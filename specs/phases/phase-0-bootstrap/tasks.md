@@ -1,5 +1,5 @@
 # Phase 0 Bootstrap Tasks
-**Status**: In Progress | **Progress**: 12/13 tasks
+**Status**: In Progress | **Progress**: 13/14 tasks
 
 * [x] **Create directory structure**
     * Run mkdir for all required directories
@@ -12,13 +12,13 @@
     * Verification: file exists with naming conventions and priorities
 * [x] **Create slash commands**
     * start-phase.md, complete-phase.md, sync-docs.md, log.md, track.md, review.md
-    * Verification: all 6 files exist in .claude/commands/
-* [x] **Create hook script**
-    * scripts/check-history-reminder.sh exists and is executable
-    * Verification: file exists, has execute permission
-* [x] **Create .claude/settings.json**
-    * PostToolUse hook configuration
-    * Verification: valid JSON with hook config
+    * Verification: all 6 files exist in .opencode/commands/ with proper frontmatter
+* [x] **Create opencode plugin**
+    * .opencode/plugins/history-reminder.js with file.edited and session.idle hooks
+    * Verification: plugin file exists and exports valid hooks
+* [x] **Create opencode.json**
+    * Project config with commands, instructions, and plugin references
+    * Verification: valid JSON with $schema, command, and instructions keys
 * [x] **Create phase history infrastructure**
     * specs/phases/index.json and specs/decisions/impact-map.json
     * Verification: both JSON files are valid
@@ -36,7 +36,14 @@
     * Verification: all files exist
 * [x] **Create developer-guideline.md**
     * Comprehensive guide for developers using this system
-    * Verification: file exists in docs/
-* [ ] **Initial git commit**
-    * git add . && git commit with proper message
-    * Verification: git log shows commit
+    * Verification: file exists in docs/ with .opencode/ references
+* [x] **Initial git commit and push**
+    * git add . && git commit with proper message, push to remote
+    * Verification: git log shows commit, remote has code
+* [ ] **Migrate from Claude Code to OpenCode format**
+    * Move .claude/commands/ → .opencode/commands/ with frontmatter format
+    * Replace .claude/settings.json hook → .opencode/plugins/history-reminder.js
+    * Create opencode.json project config
+    * Delete .claude/ directory
+    * Update all doc references from .claude/ to .opencode/
+    * Verification: no .claude/ directory exists, all docs reference .opencode/

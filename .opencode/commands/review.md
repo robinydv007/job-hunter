@@ -1,3 +1,6 @@
+---
+description: Review and groom the backlog between phases
+---
 Review and groom the backlog between phases.
 
 ## Steps

@@ -1,9 +1,12 @@
-Record a manual entry in the active phase history file.
+---
+description: Record a manual entry in the active phase history file
+---
+Record a manual entry in the active phase history file. Use $ARGUMENTS for the entry detail.
 
 ## Steps:
 1. Read `specs/status.md` to identify the active phase (`Current Phase` field)
 2. Find the history file: `specs/phases/phase-N-*/history.md`
-3. Determine entry type from the message:
+3. Determine entry type from $ARGUMENTS:
    - Decision about technology/architecture → `[DECISION]`
    - Phase scope added/removed → `[SCOPE_CHANGE]`
    - Bug/tech debt/enhancement found → `[DISCOVERY]`

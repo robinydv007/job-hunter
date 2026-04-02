@@ -24,7 +24,9 @@ This repository implements a **spec-driven development (SDD)** workflow where:
 |------|---------|
 | `specs/` | Single source of truth — status, backlog, phases, decisions, roadmap |
 | `docs/` | Developer documentation and vision |
-| `.claude/commands/` | Slash commands for phase workflows |
+| `.opencode/commands/` | Slash commands for phase workflows |
+| `.opencode/plugins/` | Event hooks (history reminder, automation) |
+| `opencode.json` | Project config (commands, instructions, plugins) |
 | `.agent/rules/` | Agent operational rules |
 | `scripts/` | Automation hooks |
 

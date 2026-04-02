@@ -1,3 +1,6 @@
+---
+description: Verify, finalize, and release a completed phase
+---
 Verify, finalize, and release a completed phase.
 
 ## Steps

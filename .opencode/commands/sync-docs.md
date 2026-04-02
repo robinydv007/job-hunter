@@ -1,3 +1,6 @@
+---
+description: Sync all relevant documents based on the active phase's history log
+---
 Sync all relevant documents based on the active phase's history log.
 Token-efficient: reads history + 2 tiny indexes first, then only targeted files.
 
@@ -45,7 +48,7 @@ git commit -m "docs(phase-N): sync docs from phase history"
 
 ### Step 8: Confirm completion
 "Doc sync complete. Updated N files:
-- [list of updated files]
+- [list of updated files]"
 
 ### Safeguards
 - NEVER update files not in the targeted list

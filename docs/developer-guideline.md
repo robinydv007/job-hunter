@@ -17,7 +17,8 @@ This project uses **spec-driven development (SDD)** with AI agents. The `specs/`
 ### Directory Structure
 ```
 /
-├── CLAUDE.md              # Agent configuration (auto-loaded)
+├── CLAUDE.md              # Agent configuration (opencode reads as fallback)
+├── opencode.json          # OpenCode project config (commands, plugins, instructions)
 ├── README.md              # Project overview
 ├── docs/                  # Developer documentation
 │   └── developer-guideline.md  # This file
@@ -30,9 +31,9 @@ This project uses **spec-driven development (SDD)** with AI agents. The `specs/`
 │   ├── roadmap/           # Timeline and milestones
 │   └── vision/            # Project charter, principles, success criteria
 ├── scripts/               # Automation scripts
-├── .claude/               # Agent commands and settings
-│   ├── commands/          # Slash commands
-│   └── settings.json      # Hook configuration
+├── .opencode/             # OpenCode configuration
+│   ├── commands/          # Slash command definitions (markdown with frontmatter)
+│   └── plugins/           # JavaScript/TS plugins (hooks, automation)
 └── .agent/
     └── rules/
         └── project.md     # Detailed agent rules
@@ -229,7 +230,7 @@ You don't need perfect backfill. The system self-improves — within 1-2 phases,
 | `specs/` — folders | `kebab-case` | `phase-0-bootstrap/` |
 | `specs/` — files | `kebab-case` | `0001-state-backend-postgres.md` |
 | `docs/` — files | `kebab-case` | `developer-guideline.md` |
-| `.claude/commands/` | `kebab-case` | `start-phase.md` |
+| `.opencode/commands/` | `kebab-case` | `start-phase.md` |
 | `.agent/` — files | `snake_case` | `project.md` |
 | ADR files | `NNNN-kebab-title.md` | `0001-state-backend-postgres.md` |
 | Phase directories | `phase-N-shortname` | `phase-0-bootstrap` |

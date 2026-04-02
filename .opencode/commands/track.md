@@ -1,9 +1,12 @@
-Track a backlog item — bug, feature, tech debt, or enhancement.
+---
+description: Track a backlog item — bug, feature, tech debt, or enhancement
+---
+Track a backlog item — bug, feature, tech debt, or enhancement. Use $ARGUMENTS for the item description.
 
 ## Steps
 1. Read the backlog to find the next available ID:
    - Read `specs/backlog/backlog.md`
-2. Determine the item type from context or `$ARGUMENTS`:
+2. Determine the item type from $ARGUMENTS:
    - Bug → `BUG-NNN` — add to Bugs table
    - Feature → `FEAT-NNN` — add to Features table
    - Tech Debt → `TD-NNN` — add to Tech Debt table

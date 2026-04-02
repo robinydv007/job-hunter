@@ -2,6 +2,13 @@
 
 Spec-driven development system. Agent rules live in `.agent/rules/project.md`.
 
+## OpenCode Configuration
+This project uses OpenCode for AI-assisted development.
+- **Commands**: `.opencode/commands/*.md` — slash commands with frontmatter
+- **Plugins**: `.opencode/plugins/*.js` — event hooks (history reminder, etc.)
+- **Config**: `opencode.json` — project config with commands, plugins, instructions
+- **Rules**: This file + `.agent/rules/project.md` — always-on agent behaviors
+
 ## Navigation (Where to Find Things)
 | Question | File |
 |----------|------|
