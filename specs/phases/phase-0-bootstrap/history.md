@@ -59,3 +59,9 @@ Topics: spec-system, enforcement, plugin-system
 Affects-phases: phase-0-bootstrap
 Affects-docs: CLAUDE.md#rule-10, .agent/rules/project.md, .opencode/plugins/history-reminder.js
 Added scripts/check-sdd-compliance.sh (4 checks: secrets, changelog, history, status sync), scripts/pre-commit git hook, and upgraded .opencode/plugins/history-reminder.js to intercept git commit and block if compliance fails. Both enforcement layers must pass for a commit to succeed.
+
+[DISCOVERY] 2026-04-02 — 7 bugs found during SDD architecture audit
+Topics: spec-system, process-discipline, opencode-config
+Affects-phases: phase-0-bootstrap
+Affects-docs: specs/roadmap/roadmap.md, specs/phases/phase-0-bootstrap/retrospective.md, specs/vision/success-criteria.md, specs/phases/phase-0-bootstrap/plan.md, CLAUDE.md, docs/developer-guideline.md, opencode.json
+Full audit revealed 7 inconsistencies: stale roadmap status, retrospective metrics mismatch, unchecked success criteria, outdated plan risk table, [NOTE] entry type inconsistency, wrong vision doc path reference, and duplicate command definitions in opencode.json. All added to backlog as BUG-001 through BUG-007.
