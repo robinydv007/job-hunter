@@ -4,8 +4,8 @@
   "description": "Maps each phase to topic keywords. Used by /sync-docs to find affected phases.",
   "phases": {
     "phase-0-bootstrap": {
-      "status": "not-started",
-      "topics": ["project-setup", "spec-system", "agent-rules"]
+      "status": "complete",
+      "topics": ["project-setup", "spec-system", "agent-rules", "opencode-config", "plugin-system", "phase-completion"]
     }
   }
 }

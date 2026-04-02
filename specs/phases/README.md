@@ -3,7 +3,7 @@ Quick reference for all phases. See [roadmap](../roadmap/roadmap.md) for timelin
 
 | Phase | Name | Status | Directory |
 |-------|------|--------|-----------|
-| 0 | Bootstrap | Not Started | [phase-0-bootstrap](phase-0-bootstrap/) |
+| 0 | Bootstrap | Complete | [phase-0-bootstrap](phase-0-bootstrap/) |
 
 Each phase directory contains:
 | File | Purpose |
@@ -16,6 +16,6 @@ Each phase directory contains:
 
 ## Dependencies
 ```
-Phase 0 (Bootstrap)
-└── Phase 1 (TBD)
+Phase 0 (Bootstrap) ✓
+└── Phase 1 (Vision & Gap Analysis)
 ```
