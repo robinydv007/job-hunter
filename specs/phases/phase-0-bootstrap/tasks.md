@@ -1,5 +1,5 @@
 # Phase 0 Bootstrap Tasks
-**Status**: In Progress | **Progress**: 13/14 tasks
+**Status**: Complete | **Progress**: 14/14 tasks
 
 * [x] **Create directory structure**
     * Run mkdir for all required directories
@@ -40,7 +40,7 @@
 * [x] **Initial git commit and push**
     * git add . && git commit with proper message, push to remote
     * Verification: git log shows commit, remote has code
-* [ ] **Migrate from Claude Code to OpenCode format**
+* [x] **Migrate from Claude Code to OpenCode format**
     * Move .claude/commands/ → .opencode/commands/ with frontmatter format
     * Replace .claude/settings.json hook → .opencode/plugins/history-reminder.js
     * Create opencode.json project config
