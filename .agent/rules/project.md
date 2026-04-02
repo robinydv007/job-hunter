@@ -146,3 +146,30 @@ After writing an entry, check `specs/decisions/impact-map.json` — if the entry
 1. **No secrets in code** — All credentials via Secrets Manager or env vars
 2. **Never commit to main** — Always use feature/phase branches
 3. **Plan before implementing** — Use plan mode for non-trivial work
+
+## Enforcement — Commits Are Blocked Without Compliance
+SDD compliance is enforced at two levels. You cannot bypass them.
+
+**Plugin enforcement** (`.opencode/plugins/history-reminder.js`):
+- Intercepts every `git commit` command
+- Runs `scripts/check-sdd-compliance.sh` before allowing the commit
+- If checks fail, throws an error — the commit never executes
+- Error message tells you exactly what to fix
+
+**Git pre-commit hook** (`scripts/pre-commit`):
+- Final gate — runs even if the plugin is somehow bypassed
+- Installed via: `git config core.hooksPath scripts/`
+- Exits non-zero on failure — git rejects the commit
+
+**Checks enforced:**
+1. **No secrets** — AWS keys, API keys, tokens, private keys block the commit
+2. **Changelog required** — Code changes (outside specs/docs) require a changelog entry for today
+3. **History required** — If phase `tasks.md` is modified, the phase's `history.md` must also be updated in the same commit
+4. **Status sync** — If a phase is marked Complete in `tasks.md`, `specs/status.md` must also be updated
+
+**Your workflow:**
+1. Make changes
+2. Update tracking (tasks.md, status.md, changelog, history.md)
+3. `git add` everything
+4. `git commit` — checks run automatically, block if non-compliant
+5. If blocked, fix the specific issues listed, stage, and retry

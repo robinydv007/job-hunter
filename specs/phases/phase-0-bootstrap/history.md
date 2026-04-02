@@ -48,8 +48,14 @@ Affects-phases: phase-0-bootstrap
 Affects-docs: specs/status.md, specs/changelog/2026-04.md
 During the initial bootstrap and migration work, Rule 2 (auto-update tracking) and Rule 8 (record phase history) were not followed. status.md showed "Not Started" while tasks were complete, changelog was missing entries, and no history.md existed. This was corrected as part of SDD compliance sync.
 
-[NOTE] 2026-04-02 — Phase 0 complete, all 14 tasks done
+[NOTE] 2026-04-02 — Phase 0 complete, all 15 tasks done
 Topics: project-setup, phase-completion
 Affects-phases: phase-0-bootstrap
 Affects-docs: specs/status.md, specs/phases/README.md
-All Phase 0 tasks completed: directory structure, agent config, slash commands, plugin, specs, developer guideline, initial git commit and push, and OpenCode migration.
+All Phase 0 tasks completed: directory structure, agent config, slash commands, plugin, specs, developer guideline, initial git commit and push, OpenCode migration, and SDD enforcement system.
+
+[ARCH_CHANGE] 2026-04-02 — SDD enforcement: hard blocks on non-compliant commits
+Topics: spec-system, enforcement, plugin-system
+Affects-phases: phase-0-bootstrap
+Affects-docs: CLAUDE.md#rule-10, .agent/rules/project.md, .opencode/plugins/history-reminder.js
+Added scripts/check-sdd-compliance.sh (4 checks: secrets, changelog, history, status sync), scripts/pre-commit git hook, and upgraded .opencode/plugins/history-reminder.js to intercept git commit and block if compliance fails. Both enforcement layers must pass for a commit to succeed.

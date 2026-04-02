@@ -38,6 +38,7 @@ Phase 0 (Bootstrap) complete. Full spec-driven development structure initialized
 - **2026-04-02**: Phase history + doc sync pattern chosen over mid-phase doc updates
 
 ## Recent Changes
+* **2026-04-02**: SDD enforcement system added — hard blocks on non-compliant commits
 * **2026-04-02**: Phase 0 marked complete — all tracking docs synced
 * **2026-04-02**: Migrated from Claude Code to OpenCode format (commands, plugins, config)
 * **2026-04-02**: Project management structure initialized

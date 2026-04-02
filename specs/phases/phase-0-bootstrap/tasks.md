@@ -1,5 +1,5 @@
 # Phase 0 Bootstrap Tasks
-**Status**: Complete | **Progress**: 14/14 tasks
+**Status**: Complete | **Progress**: 15/15 tasks
 
 * [x] **Create directory structure**
     * Run mkdir for all required directories
@@ -47,3 +47,10 @@
     * Delete .claude/ directory
     * Update all doc references from .claude/ to .opencode/
     * Verification: no .claude/ directory exists, all docs reference .opencode/
+* [x] **Set up SDD enforcement**
+    * scripts/check-sdd-compliance.sh — core compliance checker (secrets, changelog, history, status sync)
+    * scripts/pre-commit — git pre-commit hook (wired via core.hooksPath)
+    * .opencode/plugins/history-reminder.js — hard block on git commit via tool.execute.before
+    * CLAUDE.md Rule 10 — Enforcement documentation
+    * .agent/rules/project.md — Enforcement documentation
+    * Verification: compliance checker blocks violations, passes on clean state

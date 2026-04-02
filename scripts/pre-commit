@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# Git Pre-Commit Hook — SDD Compliance Enforcement
+# This script runs automatically before every commit.
+# Install: git config core.hooksPath scripts/
+#
+# To bypass (emergency only): git commit --no-verify
+# Note: The opencode plugin also enforces these checks, so bypassing here
+# will still be caught by the plugin during the session.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Run the compliance checker
+bash "$SCRIPT_DIR/check-sdd-compliance.sh" --cached
