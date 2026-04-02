@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "description": "Maps topic keywords to specific non-phase docs/sections. Used by /sync-docs to find affected docs.",
+  "topics": {}
+}
