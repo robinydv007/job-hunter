@@ -1,7 +1,7 @@
 # Project Status
 **Last Updated**: 2026-04-02
 **Current Phase**: Phase 1 — Vectorless RAG (`complete`)
-**Latest Release**: None
+**Latest Release**: v0.1.0 — Phase 1: Vectorless RAG
 **Health**: On Track
 
 ## Summary

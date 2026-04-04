@@ -4,7 +4,7 @@ Quick reference for all phases. See [roadmap](../roadmap/roadmap.md) for timelin
 | Phase | Name | Status | Directory |
 |-------|------|--------|-----------|
 | 0 | Bootstrap | Complete | [phase-0-bootstrap](phase-0-bootstrap/) |
-| 1 | Vectorless RAG | In Progress | [phase-1-vectorless-rag](phase-1-vectorless-rag/) |
+| 1 | Vectorless RAG | Complete | [phase-1-vectorless-rag](phase-1-vectorless-rag/) |
 
 Each phase directory contains:
 | File | Purpose |
@@ -18,5 +18,5 @@ Each phase directory contains:
 ## Dependencies
 ```
 Phase 0 (Bootstrap) ✓
-└── Phase 1 (Vectorless RAG) ⟳
+└── Phase 1 (Vectorless RAG) ✓
 ```
