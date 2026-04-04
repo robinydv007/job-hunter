@@ -29,3 +29,9 @@ Topics: rag, bm25, streamlit, document-processing, llm-integration
 Affects-phases: phase-1-vectorless-rag
 Affects-docs: specs/phases/phase-1-vectorless-rag/overview.md, specs/phases/phase-1-vectorless-rag/plan.md
 Phase 1 scope: build a simple RAG application using BM25 keyword retrieval (no embeddings) with Streamlit UI. Users upload documents and ask questions, chatbot answers with source citations.
+
+[ARCH_CHANGE] 2026-04-02 — Vectorless RAG implementation complete
+Topics: rag, bm25, streamlit, document-processing, llm-integration
+Affects-phases: phase-1-vectorless-rag
+Affects-docs: README.md, app.py, src/document_processor.py, src/retriever.py, src/chat_engine.py
+Built all 4 components: DocumentProcessor (PDF/TXT/MD extraction + chunking), BM25Retriever (keyword-based retrieval), ChatEngine (OpenAI/Anthropic integration), Streamlit UI (upload + chat + source citations). Added unit tests for all components. Fixed BUG-007 (duplicate commands in opencode.json).
