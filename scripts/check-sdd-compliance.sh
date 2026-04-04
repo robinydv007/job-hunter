@@ -157,11 +157,68 @@ check_status_sync() {
   done
 }
 
+# ─── Check 5: Overview.md acceptance criteria must be checked when phase is complete ──────────────────────────
+check_overview_criteria() {
+  # Check if any overview.md was modified
+  local overview_files
+  overview_files=$(git diff $DIFF_FLAG --name-only --diff-filter=ACM 2>/dev/null | {
+    grep -E 'specs/phases/phase-[^/]+/overview\.md' || true
+  } || true)
+
+  if [ -z "$overview_files" ]; then
+    return 0
+  fi
+
+  for overview_file in $overview_files; do
+    # If overview status is "Complete", check that acceptance criteria are checked
+    if git show ":$overview_file" 2>/dev/null | grep -q '\*\*Status\*\*: Complete'; then
+      # Check for any unchecked acceptance criteria
+      local unchecked
+      unchecked=$(git show ":$overview_file" 2>/dev/null | {
+        grep '\* \[ \]' || true
+      } || true)
+
+      if [ -n "$unchecked" ]; then
+        local phase_name
+        phase_name=$(basename "$(dirname "$overview_file")")
+        ERRORS+=("OVERVIEW INCOMPLETE: $overview_file is marked Complete but has unchecked acceptance criteria. Mark all criteria as [x].")
+      fi
+    fi
+  done
+}
+
+# ─── Check 6: Last Updated dates must be current ─────────────────────────────
+check_dates() {
+  local today
+  today=$(date +%Y-%m-%d)
+
+  # Check status.md Last Updated date
+  if [ -f "specs/status.md" ]; then
+    local status_date
+    status_date=$(grep '\*\*Last Updated\*\*:' specs/status.md | head -1 | sed 's/.*: //' || echo "")
+    if [ -n "$status_date" ] && [ "$status_date" != "$today" ]; then
+      # Only error if there are staged code changes (not just spec changes)
+      local code_files
+      code_files=$(git diff $DIFF_FLAG --name-only --diff-filter=ACM 2>/dev/null | {
+        grep -v '^specs/' || true
+      } | {
+        grep -v '^docs/' || true
+      } || true)
+
+      if [ -n "$code_files" ]; then
+        WARNINGS+=("STALE DATE: specs/status.md Last Updated is $status_date but today is $today. Consider updating.")
+      fi
+    fi
+  fi
+}
+
 # ─── Run all checks ──────────────────────────────────────────────────────────
 check_secrets
 check_changelog
 check_history
 check_status_sync
+check_overview_criteria
+check_dates
 
 # ─── Report results ──────────────────────────────────────────────────────────
 if [ ${#ERRORS[@]} -gt 0 ]; then

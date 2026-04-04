@@ -1,17 +1,19 @@
 /**
  * SDD Enforcement Plugin
- * 
+ *
  * Hard-blocks git commit if SDD compliance checks fail.
  * Also tracks spec file edits and reminds at session idle.
- * 
+ *
  * Enforcement checks (via scripts/check-sdd-compliance.sh):
  * 1. No secrets in staged changes
  * 2. Code changes require changelog entry for today
  * 3. Phase task changes require history.md entry
  * 4. Status.md must reflect active phase progress
+ *
+ * Runtime: Works with Node.js (no Bun dependency).
  */
 
-const { $ } = await import('bun');
+import { execSync } from 'child_process';
 
 const SIGNIFICANT_PATTERNS = [
   'specs/decisions/',
@@ -29,15 +31,18 @@ export const SddEnforcementPlugin = async ({ client, directory }) => {
    */
   async function runComplianceCheck() {
     try {
-      const result = await $`bash scripts/check-sdd-compliance.sh --diff`.quiet();
+      execSync('bash scripts/check-sdd-compliance.sh --diff', {
+        cwd: directory,
+        stdio: 'pipe',
+      });
       return { pass: true };
     } catch (error) {
-      // The script outputs errors to stdout/stderr on failure
-      const output = error.stdout?.toString() || error.stderr?.toString() || '';
+      const output =
+        error.stdout?.toString() || error.stderr?.toString() || '';
       const errors = output
         .split('\n')
-        .filter(line => line.includes('✗'))
-        .map(line => line.replace('✗', '').trim());
+        .filter((line) => line.includes('✗'))
+        .map((line) => line.replace('✗', '').trim());
       return { pass: false, errors };
     }
   }
@@ -60,7 +65,8 @@ export const SddEnforcementPlugin = async ({ client, directory }) => {
           body: {
             service: 'sdd-enforcement',
             level: 'warn',
-            message: 'Commit used --no-verify to bypass SDD checks. This should only be used in emergencies.',
+            message:
+              'Commit used --no-verify to bypass SDD checks. This should only be used in emergencies.',
           },
         });
         return;
@@ -73,7 +79,7 @@ export const SddEnforcementPlugin = async ({ client, directory }) => {
         const errorDetail = result.errors.join('\n');
         throw new Error(
           `SDD COMPLIANCE CHECK FAILED — commit blocked.\n\n${errorDetail}\n\n` +
-          `Fix the issues above, stage the fixes, then try git commit again.`
+            `Fix the issues above, stage the fixes, then try git commit again.`
         );
       }
     },
@@ -83,10 +89,10 @@ export const SddEnforcementPlugin = async ({ client, directory }) => {
      */
     'file.edited': async ({ event }) => {
       const filePath = event?.path || event?.filePath || '';
-      
+
       if (!filePath) return;
-      
-      const isSignificant = SIGNIFICANT_PATTERNS.some(pattern => 
+
+      const isSignificant = SIGNIFICANT_PATTERNS.some((pattern) =>
         filePath.includes(pattern)
       );
 
@@ -102,7 +108,7 @@ export const SddEnforcementPlugin = async ({ client, directory }) => {
       if (significantEdits.size === 0) return;
 
       const files = Array.from(significantEdits).join(', ');
-      
+
       await client.app.log({
         body: {
           service: 'sdd-enforcement',
