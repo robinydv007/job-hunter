@@ -1,18 +1,18 @@
 # Roadmap
-**Start Date**: 2026-04-04
-**Target Completion**: TBD
+**Start Date**: YYYY-MM-DD
+**Target Completion**: YYYY-MM-DD
 
 ## Timeline
 | Phase | Name | Status | Start | End | Effort |
 |-------|------|--------|-------|-----|--------|
-| 0 | Bootstrap | Complete | 2026-04-04 | 2026-04-04 | 1 day |
+| 0 | Bootstrap | Not Started | YYYY-MM-DD | YYYY-MM-DD | X days |
 
 ## Phase Dependencies
 ```
-Phase 0 (Bootstrap) ✓ → Phase 1 (TBD)
+Phase 0 → Phase 1 → Phase 2 → ...
 ```
 
 ## Milestones
 | Milestone | Phase | Target Date |
 |-----------|-------|-------------|
-| SDD architecture initialized | 0 | 2026-04-04 |
+| | 0 | YYYY-MM-DD |

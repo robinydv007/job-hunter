@@ -1,47 +1,5 @@
 {
   "version": 1,
   "description": "Maps topic keywords to specific non-phase docs/sections. Used by /sync-docs to find affected docs.",
-  "topics": {
-    "project-setup": {
-      "files": [
-        {"path": "CLAUDE.md", "section": "Project Rules"},
-        {"path": "README.md", "section": "Structure"},
-        {"path": "specs/status.md", "section": "Summary"}
-      ]
-    },
-    "agent-rules": {
-      "files": [
-        {"path": "CLAUDE.md", "section": "Autonomous Behaviors"},
-        {"path": ".agent/rules/project.md", "section": "Autonomous Behaviors"},
-        {"path": "docs/developer-guideline.md", "section": "Working with the Agent"}
-      ]
-    },
-    "spec-system": {
-      "files": [
-        {"path": "specs/README.md", "section": "Structure"},
-        {"path": "docs/developer-guideline.md", "section": "System Overview"},
-        {"path": "specs/status.md", "section": "Active Phase"}
-      ]
-    },
-    "opencode-config": {
-      "files": [
-        {"path": "opencode.json", "section": "Full file"},
-        {"path": "docs/developer-guideline.md", "section": "Directory Structure"},
-        {"path": "README.md", "section": "Structure"}
-      ]
-    },
-    "plugin-system": {
-      "files": [
-        {"path": ".opencode/plugins/history-reminder.js", "section": "Full file"},
-        {"path": "CLAUDE.md", "section": "OpenCode Configuration"}
-      ]
-    },
-    "phase-completion": {
-      "files": [
-        {"path": "specs/status.md", "section": "Active Phase"},
-        {"path": "specs/phases/README.md", "section": "Phases Index"},
-        {"path": "specs/roadmap/roadmap.md", "section": "Timeline"}
-      ]
-    }
-  }
+  "topics": {}
 }
