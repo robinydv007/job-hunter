@@ -6,6 +6,10 @@
     "phase-0-bootstrap": {
       "status": "complete",
       "topics": ["project-setup", "spec-system", "agent-rules", "opencode-config", "plugin-system", "phase-completion"]
+    },
+    "phase-1-vectorless-rag": {
+      "status": "complete",
+      "topics": ["rag", "bm25", "streamlit", "document-processing", "llm-integration"]
     }
   }
 }
