@@ -2,6 +2,10 @@
 
 You've cloned the SDD template. Here's how to start your project.
 
+**Starting a new project?** Follow the steps below.
+
+**Adding SDD to an existing project?** See [docs/migration-guide.md](docs/migration-guide.md).
+
 ## 1. Rename the Repo
 
 ```bash
@@ -40,7 +44,7 @@ Files that need updating:
 - `specs/changelog/YYYY-MM.md` (rename file to match current month)
 - `specs/phases/index.json`
 
-## 4. Run the Compliance Check
+## 5. Run the Compliance Check
 
 ```bash
 bash scripts/check-sdd-compliance.sh
@@ -48,7 +52,7 @@ bash scripts/check-sdd-compliance.sh
 
 Should pass with no errors.
 
-## 5. Start Phase 0
+## 6. Start Phase 0
 
 Run `/start-phase` in your agent session. The agent will:
 - Create `specs/phases/phase-0-<name>/` with overview, plan, tasks, history
@@ -56,7 +60,7 @@ Run `/start-phase` in your agent session. The agent will:
 - Create a git branch
 - Build the topic index
 
-## 6. Write Your First Feature
+## 7. Write Your First Feature
 
 Once Phase 0 is planned, start implementing. The agent will:
 - Auto-update tracking after each change
