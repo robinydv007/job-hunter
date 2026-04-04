@@ -9,6 +9,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+.ruff_cache/
 build/
 develop-eggs/
 dist/
@@ -40,6 +41,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# RAG app uploads (if any temp files created)
+# Temp
 uploads/
 temp/
