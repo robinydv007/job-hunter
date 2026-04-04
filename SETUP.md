@@ -18,7 +18,15 @@ Create `docs/<your-project>.md` — this is the master plan the agent reads to u
 - Technical constraints (language, framework, hosting)
 - Success criteria
 
-## 3. Update Placeholders
+## 3. Install Plugin Dependencies
+
+The enforcement plugin uses Node.js. Install dependencies:
+
+```bash
+cd .opencode && npm install
+```
+
+## 4. Update Placeholders
 
 Find and replace these in the spec files:
 - `YYYY-MM-DD` → today's date

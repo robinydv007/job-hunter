@@ -1,5 +1,5 @@
 # Backlog
-**Last Updated**: 2026-04-04
+**Last Updated**: YYYY-MM-DD
 **Convention**: Simple items stay in this table. Complex items get a detail file: `[→](details/ID.md)`
 
 ## Priority Levels
