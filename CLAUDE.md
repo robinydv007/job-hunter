@@ -94,6 +94,7 @@ During any active phase, after making a meaningful change, append an entry to th
 - A bug, tech debt, or enhancement was added to backlog → `[DISCOVERY]`
 - A new feature was added to the phase plan → `[FEATURE]`
 - An architectural pattern or integration approach changed → `[ARCH_CHANGE]`
+- Anything else worth recording → `[NOTE]`
 
 **Entry format (APPEND ONLY — never edit existing entries):**
 ```

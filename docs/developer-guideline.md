@@ -6,6 +6,10 @@
 
 ## Quick Start
 
+**New project?** Read [`SETUP.md`](../SETUP.md) first — it has the step-by-step onboarding flow.
+
+**Adding to existing project?** Read [`docs/migration-guide.md`](migration-guide.md).
+
 1. **Always start here**: Read `specs/status.md` to understand the current phase and any blockers
 2. **Check the backlog**: Look at `specs/backlog/backlog.md` for pending work
 3. **Understand your phase**: Read the phase directory in `specs/phases/phase-N-*/`
@@ -85,7 +89,7 @@ Work is broken into phases. Each phase has:
 6. **Plans before coding** — Uses plan mode for non-trivial work
 
 ### What You Should Do
-1. **Write the vision** — Put your master plan in `docs/<project-name>.md`
+1. **Write the vision** — See [`SETUP.md`](../SETUP.md) for the onboarding flow
 2. **Review plans** — Agent presents plans before implementing; approve or request changes
 3. **Use slash commands** — Trigger phase workflows (see below)
 4. **Review between phases** — Use `/review` to groom the backlog
@@ -160,6 +164,37 @@ Affects-docs: path/to/doc.md#section (or "none")
 Detail: One to three sentences describing what changed and why.
 ```
 
+## Enforcement
+
+SDD compliance is enforced at two levels. Commits are **blocked** if tracking is out of sync.
+
+### How It Works
+1. **Plugin** (`.opencode/plugins/history-reminder.js`) — intercepts `git commit` before it runs
+2. **Pre-commit hook** (`scripts/pre-commit`) — final gate via `core.hooksPath`
+
+Both run `scripts/check-sdd-compliance.sh` which checks:
+- No secrets (API keys, tokens, private keys)
+- Changelog entry exists for today (if code changed)
+- History.md updated (if tasks.md changed)
+- Status.md synced (if phase marked Complete)
+- Overview.md acceptance criteria checked (if phase marked Complete)
+
+### When a Commit Is Blocked
+You'll see an error like:
+```
+SDD COMPLIANCE CHECK FAILED — commit blocked.
+  ✗ CHANGELOG MISSING: No entry for 2026-04-04 in specs/changelog/2026-04.md.
+```
+
+**Fix:** Update the missing file, `git add` it, then retry `git commit`.
+
+### Stale Date Warning
+If `specs/status.md` has an old `Last Updated` date and code is changing, you'll get a warning (not a block):
+```
+⚠ STALE DATE: specs/status.md Last Updated is 2026-04-02 but today is 2026-04-04.
+```
+This is a reminder to keep tracking docs current.
+
 ## Architecture Decision Records (ADRs)
 
 ### When to Create an ADR
@@ -214,14 +249,7 @@ Detail: One to three sentences describing what changed and why.
 
 ## Migrating an Existing Project
 
-If you're adding this system to an existing codebase:
-1. Run the bootstrap (create all directories and files)
-2. Set `specs/status.md` to your current phase
-3. Backfill known bugs/features into the backlog
-4. Create backdated ADRs for significant past decisions
-5. Start the next phase with `/start-phase`
-
-You don't need perfect backfill. The system self-improves — within 1-2 phases, the tracking becomes comprehensive.
+See [`docs/migration-guide.md`](migration-guide.md) for the complete guide on adopting SDD in an existing codebase.
 
 ## File Naming Conventions
 
