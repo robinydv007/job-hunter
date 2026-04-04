@@ -1,15 +1,11 @@
 {
   "version": 1,
-  "generated": "2026-04-02",
+  "generated": "2026-04-04",
   "description": "Maps each phase to topic keywords. Used by /sync-docs to find affected phases.",
   "phases": {
     "phase-0-bootstrap": {
       "status": "complete",
-      "topics": ["project-setup", "spec-system", "agent-rules", "opencode-config", "plugin-system", "phase-completion"]
-    },
-    "phase-1-vectorless-rag": {
-      "status": "complete",
-      "topics": ["rag", "bm25", "streamlit", "document-processing", "llm-integration"]
+      "topics": ["project-setup", "spec-system", "agent-rules", "opencode-config", "plugin-system", "enforcement"]
     }
   }
 }
