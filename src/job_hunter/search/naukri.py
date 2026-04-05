@@ -388,6 +388,8 @@ def search_naukri(
     seen_keys = set()
 
     loop = asyncio.get_event_loop()
+    delay_min = search_config.delay_min_seconds
+    delay_max = search_config.delay_max_seconds
 
     for qi, query in enumerate(queries):
         try:
@@ -410,7 +412,7 @@ def search_naukri(
             print(f"  Total unique jobs so far: {len(all_jobs)}")
 
             if qi < len(queries) - 1:
-                delay = random.uniform(3, 8)
+                delay = random.uniform(delay_min, delay_max)
                 print(f"  [INFO] Waiting {delay:.1f}s before next query...")
                 loop.run_until_complete(asyncio.sleep(delay))
 

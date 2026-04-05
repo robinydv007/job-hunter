@@ -32,6 +32,8 @@ search:
   job_types: []  # e.g. [full-time, contract]
   excluded_companies: []  # companies to skip
   excluded_keywords: []  # e.g. [intern, fresher, trainee]
+  delay_min_seconds: 3.0  # min delay between queries
+  delay_max_seconds: 8.0  # max delay between queries
 naukri:
   login_required: true
   headless: false

@@ -35,6 +35,8 @@ class SearchConfig(BaseModel):
     job_types: list[str] = Field(default_factory=list)
     excluded_companies: list[str] = Field(default_factory=list)
     excluded_keywords: list[str] = Field(default_factory=list)
+    delay_min_seconds: float = 3.0
+    delay_max_seconds: float = 8.0
 
 
 class ScoringConfig(BaseModel):
