@@ -2,7 +2,7 @@
 
 **Project:** Job Hunter AI Agent  
 **Status:** Phase 1 (MVP) — ✅ Complete | Phase 2 (Auto-Apply) — 🔲 Not Started  
-**Last Updated:** 2026-04-05 (ENH-003, ENH-004, ENH-005, ENH-006, TD-004, regression fixes applied)
+**Last Updated:** 2026-04-05 (ENH-003, ENH-004, ENH-005, ENH-006, TD-004, regression fixes, resume caching, role priority, title tech penalty)
 
 ---
 
@@ -142,8 +142,8 @@ graph LR
 | Node | Input | Output | Key Logic |
 |------|-------|--------|-----------|
 | `load_config` | `config` | `profile_validated = True` | Validates required fields; prompts interactively for any missing ones; saves answers back to `user.yaml` |
-| `parse_resume` | `resume_path` | `profile` | Checks `data/profile.json` cache first; if stale/absent, calls LLM via `parser.py`; persists new profile to disk |
-| `search_jobs` | `profile`, `browser_page` | `raw_jobs` | Builds search queries from profile (roles × skills × locations); scrapes Naukri; deduplicates within-run AND across past CSV exports |
+| `parse_resume` | `resume_path` | `profile` | Checks `data/profile.json` cache first; if stale/absent, calls LLM via `parser.py`; persists new profile to disk. Cache can be overridden with `--force-parse` flag. |
+| `search_jobs` | `profile`, `browser_page` | `raw_jobs` | Builds search queries from profile (roles × skills × locations); scrapes Naukri; deduplicates within-run AND across past CSV exports. **Role priority:** `user.yaml` `preferred_roles` overrides parsed `target_roles` when set. |
 | `score_jobs` | `raw_jobs`, `profile` | `scored_jobs` | Applies 6-factor weighted rubric; generates human-readable `why_selected`; sets `apply_status` |
 | `filter_shortlist` | `scored_jobs` | `shortlisted_jobs` | Filters jobs ≥ `shortlist_threshold`; sorts descending by score; respects `max_jobs` cap |
 | `export_csv` | `shortlisted_jobs` | `csv_path` | Writes MVP schema CSV to `output/shortlist_<timestamp>.csv` |
@@ -161,6 +161,11 @@ graph LR
 3. Invoke the LLM with a strict structured prompt demanding a JSON response.
 4. Parse the JSON into a `ResumeProfile` Pydantic model.
 5. Persist to `data/profile.json` for future runs.
+
+**Cache behavior (cli.py):**
+- If `--resume` is not explicitly passed and `data/profile.json` exists, the pipeline skips resume parsing entirely and uses the cached profile.
+- Pass `--force-parse` to override the cache and force re-parsing even when a cached profile exists.
+- Explicit `--resume <path>` always triggers parsing regardless of cache state.
 
 **Extracted fields:** name, email, phone, skills, tech\_stack, total\_experience\_years, past\_roles, industry\_domain, location\_preference, salary\_expectation, target\_roles, education, summary.
 
@@ -222,6 +227,8 @@ Each job is scored on a **0–100 composite score** using a weighted rubric:
 | Keywords similarity | **15%** | Bag-of-words overlap between profile skills/stack and full job text |
 | Salary match | **8%** | Compares job's min salary vs. expected CTC; partial credit for ≥80% of expectation |
 | Location match | **0%** | *(Intentionally zeroed out in current implementation — see known gap below)* |
+
+**Title Tech Penalty:** After the composite score is calculated, the engine checks if the job title names a primary technology (Java, Python, .NET, SAP, etc.) that the user lacks. If so, the score is halved (0.5× multiplier). This prevents mismatched roles like "Java Technical Lead" from scoring high for non-Java developers. The penalty is noted in the `why_selected` explanation.
 
 **Output per job:**
 - `match_score` (0–100 composite)

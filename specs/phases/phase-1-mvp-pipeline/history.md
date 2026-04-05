@@ -87,3 +87,21 @@ Topics: scoring, skills, freshness, regression
 Affects-phases: none
 Affects-docs: specs/backlog/backlog.md
 Detail: ENH-005 role-only queries caused broader job results. Combined with hardcoded ~40-keyword skill extraction, this produced 0% skill matches. Scores dropped from 62-76 to 31-45. Freshness dd param only sorts, doesn't filter — older jobs appeared. Fixed by: (1) using jobAge=N in Naukri URL for actual filtering, (2) extracting skills from div.row5 on listing page, (3) fallback to scanning description for user's own skills via word-boundary regex, (4) restored threshold to 60.
+
+[FEATURE] 2026-04-05 — Resume caching with --force-parse override
+Topics: resume, caching, cli, performance
+Affects-phases: none
+Affects-docs: specs/architecture/overview.md#resume-parser
+Detail: Added automatic resume caching — if data/profile.json exists and --resume is not explicitly passed, the pipeline skips LLM parsing entirely. New --force-parse CLI flag allows users to override cache and force re-parsing. Cached profile detection runs in cli.py before pipeline start.
+
+[FEATURE] 2026-04-05 — Search role priority: user.yaml preferred_roles over parsed target_roles
+Topics: search, config, roles, priority
+Affects-phases: none
+Affects-docs: specs/architecture/overview.md#search-jobs
+Detail: search_jobs_node now checks config.profile.preferred_roles first. If set, it overrides profile.target_roles from parsed resume. Rationale: user.yaml is explicit intent; profile.json is LLM-inferred. Console output indicates which source was used.
+
+[FEATURE] 2026-04-05 — Title tech penalty in scoring engine
+Topics: scoring, title, tech-stack, penalty
+Affects-phases: none
+Affects-docs: specs/architecture/overview.md#scoring-engine
+Detail: Added _check_title_tech_penalty() that scans job titles for primary tech keywords (Java, Python, .NET, SAP, etc.). If the job title names a tech the user lacks, the composite score is halved (0.5x multiplier). Prevents mismatched roles like "Java Technical Lead" from scoring high for non-Java developers. Penalty is noted in why_selected explanation.

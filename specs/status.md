@@ -49,6 +49,9 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **Location weight = 0.0** in scoring engine (intentional — remote/hybrid listings unreliable)
 
 ## Recent Changes
+- 2026-04-05: feat(cli) — resume caching with --force-parse override; skips LLM parse when profile cached
+- 2026-04-05: feat(search) — user.yaml preferred_roles takes priority over parsed target_roles
+- 2026-04-05: feat(scoring) — title tech penalty halves score if job title requires tech user lacks
 - 2026-04-05: BUG-001 fixed — interactive config prompts now run before pipeline starts
 - 2026-04-05: Phase 1 MVP pipeline completed — all 6 LangGraph nodes implemented and validated
 - 2026-04-05: Architecture overview (`specs/architecture/overview.md`) written
