@@ -57,3 +57,9 @@ Topics: config, search, auto-apply, screening
 Affects-phases: phase-2-auto-apply
 Affects-docs: specs/backlog/details/ENH-003.md, config/user.yaml
 Detail: Added work_mode_filter, job_types, excluded_companies, excluded_keywords to SearchConfig. Created AutoApplyConfig with rate limiting and safety controls. Added 10 new fields to ScreeningAnswers (current_employer, current_designation, etc.). Wired exclusion filters into search_jobs_node for post-scrape filtering.
+
+[FEATURE] 2026-04-05 — ENH-004: Smart job freshness filter with auto-calculation
+Topics: freshness, run-history, search
+Affects-phases: none
+Affects-docs: specs/backlog/details/ENH-004.md, config/user.yaml
+Detail: Added freshness field to SearchConfig (0=auto, 1/3/7/15/30=days). Implemented resolve_freshness() that auto-calculates from last run history in data/run_history.json. First run defaults to dd=7. Run history is recorded after each search with timestamp, freshness_used, jobs_found, platform.

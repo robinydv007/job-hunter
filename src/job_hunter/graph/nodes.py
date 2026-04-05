@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -11,6 +12,86 @@ from rich.panel import Panel
 
 from job_hunter.graph.state import JobHunterState
 from job_hunter.resume.parser import load_profile, parse_resume
+
+console = Console()
+
+NAUKRI_FRESHNESS_VALUES = [1, 3, 7, 15, 30]
+
+
+def _get_run_history_path() -> Path:
+    return Path(__file__).resolve().parents[3] / "data" / "run_history.json"
+
+
+def _load_run_history() -> list[dict]:
+    path = _get_run_history_path()
+    if not path.exists():
+        return []
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return []
+
+
+def _save_run_history(history: list[dict]) -> None:
+    path = _get_run_history_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(history, f, indent=2)
+
+
+def resolve_freshness(config_freshness: int, platform: str = "naukri") -> int:
+    """Resolve freshness value based on config and run history.
+
+    Args:
+        config_freshness: User-configured freshness (0=auto, 1/3/7/15/30=days)
+        platform: Platform name (default: naukri)
+
+    Returns:
+        Resolved freshness value for the dd URL parameter
+    """
+    history = _load_run_history()
+    platform_history = [h for h in history if h.get("platform") == platform]
+
+    if config_freshness > 0:
+        if not platform_history:
+            return config_freshness
+        last_run = platform_history[-1]
+        last_ts = datetime.fromisoformat(last_run["timestamp"])
+        days_since = (datetime.now() - last_ts).days
+        auto_value = _map_days_to_freshness(days_since)
+        return max(config_freshness, auto_value)
+
+    if not platform_history:
+        return 7
+
+    last_run = platform_history[-1]
+    last_ts = datetime.fromisoformat(last_run["timestamp"])
+    days_since = (datetime.now() - last_ts).days
+    return _map_days_to_freshness(days_since)
+
+
+def _map_days_to_freshness(days: int) -> int:
+    """Map days since last run to the smallest Naukri freshness value >= days."""
+    for value in NAUKRI_FRESHNESS_VALUES:
+        if value >= days:
+            return value
+    return 30
+
+
+def record_run(platform: str, freshness_used: int, jobs_found: int) -> None:
+    """Append a run record to data/run_history.json."""
+    history = _load_run_history()
+    history.append(
+        {
+            "timestamp": datetime.now().isoformat(),
+            "freshness_used": freshness_used,
+            "jobs_found": jobs_found,
+            "platform": platform,
+        }
+    )
+    _save_run_history(history)
+
 
 console = Console()
 
@@ -68,11 +149,14 @@ def search_jobs_node(state: JobHunterState) -> dict:
     all_jobs = []
     for platform in config.search.platforms:
         if platform == "naukri":
+            freshness = resolve_freshness(config.search.freshness, platform)
+            console.print(f"[dim]Freshness filter: dd={freshness}[/]")
             jobs = search_naukri(
-                profile, config.search, page, days_old=3, max_jobs_per_query=20
+                profile, config.search, page, days_old=freshness, max_jobs_per_query=100
             )
             all_jobs.extend(jobs)
             console.print(f"[green]Naukri: found {len(jobs)} jobs[/]")
+            record_run(platform, freshness, len(jobs))
         else:
             console.print(
                 f"[yellow]Platform '{platform}' not yet implemented (Phase 2)[/]"

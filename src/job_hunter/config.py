@@ -28,6 +28,7 @@ class SearchConfig(BaseModel):
     salary_max_lpa: float = 0
     experience_years: int = 0
     max_jobs: int = 50
+    freshness: int = 0  # 0=auto, 1/3/7/15/30=days
     work_mode_filter: list[str] = Field(default_factory=list)
     job_types: list[str] = Field(default_factory=list)
     excluded_companies: list[str] = Field(default_factory=list)
