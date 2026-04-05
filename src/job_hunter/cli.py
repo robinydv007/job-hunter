@@ -11,9 +11,10 @@ from rich.panel import Panel
 
 from job_hunter.config import (
     load_config,
-    validate_profile,
-    prompt_missing_fields,
-    save_updated_config,
+    load_raw_config,
+    validate_raw_profile,
+    prompt_missing_fields_raw,
+    save_raw_config,
 )
 from job_hunter.graph.workflow import build_workflow
 from job_hunter.browser import BrowserManager
@@ -54,18 +55,17 @@ def run(resume: str | None, config: str | None, headless: bool):
         Panel("[bold green]Job Hunter Agent[/] Starting...", border_style="green")
     )
 
-    # Load config
-    app_config = load_config(config)
-
-    # Validate config and prompt for missing fields BEFORE pipeline starts
-    missing = validate_profile(app_config.profile)
+    # Validate raw config and prompt for missing fields BEFORE Pydantic validation
+    raw = load_raw_config(config)
+    missing = validate_raw_profile(raw)
     if missing:
         console.print(f"[yellow]Missing config fields: {', '.join(missing)}[/]")
-        answers = prompt_missing_fields(app_config.profile, missing)
-        save_updated_config(answers)
-        for k, v in answers.items():
-            setattr(app_config.profile, k, v)
+        answers = prompt_missing_fields_raw(missing)
+        save_raw_config(answers)
         console.print("[green]Config updated and saved.[/]")
+
+    # Load config (now with validated data)
+    app_config = load_config(config)
 
     # Find resume
     if resume is None:

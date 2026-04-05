@@ -11,27 +11,14 @@ from rich.panel import Panel
 
 from job_hunter.graph.state import JobHunterState
 from job_hunter.resume.parser import load_profile, parse_resume
-from job_hunter.config import (
-    validate_profile,
-    prompt_missing_fields,
-    save_updated_config,
-)
 
 console = Console()
 
 
 def load_config_node(state: JobHunterState) -> dict:
-    """Load and validate user config."""
+    """Log configuration loaded state (validation already done in CLI)."""
     console.print(Panel("[bold blue]Loading configuration...[/]", border_style="blue"))
     config = state["config"]
-    missing = validate_profile(config.profile)
-
-    if missing:
-        console.print(
-            f"[yellow]Warning: config still has missing fields: {', '.join(missing)}[/]"
-        )
-        console.print("[dim]These should have been prompted before pipeline start.[/]")
-
     console.print("[green]Configuration loaded successfully[/]")
     return {"config": config, "profile_validated": True}
 
