@@ -239,7 +239,7 @@ async def _extract_job_data(
                     break
 
         # Extract skills: primary from row5 div, fallback to user-skill scan
-        skills = _extract_skills_from_row5(card)
+        skills = await _extract_skills_from_row5(card)
         if not skills and user_skills and description:
             skills = _match_user_skills_in_description(description, user_skills)
 

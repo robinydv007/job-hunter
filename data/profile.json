@@ -1,11 +1,12 @@
 {
   "name": "ROBIN YADAV",
-  "email": "robinydv007@gmail.com",
+  "email": "robin.ydv007@gmail.com",
   "phone": "9199416711552",
   "skills": [
     "Node.js",
     "NestJS",
     "TypeScript",
+    "JavaScript",
     "Microservices",
     "MongoDB",
     "PostgreSQL",
@@ -38,6 +39,9 @@
     "client communication",
     "Agile/Scrum",
     "Express",
+    "PHP",
+    "Laravel",
+    "Go",
     "Python",
     "FastAPI",
     "Jira",
@@ -45,18 +49,13 @@
     "Shopify",
     "WooCommerce",
     "Git",
-    "Zoom",
-    "Langgraph",
-    "Langchain",
-    "RAG",
-    "Agentic RAG",
-    "Vectorless RAG",
-    "Agentic AI"
+    "Zoom"
   ],
   "tech_stack": [
     "Node.js",
     "NestJS",
     "TypeScript",
+    "JavaScript",
     "Microservices",
     "MongoDB",
     "PostgreSQL",
@@ -66,33 +65,27 @@
     "AWS",
     "GCP",
     "Firebase",
-    "RabbitMQ",
-    "Express",
-    "Python",
-    "FastAPI",
-    "Langgraph",
-    "Langchain",
-    "RAG",
-    "Agentic RAG",
-    "Vectorless RAG",
-    "Agentic AI"
+    "RabbitMQ"
   ],
   "total_experience_years": 9.0,
   "past_roles": [
     "Technical Lead",
-    "Sr. Software Engineer (IC)"
+    "Sr. Software Engineer (IC)",
+    "Sr. PHP Developer",
+    "PHP Developer"
   ],
   "industry_domain": "Logistics/E-commerce",
   "location_preference": "Gurugram, Haryana",
   "preferred_locations": [],
-  "salary_expectation": "30 LPA",
+  "salary_expectation": "",
   "target_roles": [
     "Technical Lead",
-    "Senior Software Engineer"
+    "Software Architect",
+    "Engineering Manager"
   ],
   "education": [
     "Bachelor of Business Administration",
     "High School Diploma"
   ],
-  "summary": "Technical Lead with 9+ years of experience in full-stack development and leadership, expertise in System Design, Distributed systems, Node.js, NestJS, and APIs. Proven success in scaling logistics/e-commerce platforms to 1.5 lakh+ daily orders. Skilled in guiding teams on architecture, design principles, and performance."
+  "summary": "Technical Lead with 9+ years of experience in full-stack development and leadership. Expertise in System Design, Distributed systems, Node.js, NestJS, and APIs. Hands-on experience with Angular and React, with proven success in scaling logistics/e-commerce platforms to 1.5 lakh+ daily orders. Skilled in guiding teams on architecture, design principles, and performance."
 }

@@ -47,3 +47,5 @@
 | ENH-007 | Anti-blocking: CAPTCHA detection + session health checks | P1 | open | 2 | [→](details/ENH-007.md) |
 | ENH-008 | Anti-blocking: Playwright stealth mode (webdriver masking) | P2 | open | 2 | [→](details/ENH-008.md) |
 | ENH-009 | Anti-blocking: exponential backoff on consecutive failures | P2 | open | 2 | [→](details/ENH-009.md) |
+| ENH-011 | Improve search_naukri method: add more parameters for flexibility | P2 | open | 2 | _(simple)_ |
+| ENH-012 | Refactor nodes.py: extract platform-specific code to separate files | P2 | open | 2 | _(simple)_ |
