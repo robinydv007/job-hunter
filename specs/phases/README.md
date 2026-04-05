@@ -3,7 +3,9 @@ Quick reference for all phases. See [roadmap](../roadmap/roadmap.md) for timelin
 
 | Phase | Name | Status | Directory |
 |-------|------|--------|-----------|
-| 0 | Bootstrap | Not Started | `phase-0-<name>/` |
+| 0 | Foundation & Infrastructure | ✅ Complete | `phase-0-foundation/` |
+| 1 | MVP Core Pipeline | ✅ Complete | `phase-1-mvp-pipeline/` |
+| 2 | Auto-Apply & Enrichment | 🔲 Not Started | `phase-2-auto-apply/` *(planned)* |
 
 Each phase directory contains:
 | File | Purpose |
@@ -16,6 +18,7 @@ Each phase directory contains:
 
 ## Dependencies
 ```
-Phase 0 (Bootstrap)
-└── Phase 1 (TBD)
+Phase 0 (Foundation & Infrastructure)  ← COMPLETE
+└── Phase 1 (MVP Core Pipeline)        ← COMPLETE
+    └── Phase 2 (Auto-Apply & Enrichment)  ← NEXT
 ```

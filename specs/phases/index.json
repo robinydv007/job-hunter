@@ -1,6 +1,17 @@
 {
   "version": 1,
-  "generated": "YYYY-MM-DD",
+  "generated": "2026-04-05",
   "description": "Maps each phase to topic keywords. Used by /sync-docs to find affected phases.",
-  "phases": {}
+  "phases": {
+    "phase-0-foundation": {
+      "name": "Foundation & Infrastructure",
+      "status": "complete",
+      "keywords": ["tooling", "packaging", "cli", "config", "pydantic", "langgraph", "playwright", "llm", "sdd", "opencode", "browser", "uv"]
+    },
+    "phase-1-mvp-pipeline": {
+      "name": "MVP Core Pipeline",
+      "status": "complete",
+      "keywords": ["resume", "parsing", "naukri", "scraping", "scoring", "rubric", "csv", "export", "deduplication", "workflow", "nodes", "mvp"]
+    }
+  }
 }

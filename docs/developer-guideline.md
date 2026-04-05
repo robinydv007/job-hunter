@@ -28,6 +28,10 @@ This project uses **spec-driven development (SDD)** with AI agents. The `specs/`
 │   └── developer-guideline.md  # This file
 ├── specs/                 # THE SOURCE OF TRUTH
 │   ├── status.md          # Current phase, blockers, P0 items
+│   ├── architecture/      # System architecture docs (overview, diagrams)
+│   │   └── overview.md    # High-level system design and component map
+│   ├── product/           # All product features across all phases (phase-agnostic)
+│   │   └── requirements.md # Feature registry — WHAT the product does
 │   ├── backlog/           # All work items (bugs, features, tech debt)
 │   ├── changelog/         # Monthly changelogs
 │   ├── decisions/         # Architecture Decision Records (ADRs)
@@ -45,6 +49,20 @@ This project uses **spec-driven development (SDD)** with AI agents. The `specs/`
 
 ## Core Concepts
 
+### Spec Layer Separation
+
+Each `specs/` folder answers a distinct question. Don't mix concerns across layers:
+
+| Layer | Answers | Changes When |
+|---|---|---|
+| `specs/vision/` | *Why does this exist? What are we trying to achieve?* | Vision shifts (rare) |
+| `specs/product/` | *What does the product do? All features across all phases?* | Features added or changed |
+| `specs/architecture/` | *How is the system built technically?* | Tech decisions change |
+| `specs/roadmap/` | *When are things happening? Phase timeline?* | Timeline shifts |
+| `specs/phases/` | *What exactly did we do in this iteration?* | Per-phase work |
+| `specs/decisions/` | *Why did we choose this over alternatives?* | A significant decision is made |
+| `specs/backlog/` | *What work is pending, blocked, or planned?* | Work items added/resolved |
+
 ### Phases
 Work is broken into phases. Each phase has:
 - `overview.md` — What we're building and why
@@ -57,6 +75,8 @@ Work is broken into phases. Each phase has:
 | File | Purpose |
 |------|---------|
 | `specs/status.md` | Current state — **read this first** |
+| `specs/product/requirements.md` | All product features — **read to understand what we're building** |
+| `specs/architecture/overview.md` | System design — read before architectural changes |
 | `specs/backlog/backlog.md` | All work items with priorities |
 | `specs/changelog/YYYY-MM.md` | What changed each month |
 | `specs/decisions/` | Why technical choices were made |

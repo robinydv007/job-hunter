@@ -1,5 +1,5 @@
 # Backlog
-**Last Updated**: YYYY-MM-DD
+**Last Updated**: 2026-04-05  
 **Convention**: Simple items stay in this table. Complex items get a detail file: `[→](details/ID.md)`
 
 ## Priority Levels
@@ -15,19 +15,34 @@
 ## Bugs
 | ID | Title | Priority | Status | Phase | Detail |
 |----|-------|----------|--------|-------|--------|
-| _(none yet)_ | | | | | |
+| BUG-001 | Missing interactive config prompts on `run` | P1 | open | 2 | [→](details/BUG-001.md) |
 
 ## Features
 | ID | Title | Priority | Status | Phase | Detail |
 |----|-------|----------|--------|-------|--------|
-| _(none yet)_ | | | | | |
+| FEAT-001 | Auto-apply pipeline (Naukri) | P0 | open | 2 | _(planned)_ |
+| FEAT-002 | Smart screening QA node | P1 | open | 2 | _(planned)_ |
+| FEAT-003 | Multi-platform search (LinkedIn, Hirist, Instahyre, Foundit) | P1 | open | 2/3 | _(planned)_ |
+| FEAT-004 | Apply status CSV write-back | P1 | open | 2 | _(planned)_ |
+| FEAT-005 | Company intelligence enrichment columns | P2 | open | 3 | _(planned)_ |
 
 ## Tech Debt
 | ID | Title | Priority | Status | Phase | Detail |
 |----|-------|----------|--------|-------|--------|
-| _(none yet)_ | | | | | |
+| TD-001 | Unit tests: scoring engine, parser, scraper | P1 | open | 2 | _(simple)_ |
+| TD-002 | Resume cache invalidation on file change | P2 | open | 2 | _(simple — hash check)_ |
+| TD-003 | LLM-based required_skills extraction per job | P3 | open | 3 | _(expensive — phase 3 candidate)_ |
+| TD-004 | Prune unused fields from `JobHunterState` | P2 | open | 2 | [→](details/TD-004.md) |
 
 ## Enhancements
 | ID | Title | Priority | Status | Phase | Detail |
 |----|-------|----------|--------|-------|--------|
-| _(none yet)_ | | | | | |
+| ENH-001 | Enable location match scoring (LOCATION_WEIGHT > 0) | P2 | open | 2 | _(simple)_ |
+| ENH-002 | Work-mode filter (remote/hybrid/on-site) in config | P2 | open | 2 | _(simple)_ |
+| ENH-003 | Expand config: search params, auto-apply controls, screening answers | P1 | open | 2 | [→](details/ENH-003.md) |
+| ENH-004 | Smart job freshness filter with auto-calculation from last run | P1 | open | 2 | [→](details/ENH-004.md) |
+| ENH-005 | Overhaul search query generation: role-only, remove arbitrary caps, configurable limits | P1 | open | 2 | [→](details/ENH-005.md) |
+| ENH-006 | Anti-blocking: randomize timing (delays, jitter, scroll behavior) | P1 | open | 2 | [→](details/ENH-006.md) |
+| ENH-007 | Anti-blocking: CAPTCHA detection + session health checks | P1 | open | 2 | [→](details/ENH-007.md) |
+| ENH-008 | Anti-blocking: Playwright stealth mode (webdriver masking) | P2 | open | 2 | [→](details/ENH-008.md) |
+| ENH-009 | Anti-blocking: exponential backoff on consecutive failures | P2 | open | 2 | [→](details/ENH-009.md) |

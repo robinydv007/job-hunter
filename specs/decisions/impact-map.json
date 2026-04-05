@@ -1,5 +1,21 @@
 {
   "version": 1,
   "description": "Maps topic keywords to specific non-phase docs/sections. Used by /sync-docs to find affected docs.",
-  "topics": {}
+  "topics": {
+    "llm": ["specs/architecture/overview.md#llm-provider", "specs/vision/principles.md"],
+    "scoring": ["specs/architecture/overview.md#scoring-engine", "specs/vision/success-criteria.md"],
+    "naukri": ["specs/architecture/overview.md#naukri-scraper"],
+    "playwright": ["specs/architecture/overview.md#browser-manager"],
+    "csv": ["specs/architecture/overview.md#csv-export", "specs/vision/success-criteria.md"],
+    "config": ["specs/architecture/overview.md#config-schema", "specs/backlog/details/BUG-001.md"],
+    "resume": ["specs/architecture/overview.md#resume-parser", "specs/vision/success-criteria.md"],
+    "langgraph": ["specs/architecture/overview.md#execution-pipeline"],
+    "sdd": ["specs/README.md", "CLAUDE.md"],
+    "deduplication": ["specs/architecture/overview.md#naukri-scraper"],
+    "tooling": ["specs/architecture/overview.md#technology-stack"],
+    "packaging": ["specs/architecture/overview.md#technology-stack"],
+    "backlog": ["specs/backlog/backlog.md"],
+    "roadmap": ["specs/roadmap/roadmap.md"],
+    "status": ["specs/status.md"]
+  }
 }
