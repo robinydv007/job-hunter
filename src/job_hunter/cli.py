@@ -9,7 +9,12 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from job_hunter.config import load_config
+from job_hunter.config import (
+    load_config,
+    validate_profile,
+    prompt_missing_fields,
+    save_updated_config,
+)
 from job_hunter.graph.workflow import build_workflow
 from job_hunter.browser import BrowserManager
 
@@ -52,13 +57,27 @@ def run(resume: str | None, config: str | None, headless: bool):
     # Load config
     app_config = load_config(config)
 
+    # Validate config and prompt for missing fields BEFORE pipeline starts
+    missing = validate_profile(app_config.profile)
+    if missing:
+        console.print(f"[yellow]Missing config fields: {', '.join(missing)}[/]")
+        answers = prompt_missing_fields(app_config.profile, missing)
+        save_updated_config(answers)
+        for k, v in answers.items():
+            setattr(app_config.profile, k, v)
+        console.print("[green]Config updated and saved.[/]")
+
     # Find resume
     if resume is None:
         if Path("resume.pdf").exists():
             resume = "resume.pdf"
         else:
-            console.print("[red]No resume file provided and 'resume.pdf' not found in root directory.[/]")
-            console.print("Please use --resume to specify one or place 'resume.pdf' in the root directory.")
+            console.print(
+                "[red]No resume file provided and 'resume.pdf' not found in root directory.[/]"
+            )
+            console.print(
+                "Please use --resume to specify one or place 'resume.pdf' in the root directory."
+            )
             raise SystemExit(1)
 
     async def run_pipeline():

@@ -35,12 +35,11 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 ## Open P1 Items
 | ID | Type | Description |
 |----|------|-------------|
-| BUG-001 | Bug | Missing interactive config prompts on `run` command |
+| _(none)_ | | |
 
 ## Next Actions
-1. Fix BUG-001 (interactive config prompts) before starting Phase 2
-2. Write Phase 2 plan: `specs/phases/phase-2-auto-apply/overview.md`
-3. Run `/start-phase` to begin Phase 2
+1. Write Phase 2 plan: `specs/phases/phase-2-auto-apply/overview.md`
+2. Run `/start-phase` to begin Phase 2
 
 ## Key Decisions Made
 - **UV** chosen as Python package manager (speed + native lockfile)
@@ -50,6 +49,7 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **Location weight = 0.0** in scoring engine (intentional — remote/hybrid listings unreliable)
 
 ## Recent Changes
+- 2026-04-05: BUG-001 fixed — interactive config prompts now run before pipeline starts
 - 2026-04-05: Phase 1 MVP pipeline completed — all 6 LangGraph nodes implemented and validated
 - 2026-04-05: Architecture overview (`specs/architecture/overview.md`) written
 - 2026-04-05: BUG-001 discovered and logged to backlog

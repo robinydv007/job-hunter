@@ -27,11 +27,10 @@ def load_config_node(state: JobHunterState) -> dict:
     missing = validate_profile(config.profile)
 
     if missing:
-        console.print(f"[yellow]Missing config fields: {', '.join(missing)}[/]")
-        answers = prompt_missing_fields(config.profile, missing)
-        save_updated_config(answers)
-        for k, v in answers.items():
-            setattr(config.profile, k, v)
+        console.print(
+            f"[yellow]Warning: config still has missing fields: {', '.join(missing)}[/]"
+        )
+        console.print("[dim]These should have been prompted before pipeline start.[/]")
 
     console.print("[green]Configuration loaded successfully[/]")
     return {"config": config, "profile_validated": True}
@@ -94,11 +93,12 @@ def search_jobs_node(state: JobHunterState) -> dict:
 
     # Deduplicate by title + company + location fingerprint
     seen = set()
-    
+
     # Pre-populate seen set with jobs from past runs
     output_dir = Path(__file__).resolve().parents[3] / "output"
     if output_dir.exists():
         import csv
+
         for csv_file in output_dir.glob("shortlist_*.csv"):
             try:
                 with open(csv_file, "r", encoding="utf-8") as f:
@@ -109,7 +109,9 @@ def search_jobs_node(state: JobHunterState) -> dict:
                         ).hexdigest()
                         seen.add(fp)
             except Exception as e:
-                console.print(f"[dim]Warning: Could not read past CSV {csv_file.name} for deduplication.[/]")
+                console.print(
+                    f"[dim]Warning: Could not read past CSV {csv_file.name} for deduplication.[/]"
+                )
 
     unique_jobs = []
     for job in all_jobs:
@@ -157,17 +159,17 @@ def filter_shortlist_node(state: JobHunterState) -> dict:
     """Filter jobs above the shortlist threshold and select top max_jobs."""
     config = state["config"]
     threshold = config.scoring.shortlist_threshold
-    
+
     # Filter and sort by score descending
     shortlisted = [
         j for j in state["scored_jobs"] if j.get("match_score", 0) >= threshold
     ]
     shortlisted.sort(key=lambda j: j.get("match_score", 0), reverse=True)
-    
+
     # Take top N
     if hasattr(config.search, "max_jobs") and config.search.max_jobs > 0:
-        shortlisted = shortlisted[:config.search.max_jobs]
-        
+        shortlisted = shortlisted[: config.search.max_jobs]
+
     console.print(
         Panel(
             f"[bold green]{len(shortlisted)} jobs shortlisted (threshold: {threshold})[/]",
