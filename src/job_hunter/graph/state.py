@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Any
 
-from langgraph.graph.message import add_messages
 from typing_extensions import TypedDict
 
 from job_hunter.config import AppConfig
@@ -37,11 +36,8 @@ class JobHunterState(TypedDict):
     config: AppConfig
     resume_path: str
     profile: ResumeProfile | None
-    profile_validated: bool
     raw_jobs: list[JobListing]
     scored_jobs: list[ScoredJob]
     shortlisted_jobs: list[ScoredJob]
     csv_path: str
-    messages: Annotated[list, add_messages]
-    errors: list[str]
     browser_page: Any  # Playwright Page object

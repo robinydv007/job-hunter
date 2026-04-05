@@ -32,7 +32,7 @@
 | TD-001 | Unit tests: scoring engine, parser, scraper | P1 | open | 2 | _(simple)_ |
 | TD-002 | Resume cache invalidation on file change | P2 | open | 2 | _(simple — hash check)_ |
 | TD-003 | LLM-based required_skills extraction per job | P3 | open | 3 | _(expensive — phase 3 candidate)_ |
-| TD-004 | Prune unused fields from `JobHunterState` | P2 | open | 2 | [→](details/TD-004.md) |
+| TD-004 | Prune unused fields from `JobHunterState` | P2 | resolved | 2 | [→](details/TD-004.md) |
 
 ## Enhancements
 | ID | Title | Priority | Status | Phase | Detail |

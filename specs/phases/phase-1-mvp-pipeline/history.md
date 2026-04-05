@@ -75,3 +75,9 @@ Topics: anti-blocking, timing, jitter, stealth
 Affects-phases: none
 Affects-docs: specs/backlog/details/ENH-006.md, config/user.yaml
 Detail: All fixed sleeps replaced with random.uniform() jitter. Post-load 2-5s, between scrolls 1.5-3s, scroll count 2-4, scroll distance 400-800px. Between-queries delay configurable via delay_min_seconds/delay_max_seconds in SearchConfig.
+
+[ARCH_CHANGE] 2026-04-05 — TD-004: Prune unused fields from JobHunterState
+Topics: state, cleanup, tech-debt
+Affects-phases: none
+Affects-docs: specs/backlog/details/TD-004.md
+Detail: Removed profile_validated (never read), messages (LangGraph add_messages overhead, not a conversational agent), errors (replaced with RuntimeError exceptions that properly stop the graph). JobHunterState now has 8 fields instead of 11.

@@ -97,13 +97,10 @@ def run(resume: str | None, config: str | None, headless: bool):
                 "config": app_config,
                 "resume_path": resume,
                 "profile": None,
-                "profile_validated": False,
                 "raw_jobs": [],
                 "scored_jobs": [],
                 "shortlisted_jobs": [],
                 "csv_path": "",
-                "messages": [],
-                "errors": [],
                 "browser_page": page,
             }
 
@@ -118,11 +115,6 @@ def run(resume: str | None, config: str | None, headless: bool):
             console.print(f"Jobs found: {len(result.get('raw_jobs', []))}")
             console.print(f"Jobs scored: {len(result.get('scored_jobs', []))}")
             console.print(f"Shortlisted: {len(result.get('shortlisted_jobs', []))}")
-
-            if result.get("errors"):
-                console.print("[yellow]Errors:[/]")
-                for err in result["errors"]:
-                    console.print(f"  - {err}")
 
         finally:
             await browser.close()

@@ -101,7 +101,7 @@ def load_config_node(state: JobHunterState) -> dict:
     console.print(Panel("[bold blue]Loading configuration...[/]", border_style="blue"))
     config = state["config"]
     console.print("[green]Configuration loaded successfully[/]")
-    return {"config": config, "profile_validated": True}
+    return {"config": config}
 
 
 def parse_resume_node(state: JobHunterState) -> dict:
@@ -139,12 +139,10 @@ def search_jobs_node(state: JobHunterState) -> dict:
     page = state.get("browser_page")
 
     if profile is None:
-        console.print("[red]ERROR: Profile is None, cannot search jobs[/]")
-        return {"raw_jobs": [], "errors": ["Profile not parsed"]}
+        raise RuntimeError("Profile is None, cannot search jobs")
 
     if page is None:
-        console.print("[red]ERROR: Browser page is None, cannot search jobs[/]")
-        return {"raw_jobs": [], "errors": ["Browser not initialized"]}
+        raise RuntimeError("Browser page is None, cannot search jobs")
 
     all_jobs = []
     for platform in config.search.platforms:
