@@ -311,57 +311,108 @@ async def scrape_jobs_from_page(
     max_jobs: int = 100,
     user_skills: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Scrape jobs from a Naukri search page using DOM selectors."""
+    """Scrape jobs from Naukri search with pagination."""
     print(f"  Searching: {keyword}" + (f" in {location}" if location else ""))
 
     try:
         keyword_encoded = keyword.replace(" ", "%20").replace(".", "%2E")
         if location:
             loc_encoded = location.replace(" ", "%20").replace(",", "%2C")
-            url = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+            base_url = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+            url_pattern = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}-{{}}?k={keyword_encoded}&jobAge={days_old}"
         else:
-            url = f"https://www.naukri.com/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
-
-        print(f"    URL: {url}")
-        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        await asyncio.sleep(random.uniform(2, 5))
-
-        page_text = await page.inner_text("body")
-        if "Access Denied" in page_text:
-            print(f"  BLOCKED: Naukri is blocking access")
-            return []
+            base_url = f"https://www.naukri.com/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
+            url_pattern = f"https://www.naukri.com/{keyword_encoded}-jobs-{{}}?k={keyword_encoded}&jobAge={days_old}"
 
         jobs = []
-        job_cards = await _find_job_cards(page)
-        print(f"    Found {len(job_cards)} job cards")
+        seen_job_ids = set()
+        current_page = 1
 
-        for card in job_cards[:max_jobs]:
-            job = await _extract_job_data(card, page, user_skills=user_skills)
-            if job and job.get("title"):
-                jobs.append(job)
+        while len(jobs) < max_jobs:
+            if current_page == 1:
+                url = base_url
+            else:
+                url = url_pattern.format(current_page)
 
-        if len(jobs) < max_jobs:
-            scroll_count = random.randint(2, 4)
-            for _ in range(scroll_count):
-                await page.evaluate(f"window.scrollBy(0, {random.randint(400, 800)})")
-                await asyncio.sleep(random.uniform(1.5, 3))
-                more_cards = await _find_job_cards(page)
-                if len(more_cards) > len(job_cards):
-                    job_cards = more_cards
-                    for card in job_cards[len(jobs) : max_jobs]:
-                        job = await _extract_job_data(
-                            card, page, user_skills=user_skills
-                        )
-                        if job and job.get("title"):
-                            jobs.append(job)
+            print(f"    Page {current_page}: {url}")
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            await asyncio.sleep(random.uniform(2, 5))
+
+            page_text = await page.inner_text("body")
+            if "Access Denied" in page_text:
+                print(f"  BLOCKED: Naukri is blocking access")
+                break
+
+            job_cards = await _find_job_cards(page)
+            print(f"    Found {len(job_cards)} job cards on page {current_page}")
+
+            if not job_cards:
+                print(
+                    f"    No more jobs found on page {current_page}, stopping pagination"
+                )
+                break
+
+            new_jobs_count = 0
+            for card in job_cards:
                 if len(jobs) >= max_jobs:
                     break
+                job = await _extract_job_data(card, page, user_skills=user_skills)
+                if job and job.get("title"):
+                    job_id = f"{job['title'].lower().strip()}|{job['company'].lower().strip()}|{job.get('job_url', '')}"
+                    if job_id not in seen_job_ids:
+                        seen_job_ids.add(job_id)
+                        job["search_keyword"] = keyword
+                        jobs.append(job)
+                        new_jobs_count += 1
+
+            print(
+                f"    Extracted {new_jobs_count} new jobs from page {current_page} (total: {len(jobs)})"
+            )
+
+            if new_jobs_count == 0:
+                print(f"    No new jobs on page {current_page}, stopping pagination")
+                break
+
+            if len(jobs) < max_jobs:
+                scroll_count = random.randint(2, 4)
+                for _ in range(scroll_count):
+                    if len(jobs) >= max_jobs:
+                        break
+                    await page.evaluate(
+                        f"window.scrollBy(0, {random.randint(400, 800)})"
+                    )
+                    await asyncio.sleep(random.uniform(1.5, 3))
+                    more_cards = await _find_job_cards(page)
+                    if len(more_cards) > len(job_cards):
+                        job_cards = more_cards
+                        for card in job_cards:
+                            if len(jobs) >= max_jobs:
+                                break
+                            job_id_str = await card.get_attribute("data-job-id")
+                            if job_id_str and job_id_str not in seen_job_ids:
+                                job = await _extract_job_data(
+                                    card, page, user_skills=user_skills
+                                )
+                                if job and job.get("title"):
+                                    job_id = f"{job['title'].lower().strip()}|{job['company'].lower().strip()}|{job.get('job_url', '')}"
+                                    if job_id not in seen_job_ids:
+                                        seen_job_ids.add(job_id)
+                                        job["search_keyword"] = keyword
+                                        jobs.append(job)
+                                        new_jobs_count += 1
+
+            if len(jobs) >= max_jobs:
+                print(f"    Reached max_jobs limit ({max_jobs}), stopping pagination")
+                break
+
+            current_page += 1
+            await asyncio.sleep(random.uniform(1.5, 3))
 
     except Exception as e:
         print(f"  Error scraping: {e}")
         return []
 
-    print(f"    Extracted {len(jobs)} jobs")
+    print(f"    Total extracted: {len(jobs)} jobs")
     return jobs
 
 

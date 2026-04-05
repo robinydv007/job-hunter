@@ -105,3 +105,9 @@ Topics: scoring, title, tech-stack, penalty
 Affects-phases: none
 Affects-docs: specs/architecture/overview.md#scoring-engine
 Detail: Added _check_title_tech_penalty() that scans job titles for primary tech keywords (Java, Python, .NET, SAP, etc.). If the job title names a tech the user lacks, the composite score is halved (0.5x multiplier). Prevents mismatched roles like "Java Technical Lead" from scoring high for non-Java developers. Penalty is noted in why_selected explanation.
+
+[FEATURE] 2026-04-05 — Pagination support for Naukri search
+Topics: search, pagination, naukri, scraping
+Affects-phases: none
+Affects-docs: specs/architecture/overview.md#naukri-scraper
+Detail: scrape_jobs_from_page now paginates through Naukri search results. URL pattern: keyword-jobs-{page}?k=keyword&jobAge=N. Continues fetching pages until max_jobs limit reached or no new jobs found on a page. Each page transition includes randomized delay (1.5-3s). Deduplication via seen_job_ids set prevents duplicates across pages.

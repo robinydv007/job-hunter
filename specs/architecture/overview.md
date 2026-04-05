@@ -195,6 +195,7 @@ A `BrowserManager` class manages the Playwright session lifecycle:
 - No arbitrary query cap — all role × location combinations are searched.
 
 **Page Scraping:**
+- **Pagination:** Navigates through multiple search result pages until `max_jobs` limit reached or no new jobs found. URL pattern: `keyword-jobs-{page}?k=keyword&jobAge=N`. Randomized delay (1.5-3s) between page transitions.
 - Freshness filtering: Uses `jobAge=N` param in URL (not `dd` which only sorts): `naukri.com/<keyword>-jobs?k=<keyword>&jobAge=<days>`
 - Respects `config.search.freshness` (0=auto, 1/3/7/15/30 days).
 - Auto-calculation: If freshness=0, calculates from last run timestamp in `data/run_history.json`.
