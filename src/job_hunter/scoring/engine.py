@@ -37,57 +37,92 @@ NON_TECHNICAL_SKILLS = {
     "sentry integration",
 }
 
+# Common role/seniority stop-words to ignore when computing title remainder
+_TITLE_STOP_WORDS = {
+    "senior", "junior", "lead", "head", "principal", "staff", "associate",
+    "manager", "director", "engineer", "developer", "architect", "analyst",
+    "consultant", "specialist", "expert", "intern", "trainee", "fresher",
+    "at", "for", "the", "and", "or", "of", "in", "a"
+}
+
+
+def _title_remainder_bonus(job: dict, profile: ResumeProfile) -> int:
+    """Bonus points based on title words left after removing the search keyword.
+
+    Strip the search_keyword words from the job title (case-insensitive).
+    Remaining words = tech/domain modifier words the job is specialising in.
+
+    Scoring:
+      +20  if any remainder word matches a user skill  (good signal)
+      +10  if no remainder words exist (title == search keyword → pure role match)
+        0  if remainder exists but no skill match     (unfamiliar tech)
+    """
+    import re
+
+    title = job.get("title", "").lower()
+    keyword = job.get("search_keyword", "").lower()
+
+    if not title:
+        return 0
+
+    # Tokenise both title and keyword into words
+    title_words = set(re.findall(r"[a-z0-9#+.]+", title))
+    keyword_words = set(re.findall(r"[a-z0-9#+.]+", keyword))
+
+    # Remainder = title words minus keyword words minus generic stop-words
+    remainder = title_words - keyword_words - _TITLE_STOP_WORDS
+
+    if not remainder:
+        # Title is essentially just the search keyword — clean role match
+        return 10
+
+    # Check if any remainder word appears in user's skills
+    user_skills = {s.lower().strip() for s in profile.skills + profile.tech_stack}
+    for word in remainder:
+        # Exact match OR word is a substring of a skill (e.g. "node" in "node.js")
+        if any(word == s or (len(word) > 2 and word in s) for s in user_skills):
+            return 20
+
+    # Remainder words exist but none match user skills — unfamiliar tech
+    return 0
+
 
 def _score_skills(job: dict, profile: ResumeProfile) -> tuple[int, list[str]]:
-    """Score skills based on job's required_skills field vs user's technical skills."""
+    """Score skills against extracted required_skills.
+
+    When required_skills are available (Naukri row5 tags), match them directly.
+    When not available, return neutral 50 — title-remainder bonus in score_job
+    provides the directional signal instead.
+    """
     import re
 
     all_user_skills = [s.lower().strip() for s in profile.skills + profile.tech_stack]
     user_tech_skills = set(s for s in all_user_skills if s not in NON_TECHNICAL_SKILLS)
 
     job_required = job.get("required_skills", [])
-    if job_required:
-        required_lower = [s.lower().strip() for s in job_required]
-        required_tech = [s for s in required_lower if s not in NON_TECHNICAL_SKILLS]
-        matched = []
-        for s in required_tech:
-            # Exact match first
-            if s in user_tech_skills:
-                matched.append(s)
-            else:
-                # Fuzzy: only match if one contains the other AND both are > 3 chars
-                # AND it's not a common substring false positive (java/javascript, py/python, etc.)
-                for u in user_tech_skills:
-                    if len(s) > 3 and len(u) > 3 and (s in u or u in s):
-                        # Avoid false positives: java != javascript, py != python
-                        skip_pairs = [
-                            ("java", "javascript"),
-                            ("js", "javascript"),
-                            ("py", "python"),
-                            ("c", "c++"),
-                            ("c#", "c++"),
-                        ]
-                        pair = tuple(sorted([s[:4], u[:4]]))
-                        if pair not in skip_pairs:
-                            matched.append(s)
-                            break
-        total = len(required_tech) if required_tech else len(required_lower)
-    else:
-        job_desc = job.get("description", "") + " " + job.get("title", "")
-        matched = []
-        for skill in user_tech_skills:
-            # Use word boundary matching to avoid substring false positives
-            pattern = r"\b" + re.escape(skill) + r"\b"
-            if re.search(pattern, job_desc, re.IGNORECASE):
-                matched.append(skill)
-        total = max(len(user_tech_skills), 1)
-        matched = list(set(matched))
-
-    if total == 0:
+    if not job_required:
+        # No extracted required_skills — use neutral; title-remainder handles signal
         return 50, []
 
-    score = int((len(matched) / total) * 100)
-    return min(score, 100), matched
+    required_lower = [s.lower().strip() for s in job_required]
+    required_tech = [s for s in required_lower if s not in NON_TECHNICAL_SKILLS]
+    matched = []
+    for s in required_tech:
+        if s in user_tech_skills:
+            matched.append(s)
+        else:
+            # Fuzzy: one contains the other, both > 3 chars, skip known false pairs
+            skip_prefixes = {("java", "java"), ("js", "java"), ("py", "pyth"), ("c", "c++"), ("c#", "c++")}
+            for u in user_tech_skills:
+                if len(s) > 3 and len(u) > 3 and (s in u or u in s):
+                    if tuple(sorted([s[:4], u[:4]])) not in skip_prefixes:
+                        matched.append(s)
+                        break
+
+    total = len(required_tech) if required_tech else len(required_lower)
+    if total == 0:
+        return 50, []
+    return min(int((len(matched) / total) * 100), 100), matched
 
 
 def _score_experience(job: dict, profile: ResumeProfile) -> int:
@@ -245,6 +280,10 @@ def score_job(job: dict, profile: ResumeProfile, config: AppConfig) -> ScoredJob
         + s_location * LOCATION_WEIGHT
     )
 
+    # Title-remainder bonus: profile-driven, zero static keyword lists
+    title_bonus = _title_remainder_bonus(job, profile)
+    composite = min(composite + title_bonus, 100)
+
     scores = {
         "skills": s_skills,
         "experience": s_exp,
@@ -255,6 +294,12 @@ def score_job(job: dict, profile: ResumeProfile, config: AppConfig) -> ScoredJob
     }
 
     why = _generate_explanation(scores, matched_skills, job, profile)
+    if title_bonus == 20:
+        why += "\n- \u2705 Title modifier matches your skills (+20)"
+    elif title_bonus == 10:
+        why += "\n- \u2705 Title is a pure role match (+10)"
+    elif title_bonus == 0 and job.get("search_keyword"):
+        why += "\n- \u26a0\ufe0f Title modifier not found in your skills (+0)"
 
     apply_status = (
         "Pending" if composite >= config.scoring.apply_threshold else "Skipped"

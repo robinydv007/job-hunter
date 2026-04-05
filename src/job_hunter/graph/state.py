@@ -22,6 +22,7 @@ class JobListing(TypedDict, total=False):
     description: str
     posted_date: str
     job_board: str
+    search_keyword: str   # keyword used to find this job (for title-remainder scoring)
 
 
 class ScoredJob(TypedDict, total=False):

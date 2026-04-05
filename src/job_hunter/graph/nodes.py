@@ -152,6 +152,18 @@ def search_jobs_node(state: JobHunterState) -> dict:
     if page is None:
         raise RuntimeError("Browser page is None, cannot search jobs")
 
+    # Priority: user.yaml preferred_roles > profile.json target_roles
+    # user.yaml is explicit user intent; profile.json is LLM-inferred from resume
+    if config.profile.preferred_roles:
+        console.print(
+            f"[dim]Search roles: using user.yaml preferred_roles → {config.profile.preferred_roles}[/]"
+        )
+        profile = profile.model_copy(update={"target_roles": config.profile.preferred_roles})
+    else:
+        console.print(
+            f"[dim]Search roles: using profile.json target_roles → {profile.target_roles}[/]"
+        )
+
     all_jobs = []
     for platform in config.search.platforms:
         if platform == "naukri":
@@ -219,6 +231,29 @@ def search_jobs_node(state: JobHunterState) -> dict:
                 continue
             filtered.append(job)
         console.print(f"[green]After exclusion filters: {len(filtered)} jobs[/]")
+        unique_jobs = filtered
+
+    # Drop jobs whose title contains any word from title_exclude_keywords
+    # Uses word-boundary matching so "Java" won't block "JavaScript"
+    title_exclude = [w.lower() for w in config.search.title_exclude_keywords]
+    if title_exclude:
+        import re
+        before = len(unique_jobs)
+        filtered = []
+        for job in unique_jobs:
+            title = job.get("title", "").lower()
+            excluded = any(
+                re.search(r"\b" + re.escape(w) + r"\b", title)
+                for w in title_exclude
+            )
+            if not excluded:
+                filtered.append(job)
+        dropped = before - len(filtered)
+        if dropped:
+            console.print(
+                f"[dim]Title keyword filter: dropped {dropped} jobs "
+                f"(keywords: {', '.join(config.search.title_exclude_keywords)})[/]"
+            )
         unique_jobs = filtered
 
     return {"raw_jobs": unique_jobs}

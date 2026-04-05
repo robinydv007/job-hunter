@@ -49,7 +49,13 @@ def cli():
     default=False,
     help="Run browser in headless mode (not recommended for Naukri)",
 )
-def run(resume: str | None, config: str | None, headless: bool):
+@click.option(
+    "--force-parse",
+    is_flag=True,
+    default=False,
+    help="Force re-parse resume even if a cached profile already exists",
+)
+def run(resume: str | None, config: str | None, headless: bool, force_parse: bool):
     """Run the full job hunter pipeline."""
     console.print(
         Panel("[bold green]Job Hunter Agent[/] Starting...", border_style="green")
@@ -68,6 +74,9 @@ def run(resume: str | None, config: str | None, headless: bool):
     app_config = load_config(config)
 
     # Find resume
+    cached_profile_path = Path(__file__).resolve().parents[3] / "data" / "profile.json"
+    explicit_resume = resume is not None  # True only when --resume was explicitly passed
+
     if resume is None:
         if Path("resume.pdf").exists():
             resume = "resume.pdf"
@@ -79,6 +88,14 @@ def run(resume: str | None, config: str | None, headless: bool):
                 "Please use --resume to specify one or place 'resume.pdf' in the root directory."
             )
             raise SystemExit(1)
+
+    # Use cached profile only when resume was NOT explicitly provided and --force-parse not set
+    # Explicit --resume always means "parse this resume"
+    if not explicit_resume and not force_parse and cached_profile_path.exists():
+        console.print(
+            "[dim]Cached profile found — skipping resume parse. Use --force-parse to re-parse.[/]"
+        )
+        resume = None  # signals parse_resume_node to use cache
 
     async def run_pipeline():
         browser = BrowserManager(headless=headless)
