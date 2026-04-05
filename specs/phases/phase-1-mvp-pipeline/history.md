@@ -51,3 +51,9 @@ Topics: validation, mvp
 Affects-phases: none
 Affects-docs: specs/vision/success-criteria.md
 Detail: Full run of `job-hunter run --resume resume.pdf` completed successfully. Resume parsed, Naukri scraped 30+ jobs, scoring produced valid scores, shortlist filtered and CSV exported to output/. The MVP success metric from success-criteria.md is met.
+
+[FEATURE] 2026-04-05 — ENH-003: Expand config for search params, auto-apply controls, screening answers
+Topics: config, search, auto-apply, screening
+Affects-phases: phase-2-auto-apply
+Affects-docs: specs/backlog/details/ENH-003.md, config/user.yaml
+Detail: Added work_mode_filter, job_types, excluded_companies, excluded_keywords to SearchConfig. Created AutoApplyConfig with rate limiting and safety controls. Added 10 new fields to ScreeningAnswers (current_employer, current_designation, etc.). Wired exclusion filters into search_jobs_node for post-scrape filtering.

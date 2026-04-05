@@ -110,6 +110,27 @@ def search_jobs_node(state: JobHunterState) -> dict:
             unique_jobs.append(job)
 
     console.print(f"[green]After deduplication: {len(unique_jobs)} unique jobs[/]")
+
+    # Apply exclusion filters from config
+    excluded_companies = [c.lower() for c in config.search.excluded_companies]
+    excluded_keywords = [k.lower() for k in config.search.excluded_keywords]
+
+    if excluded_companies or excluded_keywords:
+        filtered = []
+        for job in unique_jobs:
+            company = job.get("company", "").lower()
+            title = job.get("title", "").lower()
+            description = job.get("description", "").lower()
+            text = f"{title} {description}"
+
+            if excluded_companies and company in excluded_companies:
+                continue
+            if excluded_keywords and any(kw in text for kw in excluded_keywords):
+                continue
+            filtered.append(job)
+        console.print(f"[green]After exclusion filters: {len(filtered)} jobs[/]")
+        unique_jobs = filtered
+
     return {"raw_jobs": unique_jobs}
 
 

@@ -28,11 +28,24 @@ class SearchConfig(BaseModel):
     salary_max_lpa: float = 0
     experience_years: int = 0
     max_jobs: int = 50
+    work_mode_filter: list[str] = Field(default_factory=list)
+    job_types: list[str] = Field(default_factory=list)
+    excluded_companies: list[str] = Field(default_factory=list)
+    excluded_keywords: list[str] = Field(default_factory=list)
 
 
 class ScoringConfig(BaseModel):
     shortlist_threshold: int = 60
     apply_threshold: int = 75
+
+
+class AutoApplyConfig(BaseModel):
+    enabled: bool = False
+    max_per_day: int = 10
+    max_per_run: int = 5
+    delay_between_seconds: int = 30
+    require_confirmation: bool = True
+    skip_if_already_applied: bool = True
 
 
 class ScreeningAnswers(BaseModel):
@@ -44,6 +57,16 @@ class ScreeningAnswers(BaseModel):
     reason_for_change: str = ""
     visa_status: str = "not applicable"
     remote_work_preference: str = "flexible"
+    current_employer: str = ""
+    current_designation: str = ""
+    years_in_current_role: float = 0
+    highest_qualification: str = ""
+    university_name: str = ""
+    passing_year: int = 0
+    gaps_in_employment: str = ""
+    work_authorization: str = ""
+    background_check_consent: bool = True
+    references_available: bool = True
 
 
 class AppConfig(BaseModel):
@@ -51,6 +74,7 @@ class AppConfig(BaseModel):
     search: SearchConfig = Field(default_factory=SearchConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
     screening_answers: ScreeningAnswers = Field(default_factory=ScreeningAnswers)
+    auto_apply: AutoApplyConfig = Field(default_factory=AutoApplyConfig)
 
 
 REQUIRED_PROFILE_FIELDS = [
