@@ -63,3 +63,9 @@ Topics: freshness, run-history, search
 Affects-phases: none
 Affects-docs: specs/backlog/details/ENH-004.md, config/user.yaml
 Detail: Added freshness field to SearchConfig (0=auto, 1/3/7/15/30=days). Implemented resolve_freshness() that auto-calculates from last run history in data/run_history.json. First run defaults to dd=7. Run history is recorded after each search with timestamp, freshness_used, jobs_found, platform.
+
+[FEATURE] 2026-04-05 — ENH-005: Overhaul search query generation
+Topics: search, queries, scraping, limits
+Affects-phases: none
+Affects-docs: specs/backlog/details/ENH-005.md, config/user.yaml
+Detail: Rewrote _build_search_queries to use role-only (no skills), removed arbitrary 10-query cap. Added max_roles (default 5) and max_locations (default 3) config fields. Set 100 raw jobs per query soft limit (internal). Removed 150 total job cap. Added max_jobs config controls final CSV output (0=all qualified). Added random 3-8s delay between queries.

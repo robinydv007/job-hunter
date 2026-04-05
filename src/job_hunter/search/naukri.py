@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import random
 import re
 from typing import Any
 
@@ -15,32 +16,25 @@ from job_hunter.resume.schema import ResumeProfile
 def _build_search_queries(
     profile: ResumeProfile, search_config: SearchConfig
 ) -> list[dict[str, str]]:
-    """Build search queries with keywords and optional location."""
+    """Build search queries: role-only, no skills, no arbitrary cap."""
     queries = []
-    # Only use locations from config, not from resume's location_preference
-    locations = profile.preferred_locations if profile.preferred_locations else []
-
-    roles = profile.target_roles[:3] if profile.target_roles else ["Technical Lead"]
-    key_skills = profile.tech_stack[:3] if profile.tech_stack else profile.skills[:5]
+    locations = (
+        profile.preferred_locations[: search_config.max_locations]
+        if profile.preferred_locations
+        else []
+    )
+    roles = (
+        profile.target_roles[: search_config.max_roles]
+        if profile.target_roles
+        else ["Technical Lead"]
+    )
 
     for role in roles:
-        for skill in key_skills:
-            keyword = f"{role} {skill}".strip()
-            if locations:
-                for loc in locations[:3]:
-                    queries.append(
-                        {
-                            "keyword": keyword,
-                            "location": loc,
-                        }
-                    )
-            else:
-                queries.append(
-                    {
-                        "keyword": keyword,
-                        "location": "",
-                    }
-                )
+        if locations:
+            for loc in locations:
+                queries.append({"keyword": role, "location": loc})
+        else:
+            queries.append({"keyword": role, "location": ""})
 
     seen = set()
     unique = []
@@ -50,7 +44,7 @@ def _build_search_queries(
             seen.add(key)
             unique.append(q)
 
-    return unique[:10]
+    return unique
 
 
 def _clean_company(name: str) -> str:
@@ -320,13 +314,12 @@ async def scrape_jobs_from_page(
     keyword: str,
     location: str = "",
     days_old: int = 7,
-    max_jobs: int = 20,
+    max_jobs: int = 100,
 ) -> list[dict[str, Any]]:
     """Scrape jobs from a Naukri search page using DOM selectors."""
     print(f"  Searching: {keyword}" + (f" in {location}" if location else ""))
 
     try:
-        # Build search URL with freshness filter
         keyword_encoded = keyword.replace(" ", "%20").replace(".", "%2E")
         if location:
             loc_encoded = location.replace(" ", "%20").replace(",", "%2C")
@@ -336,15 +329,13 @@ async def scrape_jobs_from_page(
 
         print(f"    URL: {url}")
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        await asyncio.sleep(3)
+        await asyncio.sleep(random.uniform(2, 5))
 
-        # Check if blocked
         page_text = await page.inner_text("body")
         if "Access Denied" in page_text:
             print(f"  BLOCKED: Naukri is blocking access")
             return []
 
-        # Find job cards
         jobs = []
         job_cards = await _find_job_cards(page)
         print(f"    Found {len(job_cards)} job cards")
@@ -354,11 +345,11 @@ async def scrape_jobs_from_page(
             if job and job.get("title"):
                 jobs.append(job)
 
-        # Scroll to load more
         if len(jobs) < max_jobs:
-            for _ in range(3):
-                await page.evaluate("window.scrollBy(0, 600)")
-                await asyncio.sleep(2)
+            scroll_count = random.randint(2, 4)
+            for _ in range(scroll_count):
+                await page.evaluate(f"window.scrollBy(0, {random.randint(400, 800)})")
+                await asyncio.sleep(random.uniform(1.5, 3))
                 more_cards = await _find_job_cards(page)
                 if len(more_cards) > len(job_cards):
                     job_cards = more_cards
@@ -382,7 +373,7 @@ def search_naukri(
     search_config: SearchConfig,
     page: Page,
     days_old: int = 7,
-    max_jobs_per_query: int = 15,
+    max_jobs_per_query: int = 100,
 ) -> list[dict[str, Any]]:
     """Search Naukri for jobs using a persistent browser page."""
     import asyncio
@@ -399,9 +390,6 @@ def search_naukri(
     loop = asyncio.get_event_loop()
 
     for qi, query in enumerate(queries):
-        if len(all_jobs) >= 150:
-            break
-
         try:
             jobs = loop.run_until_complete(
                 scrape_jobs_from_page(
@@ -409,7 +397,7 @@ def search_naukri(
                     query["keyword"],
                     query["location"],
                     days_old=days_old,
-                    max_jobs=min(max_jobs_per_query, 150 - len(all_jobs)),
+                    max_jobs=max_jobs_per_query,
                 )
             )
 
@@ -420,6 +408,11 @@ def search_naukri(
                     all_jobs.append(job)
 
             print(f"  Total unique jobs so far: {len(all_jobs)}")
+
+            if qi < len(queries) - 1:
+                delay = random.uniform(3, 8)
+                print(f"  [INFO] Waiting {delay:.1f}s before next query...")
+                loop.run_until_complete(asyncio.sleep(delay))
 
         except Exception as e:
             print(f"  [WARN] Query failed: {e}")

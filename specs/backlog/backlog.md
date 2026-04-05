@@ -41,7 +41,7 @@
 | ENH-002 | Work-mode filter (remote/hybrid/on-site) in config | P2 | open | 2 | _(simple)_ |
 | ENH-003 | Expand config: search params, auto-apply controls, screening answers | P1 | resolved | 2 | [→](details/ENH-003.md) |
 | ENH-004 | Smart job freshness filter with auto-calculation from last run | P1 | resolved | 2 | [→](details/ENH-004.md) |
-| ENH-005 | Overhaul search query generation: role-only, remove arbitrary caps, configurable limits | P1 | open | 2 | [→](details/ENH-005.md) |
+| ENH-005 | Overhaul search query generation: role-only, remove arbitrary caps, configurable limits | P1 | resolved | 2 | [→](details/ENH-005.md) |
 | ENH-010 | Pan-India fallback: add locationless query when locations < max_locations | P1 | open | 2 | [→](details/ENH-010.md) |
 | ENH-006 | Anti-blocking: randomize timing (delays, jitter, scroll behavior) | P1 | open | 2 | [→](details/ENH-006.md) |
 | ENH-007 | Anti-blocking: CAPTCHA detection + session health checks | P1 | open | 2 | [→](details/ENH-007.md) |
