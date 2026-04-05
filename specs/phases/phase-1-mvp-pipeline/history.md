@@ -69,3 +69,9 @@ Topics: search, queries, scraping, limits
 Affects-phases: none
 Affects-docs: specs/backlog/details/ENH-005.md, config/user.yaml
 Detail: Rewrote _build_search_queries to use role-only (no skills), removed arbitrary 10-query cap. Added max_roles (default 5) and max_locations (default 3) config fields. Set 100 raw jobs per query soft limit (internal). Removed 150 total job cap. Added max_jobs config controls final CSV output (0=all qualified). Added random 3-8s delay between queries.
+
+[FEATURE] 2026-04-05 — ENH-006: Anti-blocking randomize timing
+Topics: anti-blocking, timing, jitter, stealth
+Affects-phases: none
+Affects-docs: specs/backlog/details/ENH-006.md, config/user.yaml
+Detail: All fixed sleeps replaced with random.uniform() jitter. Post-load 2-5s, between scrolls 1.5-3s, scroll count 2-4, scroll distance 400-800px. Between-queries delay configurable via delay_min_seconds/delay_max_seconds in SearchConfig.

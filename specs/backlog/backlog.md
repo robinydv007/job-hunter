@@ -43,7 +43,7 @@
 | ENH-004 | Smart job freshness filter with auto-calculation from last run | P1 | resolved | 2 | [→](details/ENH-004.md) |
 | ENH-005 | Overhaul search query generation: role-only, remove arbitrary caps, configurable limits | P1 | resolved | 2 | [→](details/ENH-005.md) |
 | ENH-010 | Pan-India fallback: add locationless query when locations < max_locations | P1 | open | 2 | [→](details/ENH-010.md) |
-| ENH-006 | Anti-blocking: randomize timing (delays, jitter, scroll behavior) | P1 | open | 2 | [→](details/ENH-006.md) |
+| ENH-006 | Anti-blocking: randomize timing (delays, jitter, scroll behavior) | P1 | resolved | 2 | [→](details/ENH-006.md) |
 | ENH-007 | Anti-blocking: CAPTCHA detection + session health checks | P1 | open | 2 | [→](details/ENH-007.md) |
 | ENH-008 | Anti-blocking: Playwright stealth mode (webdriver masking) | P2 | open | 2 | [→](details/ENH-008.md) |
 | ENH-009 | Anti-blocking: exponential backoff on consecutive failures | P2 | open | 2 | [→](details/ENH-009.md) |
