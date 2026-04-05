@@ -105,16 +105,24 @@ def load_config_node(state: JobHunterState) -> dict:
 
 
 def parse_resume_node(state: JobHunterState) -> dict:
-    """Parse resume or load cached profile."""
+    """Parse resume or load cached profile.
+
+    If an explicit resume path is provided, always re-parse it with the LLM.
+    If no resume path is given, fall back to the cached profile in data/profile.json.
+    """
     console.print(Panel("[bold blue]Processing resume...[/]", border_style="blue"))
     resume_path = state["resume_path"]
 
-    existing = load_profile()
-    if existing and existing.name:
-        console.print(f"[green]Using cached profile: {existing.name}[/]")
-        return {"profile": existing}
+    # Only use cache when no explicit resume was supplied
+    if not resume_path:
+        existing = load_profile()
+        if existing and existing.name:
+            console.print(f"[green]Using cached profile: {existing.name}[/]")
+            return {"profile": existing}
+        console.print("[red]No resume provided and no cached profile found.[/]")
+        raise RuntimeError("No resume path and no cached profile available.")
 
-    console.print("[dim]Parsing resume with LLM...[/]")
+    console.print(f"[dim]Parsing resume: {resume_path}[/]")
     import asyncio
     import nest_asyncio
 

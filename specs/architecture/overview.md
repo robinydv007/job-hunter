@@ -2,7 +2,7 @@
 
 **Project:** Job Hunter AI Agent  
 **Status:** Phase 1 (MVP) — ✅ Complete | Phase 2 (Auto-Apply) — 🔲 Not Started  
-**Last Updated:** 2026-04-05
+**Last Updated:** 2026-04-05 (ENH-003, ENH-004, ENH-005, ENH-006, TD-004, regression fixes applied)
 
 ---
 
@@ -57,7 +57,8 @@ job-hunter/
 ├── config/
 │   └── user.yaml            # User profile, search config, scoring thresholds
 ├── data/
-│   └── profile.json         # Cached parsed profile (persisted between runs)
+│   ├── profile.json         # Cached parsed profile (persisted between runs)
+│   └── run_history.json     # Tracks last run timestamps for freshness auto-calculation
 ├── output/
 │   └── shortlist_*.csv      # Timestamped CSV exports (one per run)
 ├── resume.pdf               # User's resume file (root-level convention)
@@ -77,13 +78,10 @@ class JobHunterState(TypedDict):
     config: AppConfig          # Full user config
     resume_path: str           # Path to resume file
     profile: ResumeProfile     # Structured profile extracted from resume
-    profile_validated: bool    # Config validation gate passed
     raw_jobs: list[JobListing] # All scraped jobs (before scoring)
     scored_jobs: list[ScoredJob]       # All jobs with scores
     shortlisted_jobs: list[ScoredJob]  # Jobs above threshold
     csv_path: str              # Output path for CSV
-    messages: list             # LangGraph message history
-    errors: list[str]          # Non-fatal errors accumulated
     browser_page: Any          # Live Playwright Page injected at startup
 ```
 
@@ -94,9 +92,10 @@ User intent is driven entirely by `config/user.yaml`, parsed into a Pydantic mod
 ```
 AppConfig
 ├── Profile         — name, experience, target roles, salary, locations
-├── SearchConfig    — platforms, salary range, experience filter, max_jobs
-├── ScoringConfig   — shortlist_threshold (default 60), apply_threshold (default 75)  
-└── ScreeningAnswers — pre-filled answers for Phase 2 application forms
+├── SearchConfig    — platforms, salary range, experience filter, freshness, max_roles, max_locations, max_jobs, work_mode_filter, job_types, excluded_companies, excluded_keywords, delay_min/max_seconds
+├── ScoringConfig   — shortlist_threshold (default 60), apply_threshold (default 75)
+├── ScreeningAnswers — willing_to_relocate, current_ctc, expected_ctc, notice_period, reason_for_change, visa_status, remote_work_preference + 10 new fields for Phase 2
+└── AutoApplyConfig — enabled, max_per_day, max_per_run, delay_between_seconds, require_confirmation, skip_if_already_applied (Phase 2)
 ```
 
 ### 4.3 Job Data Schemas
@@ -185,17 +184,27 @@ A `BrowserManager` class manages the Playwright session lifecycle:
 ### 6.4 Naukri Scraper (`search/naukri.py`)
 
 **Search Query Generation:**
-- Takes the top 3 `target_roles` and top 3 `tech_stack` skills from the profile.
-- Generates role × skill combinations (e.g., "Technical Lead React").
-- If `preferred_locations` exist, generates per-location queries (e.g., "Technical Lead React in Bangalore").
-- Caps at 10 unique queries per run.
+- Uses configurable `max_roles` (default 5) and `max_locations` (default 3) from SearchConfig.
+- Generates role-only queries (no skill suffix): e.g., "Technical Lead in Bangalore".
+- If no locations configured, uses role-only query with empty location.
+- No arbitrary query cap — all role × location combinations are searched.
 
 **Page Scraping:**
-- Constructs freshness-filtered Naukri URLs: `naukri.com/<keyword>-jobs?dd=<days_old>`
+- Freshness filtering: Uses `jobAge=N` param in URL (not `dd` which only sorts): `naukri.com/<keyword>-jobs?k=<keyword>&jobAge=<days>`
+- Respects `config.search.freshness` (0=auto, 1/3/7/15/30 days).
+- Auto-calculation: If freshness=0, calculates from last run timestamp in `data/run_history.json`.
 - Attempts 7 progressive selector strategies to find job cards (resilient to DOM changes).
-- Extracts: title, company, location, description, salary, experience, posted date, apply URL, required skills (heuristic keyword scan of description).
-- Scrolls down up to 3 times to trigger lazy-loaded results.
-- Caps results per query at `max_jobs_per_query` (default: 20).
+- Extracts: title, company, location, description, salary, experience, posted date, apply URL.
+- **Skills extraction:**
+  1. **Primary:** Extracts from `.row5` or `.tags` div on Naukri listing page — where Naukri displays key skills per job card.
+  2. **Fallback:** If row5 not found, scans job description for user's own skills using word-boundary regex (`\b<skill>\b`). No static keyword list — only matches skills the user actually has.
+- Scrolls down 2-4 times (randomized) to trigger lazy-loaded results.
+- Caps results per query at `max_jobs_per_query` (default: 100).
+- **Anti-blocking:** All delays randomized with `random.uniform()`:
+  - Page load wait: 2-5 seconds
+  - Between scrolls: 1.5-3 seconds
+  - Between queries: `delay_min_seconds` to `delay_max_seconds` (default 3-8s)
+  - Scroll distance: random 400-800px
 
 **Within-run Deduplication:** fingerprint = MD5(`title|company`).
 
@@ -280,6 +289,27 @@ Phase 2 extends the pipeline without changing its core architecture:
 ## 9. Security & Anti-bot Considerations
 
 - **Credentials:** Naukri login and LLM API keys stored in `.env` only — never committed.
-- **Anti-bot measures:** Chromium launched with `AutomationControlled` disabled; `webdriver` navigator property spoofed; human-like `locale`, `timezone`, and plugin count set.
+- **Anti-bot measures:** 
+  - Chromium launched with `AutomationControlled` disabled; `webdriver` navigator property spoofed; human-like `locale`, `timezone`, and plugin count set.
+  - **Randomized timing:** All sleeps use `random.uniform()` instead of fixed values.
+  - Randomized scroll count (2-4) and distance (400-800px).
+  - Configurable delay between queries (`delay_min_seconds`, `delay_max_seconds`).
 - **Rate limit handling:** LLM provider auto-switches from Groq to OpenAI on 429 errors.
 - **Scraper fragility:** Naukri DOM changes will break selectors. The scraper uses 7 progressive selector strategies to maximise resilience but must be treated as a maintainable layer.
+
+---
+
+## 10. Smart Freshness (ENH-004)
+
+The pipeline auto-calculates the optimal freshness window based on run history:
+
+- `config.search.freshness` = 0 → auto-calculate from last run
+- `config.search.freshness` = 1/3/7/15/30 → use explicit value, minimum with auto
+
+**Auto-calculation logic:**
+1. Load `data/run_history.json` — tracks last run timestamp per platform.
+2. Calculate `days_since = (now - last_run).days`
+3. Map to smallest Naukri `jobAge` value >= days_since
+4. Example: 2 days ago → jobAge=3, 5 days ago → jobAge=7
+
+**First run:** No history → defaults to jobAge=7 (past week).

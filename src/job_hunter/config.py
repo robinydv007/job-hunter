@@ -91,7 +91,7 @@ REQUIRED_PROFILE_FIELDS = [
 ]
 
 
-def load_raw_config(config_path: str | Path | None = None) -> dict[str, Any]:
+def load_config_dict(config_path: str | Path | None = None) -> dict[str, Any]:
     """Load raw YAML dict without Pydantic validation (for pre-validation prompting)."""
     if config_path is None:
         config_path = Path(__file__).resolve().parents[2] / "config" / "user.yaml"
@@ -106,7 +106,7 @@ def load_raw_config(config_path: str | Path | None = None) -> dict[str, Any]:
     return raw
 
 
-def validate_raw_profile(raw: dict[str, Any]) -> list[str]:
+def validate_profile(raw: dict[str, Any]) -> list[str]:
     """Check for missing required fields in raw YAML dict."""
     profile = raw.get("profile") or {}
     missing = []
@@ -117,7 +117,7 @@ def validate_raw_profile(raw: dict[str, Any]) -> list[str]:
     return missing
 
 
-def prompt_missing_fields_raw(missing: list[str]) -> dict[str, Any]:
+def prompt_missing_fields(missing: list[str]) -> dict[str, Any]:
     """Interactively prompt for missing config fields."""
     from rich.prompt import Prompt
 
@@ -146,10 +146,10 @@ def prompt_missing_fields_raw(missing: list[str]) -> dict[str, Any]:
     return answers
 
 
-def save_raw_config(
+def save_config(
     updates: dict[str, Any], config_path: str | Path | None = None
 ) -> None:
-    """Merge updates into the profile section of the raw YAML config."""
+    """Merge updates into the profile section of the YAML config."""
     if config_path is None:
         config_path = Path(__file__).resolve().parents[2] / "config" / "user.yaml"
     config_path = Path(config_path)
@@ -177,54 +177,4 @@ def load_config(config_path: str | Path | None = None) -> AppConfig:
     return AppConfig(**raw)
 
 
-def validate_profile(profile: Profile) -> list[str]:
-    missing = []
-    for field in REQUIRED_PROFILE_FIELDS:
-        value = getattr(profile, field)
-        if not value or (isinstance(value, list) and len(value) == 0):
-            missing.append(field)
-    return missing
 
-
-def prompt_missing_fields(profile: Profile, missing: list[str]) -> dict[str, Any]:
-    from rich.prompt import Prompt
-
-    answers: dict[str, Any] = {}
-    field_labels = {
-        "name": "Full name",
-        "total_experience": "Years of total experience",
-        "preferred_roles": "Preferred job roles (comma-separated)",
-        "expected_salary_lpa": "Expected salary (LPA)",
-        "notice_period": "Notice period (e.g. 30 days, immediate)",
-        "preferred_locations": "Preferred locations (comma-separated)",
-    }
-
-    for field in missing:
-        label = field_labels.get(field, field)
-        value = Prompt.ask(f"  [bold]{label}[/]")
-        if field in ("preferred_roles", "preferred_locations"):
-            answers[field] = [v.strip() for v in value.split(",") if v.strip()]
-        elif field == "total_experience":
-            answers[field] = int(value)
-        elif field == "expected_salary_lpa":
-            answers[field] = float(value)
-        else:
-            answers[field] = value
-
-    return answers
-
-
-def save_updated_config(
-    updates: dict[str, Any], config_path: str | Path | None = None
-) -> None:
-    if config_path is None:
-        config_path = Path(__file__).resolve().parents[2] / "config" / "user.yaml"
-    config_path = Path(config_path)
-
-    with open(config_path) as f:
-        raw: dict[str, Any] = yaml.safe_load(f) or {}
-
-    raw.setdefault("profile", {}).update(updates)
-
-    with open(config_path, "w") as f:
-        yaml.dump(raw, f, default_flow_style=False, sort_keys=False)
