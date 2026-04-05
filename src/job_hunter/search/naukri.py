@@ -83,7 +83,9 @@ async def _find_job_cards(page: Page) -> list:
     return []
 
 
-async def _extract_job_data(card, page: Page) -> dict[str, Any] | None:
+async def _extract_job_data(
+    card, page: Page, user_skills: list[str] | None = None
+) -> dict[str, Any] | None:
     """Extract job data from a card element."""
     try:
         title = ""
@@ -236,55 +238,10 @@ async def _extract_job_data(card, page: Page) -> dict[str, Any] | None:
                 if experience:
                     break
 
-        # Extract skills from description
-        skills = []
-        if description:
-            tech_keywords = [
-                "node.js",
-                "nodejs",
-                "react",
-                "react.js",
-                "python",
-                "java",
-                "aws",
-                "docker",
-                "kubernetes",
-                "typescript",
-                "javascript",
-                "mongodb",
-                "postgres",
-                "postgresql",
-                "mysql",
-                "redis",
-                "kafka",
-                "rabbitmq",
-                "graphql",
-                "microservices",
-                "angular",
-                "vue",
-                "nestjs",
-                "express",
-                "django",
-                "flask",
-                "spring",
-                "golang",
-                "azure",
-                "gcp",
-                "terraform",
-                "jenkins",
-                "ci/cd",
-                "system design",
-                "distributed systems",
-                "observability",
-                "fastapi",
-                "temporal",
-                "php",
-                "laravel",
-                "shopify",
-            ]
-            for kw in tech_keywords:
-                if kw in description.lower():
-                    skills.append(kw)
+        # Extract skills: primary from row5 div, fallback to user-skill scan
+        skills = _extract_skills_from_row5(card)
+        if not skills and user_skills and description:
+            skills = _match_user_skills_in_description(description, user_skills)
 
         return {
             "title": title,
@@ -309,12 +266,50 @@ async def _extract_job_data(card, page: Page) -> dict[str, Any] | None:
         return None
 
 
+async def _extract_skills_from_row5(card) -> list[str]:
+    """Extract key skills from the row5 div on Naukri listing page."""
+    try:
+        row5_el = await card.query_selector(
+            '.row5, [class*="row5"], .tags, [class*="tags"]'
+        )
+        if row5_el:
+            skills_text = (await row5_el.inner_text()).strip()
+            if skills_text:
+                skills = [
+                    s.strip()
+                    for s in re.split(r"[,|•·]", skills_text)
+                    if s.strip() and len(s.strip()) > 1
+                ]
+                return skills
+    except Exception:
+        pass
+    return []
+
+
+def _match_user_skills_in_description(
+    description: str, user_skills: list[str]
+) -> list[str]:
+    """Scan job description for user's skills using word-boundary regex."""
+    matched = []
+    desc_lower = description.lower()
+    for skill in user_skills:
+        skill_lower = skill.lower().strip()
+        if not skill_lower or len(skill_lower) < 2:
+            continue
+        escaped = re.escape(skill_lower)
+        pattern = r"\b" + escaped + r"\b"
+        if re.search(pattern, desc_lower):
+            matched.append(skill_lower)
+    return matched
+
+
 async def scrape_jobs_from_page(
     page: Page,
     keyword: str,
     location: str = "",
     days_old: int = 7,
     max_jobs: int = 100,
+    user_skills: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Scrape jobs from a Naukri search page using DOM selectors."""
     print(f"  Searching: {keyword}" + (f" in {location}" if location else ""))
@@ -323,9 +318,9 @@ async def scrape_jobs_from_page(
         keyword_encoded = keyword.replace(" ", "%20").replace(".", "%2E")
         if location:
             loc_encoded = location.replace(" ", "%20").replace(",", "%2C")
-            url = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}?dd={days_old}"
+            url = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
         else:
-            url = f"https://www.naukri.com/{keyword_encoded}-jobs?dd={days_old}"
+            url = f"https://www.naukri.com/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
 
         print(f"    URL: {url}")
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -341,7 +336,7 @@ async def scrape_jobs_from_page(
         print(f"    Found {len(job_cards)} job cards")
 
         for card in job_cards[:max_jobs]:
-            job = await _extract_job_data(card, page)
+            job = await _extract_job_data(card, page, user_skills=user_skills)
             if job and job.get("title"):
                 jobs.append(job)
 
@@ -354,7 +349,9 @@ async def scrape_jobs_from_page(
                 if len(more_cards) > len(job_cards):
                     job_cards = more_cards
                     for card in job_cards[len(jobs) : max_jobs]:
-                        job = await _extract_job_data(card, page)
+                        job = await _extract_job_data(
+                            card, page, user_skills=user_skills
+                        )
                         if job and job.get("title"):
                             jobs.append(job)
                 if len(jobs) >= max_jobs:
@@ -391,6 +388,8 @@ def search_naukri(
     delay_min = search_config.delay_min_seconds
     delay_max = search_config.delay_max_seconds
 
+    user_skills = profile.skills + profile.tech_stack
+
     for qi, query in enumerate(queries):
         try:
             jobs = loop.run_until_complete(
@@ -400,6 +399,7 @@ def search_naukri(
                     query["location"],
                     days_old=days_old,
                     max_jobs=max_jobs_per_query,
+                    user_skills=user_skills,
                 )
             )
 

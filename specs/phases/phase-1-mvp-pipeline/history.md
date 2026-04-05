@@ -81,3 +81,9 @@ Topics: state, cleanup, tech-debt
 Affects-phases: none
 Affects-docs: specs/backlog/details/TD-004.md
 Detail: Removed profile_validated (never read), messages (LangGraph add_messages overhead, not a conversational agent), errors (replaced with RuntimeError exceptions that properly stop the graph). JobHunterState now has 8 fields instead of 11.
+
+[DISCOVERY] 2026-04-05 — Post-ENH-005 regression: skill match=0, scores dropped 62→31
+Topics: scoring, skills, freshness, regression
+Affects-phases: none
+Affects-docs: specs/backlog/backlog.md
+Detail: ENH-005 role-only queries caused broader job results. Combined with hardcoded ~40-keyword skill extraction, this produced 0% skill matches. Scores dropped from 62-76 to 31-45. Freshness dd param only sorts, doesn't filter — older jobs appeared. Fixed by: (1) using jobAge=N in Naukri URL for actual filtering, (2) extracting skills from div.row5 on listing page, (3) fallback to scanning description for user's own skills via word-boundary regex, (4) restored threshold to 60.

@@ -4,5 +4,29 @@
     "freshness_used": 7,
     "jobs_found": 42,
     "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-05T17:56:56.206850",
+    "freshness_used": 7,
+    "jobs_found": 42,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-05T20:43:24.738511",
+    "freshness_used": 1,
+    "jobs_found": 31,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-05T20:46:32.199543",
+    "freshness_used": 1,
+    "jobs_found": 31,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-05T20:53:05.396469",
+    "freshness_used": 1,
+    "jobs_found": 31,
+    "platform": "naukri"
   }
 ]
