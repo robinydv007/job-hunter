@@ -171,13 +171,14 @@ def search_jobs_node(state: JobHunterState) -> dict:
         if platform == "naukri":
             freshness = resolve_freshness(config.search.freshness, platform)
             console.print(f"[dim]Freshness filter: dd={freshness}[/]")
+            max_jobs_per_query = getattr(config.search, "max_jobs_per_query", 50) or 50
             jobs = search_naukri(
                 profile,
                 config.search,
                 config.naukri,
                 page,
                 days_old=freshness,
-                max_jobs_per_query=100,
+                max_jobs_per_query=max_jobs_per_query,
             )
             all_jobs.extend(jobs)
             console.print(f"[green]Naukri: found {len(jobs)} jobs[/]")

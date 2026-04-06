@@ -413,13 +413,16 @@ def search_naukri(
     naukri_config,
     page: Page,
     days_old: int = 7,
-    max_jobs_per_query: int = 100,
+    max_jobs_per_query: int = 0,
 ) -> list[dict[str, Any]]:
     """Search Naukri for jobs using a persistent browser page."""
     import asyncio
     import nest_asyncio
 
     nest_asyncio.apply()
+
+    if max_jobs_per_query <= 0:
+        max_jobs_per_query = 100
 
     queries = _build_search_queries(profile, search_config)
     print(f"  [INFO] Searching with {len(queries)} queries...")

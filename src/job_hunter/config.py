@@ -27,7 +27,8 @@ class SearchConfig(BaseModel):
     salary_min_lpa: float = 0
     salary_max_lpa: float = 0
     experience_years: int = 0
-    max_jobs: int = 50
+    max_jobs: int = 0  # 0 = no limit for final shortlist
+    max_jobs_per_query: int = 50  # max jobs to scrape per query
     freshness: int = 0  # 0=auto, 1/3/7/15/30=days
     max_roles: int = 5
     max_locations: int = 3
