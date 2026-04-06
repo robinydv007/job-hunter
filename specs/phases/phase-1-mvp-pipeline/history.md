@@ -111,3 +111,45 @@ Topics: search, pagination, naukri, scraping
 Affects-phases: none
 Affects-docs: specs/architecture/overview.md#naukri-scraper
 Detail: scrape_jobs_from_page now paginates through Naukri search results. URL pattern: keyword-jobs-{page}?k=keyword&jobAge=N. Continues fetching pages until max_jobs limit reached or no new jobs found on a page. Each page transition includes randomized delay (1.5-3s). Deduplication via seen_job_ids set prevents duplicates across pages.
+
+[ENHANCEMENT] 2026-04-06 — ENH-012: Fix Naukri base_url bug
+Topics: naukri, url, config, bug-fix
+Affects-phases: none
+Affects-docs: specs/backlog/details/ENH-012.md
+Detail: search/naukri.py had hardcoded "NAUKRI.base_url" placeholder string instead of actual URL. Created config/job_boards/naukri.py with NaukriConstants containing base_url. Search now correctly builds full URLs like https://www.naukri.com/Technical%20Lead-jobs?k=Technical%20Lead&jobAge=1.
+
+[ENHANCEMENT] 2026-04-06 — ENH-013: Extract static scoring data to config/constants.yaml
+Topics: config, constants, scoring, domain-knowledge
+Affects-phases: none
+Affects-docs: specs/backlog/details/ENH-013.md
+Detail: Moved all hardcoded domain knowledge from scoring/engine.py to config/constants.yaml: skill_aliases (22 mappings), company_rating_bands, experience_penalties, role_overlap_thresholds, work_mode_scores, metro_cities. Created Constants Pydantic model with load_constants() using @lru_cache. Added scoring weights to user.yaml (skill_weight 0.35, role_weight 0.20, etc.). Removed ~270 lines of static data from engine.py. Removed dead code: NON_TECHNICAL_SKILLS filter, _TITLE_STOP_WORDS, _split_concatenated_skills.
+
+[ENHANCEMENT] 2026-04-06 — ENH-014: Refactor CSV export with single source of truth
+Topics: csv, export, refactor, schema
+Affects-phases: none
+Affects-docs: specs/backlog/details/ENH-014.md
+Detail: Replaced dual-definition approach (MVP_COLUMNS list + row dict) with ROW_MAPPING dict. Each column now defined once as column_name -> lambda extractor. Add/remove columns in one place only. No extrasaction="ignore" needed.
+
+[BUG_FIX] 2026-04-06 — Fix experience penalty key type mismatch
+Topics: scoring, bug-fix, type-error
+Affects-phases: none
+Affects-docs: specs/changelog/2026-04.md
+Detail: YAML loads integer keys (2, 4, 6) but code was converting to string with str(). Caused KeyError when accessing experience penalty thresholds. Fixed by using int keys directly.
+
+[BUG_FIX] 2026-04-06 — Fix config path resolution
+Topics: config, path, bug-fix
+Affects-phases: none
+Affects-docs: specs/changelog/2026-04.md
+Detail: Config/__init__.py used parents[2] to locate config/user.yaml but file is in src/job_hunter/config/, requiring parents[3]. Fixed path calculation.
+
+[BUG_FIX] 2026-04-06 — Fix unicode encode error on Windows console
+Topics: console, unicode, windows, bug-fix
+Affects-phases: none
+Affects-docs: specs/changelog/2026-04.md
+Detail: Rich console print with → arrow character caused UnicodeEncodeError on Windows (cp1252 codec). Replaced with ASCII -> in console output.
+
+[NOTE] 2026-04-06 — Phase 1 maintenance and cleanup completed
+Topics: cleanup, tech-debt, config
+Affects-phases: none
+Affects-docs: specs/status.md, specs/changelog/2026-04.md
+Detail: Today's changes complete: config.py converted to config/__init__.py package, constants.yaml created, scoring engine stripped of static data, CSV export refactored, multiple bug fixes applied. All specs synced with changelog. Net reduction of ~300 lines of code while adding new features.

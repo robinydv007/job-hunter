@@ -2,7 +2,7 @@
 
 **Project:** Job Hunter AI Agent  
 **Status:** Phase 1 (MVP) — ✅ Complete | Phase 2 (Auto-Apply) — 🔲 Not Started  
-**Last Updated:** 2026-04-05 (ENH-003, ENH-004, ENH-005, ENH-006, TD-004, regression fixes, resume caching, role priority, title tech penalty)
+**Last Updated:** 2026-04-06 (ENH-012, ENH-013, ENH-014, scoring weights, constants.yaml, CSV refactor)
 
 ---
 
@@ -37,7 +37,11 @@ This document covers the complete system architecture for Phase 1 (MVP — compl
 job-hunter/
 ├── src/job_hunter/          # Core application package
 │   ├── cli.py               # CLI entry point (Click commands)
-│   ├── config.py            # Config loading, validation, interactive prompts
+│   ├── config/              # Config loading, validation, interactive prompts
+│   │   ├── __init__.py      # AppConfig, Profile, SearchConfig, ScoringConfig, etc.
+│   │   ├── constants.py    # Constants model + load_constants() (domain knowledge)
+│   │   └── job_boards/      # Platform-specific constants
+│   │       └── naukri.py    # NaukriConstants (base_url, login_url, etc.)
 │   ├── browser.py           # BrowserManager (Playwright session lifecycle)
 │   ├── graph/
 │   │   ├── state.py         # LangGraph state schema (JobHunterState)
@@ -51,11 +55,12 @@ job-hunter/
 │   ├── scoring/
 │   │   └── engine.py        # Weighted rubric scoring engine
 │   ├── export/
-│   │   └── csv_export.py    # CSV writer with full MVP schema
+│   │   └── csv_export.py    # CSV writer with ROW_MAPPING
 │   └── llm/
 │       └── provider.py      # LLM abstraction (Groq primary + OpenAI fallback)
 ├── config/
-│   └── user.yaml            # User profile, search config, scoring thresholds
+│   ├── user.yaml            # User profile, search config, scoring thresholds + weights
+│   └── constants.yaml       # Domain knowledge (skill aliases, metro cities, rating bands)
 ├── data/
 │   ├── profile.json         # Cached parsed profile (persisted between runs)
 │   └── run_history.json     # Tracks last run timestamps for freshness auto-calculation
@@ -92,8 +97,8 @@ User intent is driven entirely by `config/user.yaml`, parsed into a Pydantic mod
 ```
 AppConfig
 ├── Profile         — name, experience, target roles, salary, locations
-├── SearchConfig    — platforms, salary range, experience filter, freshness, max_roles, max_locations, max_jobs, work_mode_filter, job_types, excluded_companies, excluded_keywords, delay_min/max_seconds
-├── ScoringConfig   — shortlist_threshold (default 60), apply_threshold (default 75)
+├── SearchConfig    — platforms, salary range, experience filter, freshness, max_roles, max_locations, max_jobs, work_mode_filter, job_types, excluded_companies, excluded_keywords, delay_min/max_seconds, max_jobs_per_query
+├── ScoringConfig   — shortlist_threshold (default 60), apply_threshold (default 75), skill_weight (0.35), role_weight (0.20), experience_weight (0.20), company_weight (0.10), location_weight (0.08), work_mode_weight (0.07)
 ├── ScreeningAnswers — willing_to_relocate, current_ctc, expected_ctc, notice_period, reason_for_change, visa_status, remote_work_preference + 10 new fields for Phase 2
 └── AutoApplyConfig — enabled, max_per_day, max_per_run, delay_between_seconds, require_confirmation, skip_if_already_applied (Phase 2)
 ```
@@ -222,12 +227,16 @@ Each job is scored on a **0–100 composite score** using a weighted rubric:
 
 | Factor | Weight | Logic |
 |--------|--------|-------|
-| Skills match | **30%** | Matches profile's tech skills vs. job's `required_skills` field (or description keyword scan); uses fuzzy substring matching with false-positive guards (e.g., java ≠ javascript) |
-| Experience match | **20%** | Matches user years vs. job range; penalises mismatch linearly |
-| Role title match | **20%** | Exact → word overlap → keyword match with target + past roles |
-| Keywords similarity | **15%** | Bag-of-words overlap between profile skills/stack and full job text |
-| Salary match | **8%** | Compares job's min salary vs. expected CTC; partial credit for ≥80% of expectation |
-| Location match | **0%** | *(Intentionally zeroed out in current implementation — see known gap below)* |
+| Skills match | **35%** | Matches profile's tech skills vs. job's `required_skills` field (or description keyword scan); uses skill aliases from `config/constants.yaml`, fuzzy substring matching with false-positive guards (e.g., java ≠ javascript, py ≠ python) |
+| Role title match | **20%** | Exact → word overlap → keyword match with target + past roles; uses `config/constants.yaml` role overlap thresholds |
+| Experience match | **20%** | Matches user years vs. job range; penalises mismatch using `config/constants.yaml` experience penalties (different curves for over-qualified vs. under-qualified) |
+| Company rating | **10%** | Uses company rating from Naukri (0-5 stars); maps to score bands from `config/constants.yaml`; review count provides small boost |
+| Location match | **8%** | Uses metro city aliases from `config/constants.yaml` for location normalization; prefers exact match → metro match → partial match → no match |
+| Work mode match | **7%** | Matches user preference (remote/hybrid/onsite) vs. job's work_mode; scores from `config/constants.yaml` |
+
+**Constants-driven:** All domain knowledge (skill aliases, metro cities, rating bands, thresholds, penalties) is loaded from `config/constants.yaml` via `load_constants()` with LRU caching. No hardcoded static data in the engine — all tunable values can be adjusted without code changes.
+
+**Removed dead code:** The engine no longer includes `NON_TECHNICAL_SKILLS` filter (hurts accuracy), `_TITLE_STOP_WORDS` (never used), or concatenated skill splitting (hack for bad listing data that's unnecessary with full job details).
 
 **Title Tech Penalty:** After the composite score is calculated, the engine checks if the job title names a primary technology (Java, Python, .NET, SAP, etc.) that the user lacks. If so, the score is halved (0.5× multiplier). This prevents mismatched roles like "Java Technical Lead" from scoring high for non-Java developers. The penalty is noted in the `why_selected` explanation.
 
@@ -242,6 +251,8 @@ Each job is scored on a **0–100 composite score** using a weighted rubric:
 Writes `output/shortlist_<YYYYMMDD_HHMMSS>.csv` with the full MVP column schema:
 
 `job_title`, `company`, `job_board`, `location`, `work_mode`, `experience_required`, `salary_lpa`, `match_score`, `matched_skills`, `why_selected`, `job_url`, `posted_date`, `job_description`, `apply_status`, `data_source`
+
+**Implementation:** Uses a single `ROW_MAPPING` dict that maps column names to lambda extractors. This replaces the previous dual-definition approach (MVP_COLUMNS list + row dict), ensuring adding/removing columns requires changes in one place only.
 
 ---
 

@@ -1,5 +1,5 @@
 # Backlog
-**Last Updated**: 2026-04-05  
+**Last Updated**: 2026-04-06  
 **Convention**: Simple items stay in this table. Complex items get a detail file: `[→](details/ID.md)`
 
 ## Priority Levels
@@ -51,3 +51,4 @@
 | ENH-012 | Refactor nodes.py: extract platform-specific code to separate files | P2 | resolved | 1 | [→](details/ENH-012.md) |
 | ENH-013 | Extract static scoring data to config/constants.yaml | P1 | resolved | 1 | [→](details/ENH-013.md) |
 | ENH-014 | Refactor CSV export: single source of truth for columns | P2 | resolved | 1 | [→](details/ENH-014.md) |
+| ENH-015 | LLM-Based Job Scoring | P1 | open | 1 | [→](details/ENH-015.md) |

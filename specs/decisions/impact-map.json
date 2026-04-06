@@ -8,6 +8,8 @@
     "playwright": ["specs/architecture/overview.md#browser-manager"],
     "csv": ["specs/architecture/overview.md#csv-export", "specs/vision/success-criteria.md"],
     "config": ["specs/architecture/overview.md#config-schema", "specs/backlog/details/BUG-001.md"],
+    "constants": ["specs/architecture/overview.md#config-schema", "specs/architecture/overview.md#scoring-engine"],
+    "domain-knowledge": ["specs/architecture/overview.md#scoring-engine"],
     "resume": ["specs/architecture/overview.md#resume-parser", "specs/vision/success-criteria.md"],
     "langgraph": ["specs/architecture/overview.md#execution-pipeline"],
     "sdd": ["specs/README.md", "CLAUDE.md"],
