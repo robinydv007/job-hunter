@@ -1,118 +1,26 @@
-"""Job relevance scoring engine with weighted rubric (v2).
+"""Job relevance scoring engine — zero static data.
 
-Scoring dimensions and weights:
-  Skills Match      35%  — word-boundary + alias matching against required_skills
-  Role Alignment    20%  — fuzzy role match with seniority awareness
-  Experience Fit    20%  — years match with graceful penalty curves
-  Company Quality   10%  — rating + review count as confidence signal
-  Preferred Location  8%  — city/metro match against preferred_locations
-  Work Mode          7%  — hybrid/remote/onsite preference matching
+All domain knowledge comes from Constants (config/constants.yaml).
+All user preferences come from AppConfig (config/user.yaml).
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from job_hunter.config import AppConfig
-from job_hunter.resume.schema import ResumeProfile
+from job_hunter.config.constants import Constants
 from job_hunter.graph.state import JobListing, ScoredJob
-
-SKILL_WEIGHT = 0.35
-ROLE_WEIGHT = 0.20
-EXPERIENCE_WEIGHT = 0.20
-COMPANY_WEIGHT = 0.10
-LOCATION_WEIGHT = 0.08
-WORK_MODE_WEIGHT = 0.07
-
-NON_TECHNICAL_SKILLS = {
-    "team mentorship",
-    "client communication",
-    "sprint management",
-    "roadmap planning",
-    "hiring & performance reviews",
-    "agile/scrum",
-    "jira",
-    "zoom",
-    "git",
-    "ui best practices",
-    "reusable components",
-    "frontend caching",
-    "modular design",
-    "sentry integration",
-}
-
-SKILL_ALIASES: dict[str, list[str]] = {
-    "node.js": ["nodejs", "node js", "node"],
-    "typescript": ["ts", "type script"],
-    "javascript": ["js", "java script", "ecmascript"],
-    "postgresql": ["postgres", "psql"],
-    "mongodb": ["mongo db", "mongo"],
-    "express": ["express.js", "expressjs"],
-    "nestjs": ["nest js", "nest.js"],
-    "react": ["react.js", "reactjs", "react.js"],
-    "angular": ["angular.js", "angularjs"],
-    "aws": ["amazon web services"],
-    "gcp": ["google cloud platform", "google cloud"],
-    "kafka": ["apache kafka"],
-    "redis": ["redis cache"],
-    "python": ["py"],
-    "fastapi": ["fast api"],
-    "laravel": ["laravel php"],
-    "php": ["php laravel"],
-    "rabbitmq": ["rabbit mq"],
-    "microservices": ["micro services"],
-    "ci/cd": [
-        "cicd",
-        "ci cd",
-        "continuous integration",
-        "continuous delivery",
-        "continuous deployment",
-    ],
-    "system design": ["distributed systems", "scalable architecture"],
-    "observability": ["monitoring", "logging", "tracing"],
-}
-
-_TITLE_STOP_WORDS = {
-    "senior",
-    "junior",
-    "lead",
-    "head",
-    "principal",
-    "staff",
-    "associate",
-    "manager",
-    "director",
-    "engineer",
-    "developer",
-    "architect",
-    "analyst",
-    "consultant",
-    "specialist",
-    "expert",
-    "intern",
-    "trainee",
-    "fresher",
-    "at",
-    "for",
-    "the",
-    "and",
-    "or",
-    "of",
-    "in",
-    "a",
-    "with",
-    "to",
-}
+from job_hunter.resume.schema import ResumeProfile
 
 
 def _normalize(text: str) -> set[str]:
     return set(t.strip().lower() for t in text.replace(",", " ").split() if t.strip())
 
 
-def _build_skill_alias_map() -> dict[str, str]:
+def _build_alias_map(constants: Constants) -> dict[str, str]:
     alias_to_canonical: dict[str, str] = {}
-    for canonical, aliases in SKILL_ALIASES.items():
+    for canonical, aliases in constants.skill_aliases.items():
         alias_to_canonical[canonical.lower()] = canonical.lower()
         for alias in aliases:
             alias_to_canonical[alias.lower()] = canonical.lower()
@@ -123,109 +31,19 @@ def _resolve_skill(skill: str, alias_map: dict[str, str]) -> str:
     return alias_map.get(skill.lower().strip(), skill.lower().strip())
 
 
-def _word_boundary_match(skill: str, text: str) -> bool:
-    escaped = re.escape(skill)
-    pattern = r"\b" + escaped + r"\b"
-    return bool(re.search(pattern, text, re.IGNORECASE))
-
-
-def _split_concatenated_skills(skills: list[str]) -> list[str]:
-    """Split concatenated skills like 'LLMMachine Learning' into separate skills.
-
-    Only splits when the result produces meaningful tech skill tokens.
-    Preserves common compound names like TypeScript, MongoDB, Node.js.
-    """
-    preserved = {
-        "typescript",
-        "javascript",
-        "mongodb",
-        "redis",
-        "nodejs",
-        "nestjs",
-        "expressjs",
-        "reactjs",
-        "angularjs",
-        "vuejs",
-        "nextjs",
-        "nuxtjs",
-        "tailwindcss",
-        "bootstrap",
-        "postgresql",
-        "mysql",
-        "mariadb",
-        "elasticsearch",
-        "kubernetes",
-        "docker",
-    }
-
-    known_skill_starts = {
-        "llm",
-        "ml",
-        "ai",
-        "gen",
-        "deep",
-        "machine",
-        "natural",
-        "computer",
-        "data",
-        "big",
-        "cloud",
-        "dev",
-        "sys",
-        "net",
-        "web",
-        "mobile",
-        "ios",
-        "android",
-        "block",
-        "crypto",
-    }
-
-    split_skills = []
-    for skill in skills:
-        skill_lower = skill.lower().replace(".", "").replace(" ", "").replace("-", "")
-        if skill_lower in preserved or len(skill) < 8:
-            split_skills.append(skill)
-            continue
-
-        parts = re.split(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", skill)
-        if len(parts) > 1:
-            first_part = parts[0].strip().lower().replace(".", "").replace(" ", "")
-            if first_part in known_skill_starts and len(parts) > 1:
-                split_skills.extend([p.strip() for p in parts if p.strip()])
-            else:
-                split_skills.append(skill)
-        else:
-            split_skills.append(skill)
-    return split_skills
-
-
-def _score_skills(job: dict, profile: ResumeProfile) -> tuple[int, list[str]]:
-    """Score skills with alias resolution and word-boundary matching.
-
-    Handles concatenated skills like "LLMMachine Learning" by splitting
-    on camelCase boundaries.
-    """
-    alias_map = _build_skill_alias_map()
+def _score_skills(
+    job: dict, profile: ResumeProfile, constants: Constants
+) -> tuple[int, list[str]]:
+    alias_map = _build_alias_map(constants)
 
     all_user_skills = [s.lower().strip() for s in profile.skills + profile.tech_stack]
-    user_tech_skills = set(s for s in all_user_skills if s not in NON_TECHNICAL_SKILLS)
-
-    user_canonical = {_resolve_skill(s, alias_map) for s in user_tech_skills}
+    user_canonical = {_resolve_skill(s, alias_map) for s in all_user_skills}
 
     job_required = job.get("required_skills", [])
     if not job_required:
         return 50, []
 
-    job_required = _split_concatenated_skills(job_required)
-
-    job_skills_raw = []
-    for s in job_required:
-        s_lower = s.lower().strip()
-        if s_lower in NON_TECHNICAL_SKILLS:
-            continue
-        job_skills_raw.append(s_lower)
-
+    job_skills_raw = [s.lower().strip() for s in job_required if s.strip()]
     if not job_skills_raw:
         return 50, []
 
@@ -240,17 +58,12 @@ def _score_skills(job: dict, profile: ResumeProfile) -> tuple[int, list[str]]:
             matched_canonical.add(req_canonical)
             continue
 
-        for user_skill in user_tech_skills:
+        for user_skill in all_user_skills:
             if len(req) > 3 and len(user_skill) > 3:
-                skip_pairs = {
-                    ("java", "javascript"),
-                    ("js", "javascript"),
-                    ("py", "python"),
-                    ("c", "c++"),
-                    ("c#", "c++"),
-                }
-                pair = tuple(sorted([req[:4], user_skill[:4]]))
-                if pair in skip_pairs:
+                if (
+                    req[:2].lower() == user_skill[:2].lower()
+                    and abs(len(req) - len(user_skill)) <= 2
+                ):
                     continue
                 if req in user_skill or user_skill in req:
                     canon = _resolve_skill(user_skill, alias_map)
@@ -259,15 +72,6 @@ def _score_skills(job: dict, profile: ResumeProfile) -> tuple[int, list[str]]:
                         matched_canonical.add(canon)
                         break
 
-    if not matched:
-        job_text = (job.get("title", "") + " " + job.get("description", "")).lower()
-        for user_skill in user_tech_skills:
-            if _word_boundary_match(user_skill, job_text):
-                canon = _resolve_skill(user_skill, alias_map)
-                if canon not in matched_canonical:
-                    matched.append(user_skill)
-                    matched_canonical.add(canon)
-
     total = len(job_skills_raw)
     if total == 0:
         return 50, []
@@ -275,7 +79,7 @@ def _score_skills(job: dict, profile: ResumeProfile) -> tuple[int, list[str]]:
     return min(int((len(matched) / total) * 100), 100), matched
 
 
-def _score_experience(job: dict, profile: ResumeProfile) -> int:
+def _score_experience(job: dict, profile: ResumeProfile, constants: Constants) -> int:
     exp_required = job.get("experience_required", "")
     if not exp_required:
         return 50
@@ -291,29 +95,31 @@ def _score_experience(job: dict, profile: ResumeProfile) -> int:
     if min_exp <= user_exp <= max_exp:
         return 100
 
+    penalties = constants.experience_penalties
+
     if user_exp > max_exp:
         over = user_exp - max_exp
-        if over <= 2:
-            return 90
-        elif over <= 4:
-            return 75
-        elif over <= 6:
-            return 55
-        else:
-            return max(0, 40 - (over - 6) * 8)
+        over_map = penalties.get("over", {})
+        for threshold in sorted(int(k) for k in over_map if k != "default_formula"):
+            if over <= threshold:
+                return over_map[str(threshold)]
+        formula_base = over_map.get("default_formula", 0)
+        if isinstance(formula_base, int):
+            return max(0, formula_base)
+        return max(0, 40 - (over - 6) * 8)
 
     under = min_exp - user_exp
-    if under <= 1:
-        return 70
-    elif under <= 2:
-        return 50
-    elif under <= 3:
-        return 30
-    else:
-        return max(0, 20 - (under - 3) * 10)
+    under_map = penalties.get("under", {})
+    for threshold in sorted(int(k) for k in under_map if k != "default_formula"):
+        if under <= threshold:
+            return under_map[str(threshold)]
+    formula_base = under_map.get("default_formula", 0)
+    if isinstance(formula_base, int):
+        return max(0, formula_base)
+    return max(0, 20 - (under - 3) * 10)
 
 
-def _score_role(job: dict, profile: ResumeProfile) -> int:
+def _score_role(job: dict, profile: ResumeProfile, constants: Constants) -> int:
     job_title = job.get("title", "").lower()
     target_roles = [r.lower() for r in profile.target_roles]
     past_roles = [r.lower() for r in profile.past_roles]
@@ -326,33 +132,24 @@ def _score_role(job: dict, profile: ResumeProfile) -> int:
         if role in job_title or job_title in role:
             return 100
 
-    role_words_map = {}
-    for role in all_roles:
-        role_words_map[role] = _normalize(role)
-
     job_words = _normalize(job_title)
-    best_overlap = 0
-    for role, role_words in role_words_map.items():
+    best_overlap = 0.0
+    for role in all_roles:
+        role_words = _normalize(role)
         overlap = job_words & role_words
         if overlap:
             ratio = len(overlap) / max(len(role_words), len(job_words))
             best_overlap = max(best_overlap, ratio)
 
-    if best_overlap >= 0.5:
-        return 80
-    elif best_overlap >= 0.3:
-        return 60
-    elif best_overlap > 0:
-        return 40
+    thresholds = constants.role_overlap_thresholds
+    for threshold in sorted(thresholds.keys(), reverse=True):
+        if best_overlap >= threshold:
+            return thresholds[threshold]
 
-    return 20
+    return constants.role_overlap_default
 
 
-def _score_company(job: dict) -> int:
-    """Score company quality based on rating and review count.
-
-    Rating is the primary signal. Review count boosts confidence.
-    """
+def _score_company(job: dict, constants: Constants) -> int:
     rating_str = job.get("company_rating", "")
     review_str = job.get("review_count", "")
 
@@ -364,38 +161,27 @@ def _score_company(job: dict) -> int:
     except (ValueError, TypeError):
         return 50
 
-    if rating >= 4.5:
-        base = 100
-    elif rating >= 4.0:
-        base = 90
-    elif rating >= 3.5:
-        base = 75
-    elif rating >= 3.0:
-        base = 60
-    elif rating >= 2.5:
-        base = 40
-    else:
-        base = 20
+    bands = constants.company_rating_bands
+    base = constants.company_rating_default
+    for threshold in sorted(bands.keys(), reverse=True):
+        if rating >= threshold:
+            base = bands[threshold]
+            break
 
     if review_str:
         try:
             reviews = int(review_str.replace(",", ""))
-            if reviews >= 10000:
-                base = min(base + 10, 100)
-            elif reviews >= 1000:
-                base = min(base + 5, 100)
+            for threshold in sorted(constants.review_count_boosts.keys(), reverse=True):
+                if reviews >= threshold:
+                    base = min(base + constants.review_count_boosts[threshold], 100)
+                    break
         except (ValueError, TypeError):
             pass
 
     return base
 
 
-def _score_location(job: dict, profile: ResumeProfile) -> int:
-    """Score based on preferred location matching.
-
-    Uses profile's location_preference and preferred_locations to match
-    against job's location string.
-    """
+def _score_location(job: dict, profile: ResumeProfile, constants: Constants) -> int:
     job_loc = job.get("location", "").lower()
     if not job_loc:
         return 50
@@ -412,18 +198,9 @@ def _score_location(job: dict, profile: ResumeProfile) -> int:
     if not pref_locations:
         return 60
 
-    metro_cities = {
-        "bangalore": ["bengaluru", "bangalore"],
-        "delhi": ["delhi", "ncr", "gurgaon", "gurugram", "noida", "faridabad"],
-        "mumbai": ["mumbai", "bombay", "navi mumbai", "thane", "pune"],
-        "hyderabad": ["hyderabad", "secunderabad"],
-        "chennai": ["chennai", "madras"],
-        "pune": ["pune"],
-        "kolkata": ["kolkata", "calcutta"],
-        "bangalore": ["bengaluru", "bangalore"],
-    }
+    metro_cities = constants.metro_cities
 
-    def _city_match(loc: str) -> tuple[bool, bool]:
+    def _city_match(loc: str) -> tuple[bool, str]:
         for metro, aliases in metro_cities.items():
             for alias in aliases:
                 if alias in loc:
@@ -444,8 +221,7 @@ def _score_location(job: dict, profile: ResumeProfile) -> int:
     return 30
 
 
-def _score_work_mode(job: dict, config: AppConfig) -> int:
-    """Score based on work mode preference matching."""
+def _score_work_mode(job: dict, config: AppConfig, constants: Constants) -> int:
     work_mode = job.get("work_mode", "").lower()
     preference = (
         config.profile.remote_preference.lower()
@@ -455,36 +231,19 @@ def _score_work_mode(job: dict, config: AppConfig) -> int:
     location = job.get("location", "").lower()
 
     if not preference:
-        return 60
+        return constants.work_mode_scores.get("default", 60)
 
-    if "hybrid" in preference:
-        if "hybrid" in work_mode or "hybrid" in location:
-            return 100
-        if "remote" in work_mode or "remote" in location:
-            return 80
-        if "onsite" in work_mode or "office" in location:
-            return 50
-        return 60
+    mode_scores = constants.work_mode_scores.get(preference, {})
+    if not mode_scores:
+        return constants.work_mode_scores.get("default", 60)
 
-    if "remote" in preference:
-        if (
-            "remote" in work_mode
-            or "remote" in location
-            or "work from home" in location
-        ):
-            return 100
-        if "hybrid" in work_mode or "hybrid" in location:
-            return 70
-        return 30
+    for check in ["remote", "hybrid", "onsite", "office", "work from home"]:
+        if check in work_mode or check in location:
+            normalized = "remote" if check in ("remote", "work from home") else check
+            if normalized in mode_scores:
+                return mode_scores[normalized]
 
-    if "onsite" in preference:
-        if "onsite" in work_mode or "office" in location:
-            return 100
-        if "hybrid" in work_mode or "hybrid" in location:
-            return 70
-        return 40
-
-    return 60
+    return mode_scores.get("default", constants.work_mode_scores.get("default", 60))
 
 
 def _generate_explanation(
@@ -523,32 +282,29 @@ def _generate_explanation(
     return "\n".join(lines)
 
 
-def score_job(job: dict, profile: ResumeProfile, config: AppConfig) -> ScoredJob:
-    """Score a single job against the user profile using v2 rubric."""
+def score_job(
+    job: dict, profile: ResumeProfile, config: AppConfig, constants: Constants
+) -> ScoredJob:
     title = job.get("title", "").lower()
-    exclude_keywords = (
-        config.search.title_exclude_keywords
-        if config.search.title_exclude_keywords
-        else []
-    )
+    exclude_keywords = config.search.title_exclude_keywords or []
     for kw in exclude_keywords:
         if re.search(r"\b" + re.escape(kw.lower()) + r"\b", title):
             return _create_zero_score_job(job, config)
 
-    s_skills, matched_skills = _score_skills(job, profile)
-    s_role = _score_role(job, profile)
-    s_exp = _score_experience(job, profile)
-    s_company = _score_company(job)
-    s_location = _score_location(job, profile)
-    s_work_mode = _score_work_mode(job, config)
+    s_skills, matched_skills = _score_skills(job, profile, constants)
+    s_role = _score_role(job, profile, constants)
+    s_exp = _score_experience(job, profile, constants)
+    s_company = _score_company(job, constants)
+    s_location = _score_location(job, profile, constants)
+    s_work_mode = _score_work_mode(job, config, constants)
 
     composite = int(
-        s_skills * SKILL_WEIGHT
-        + s_role * ROLE_WEIGHT
-        + s_exp * EXPERIENCE_WEIGHT
-        + s_company * COMPANY_WEIGHT
-        + s_location * LOCATION_WEIGHT
-        + s_work_mode * WORK_MODE_WEIGHT
+        s_skills * config.scoring.skill_weight
+        + s_role * config.scoring.role_weight
+        + s_exp * config.scoring.experience_weight
+        + s_company * config.scoring.company_weight
+        + s_location * config.scoring.location_weight
+        + s_work_mode * config.scoring.work_mode_weight
     )
 
     composite = max(0, min(composite, 100))
@@ -579,7 +335,6 @@ def score_job(job: dict, profile: ResumeProfile, config: AppConfig) -> ScoredJob
 
 
 def _create_zero_score_job(job: dict, config: AppConfig) -> ScoredJob:
-    """Create a zero-score job result for excluded positions."""
     result: ScoredJob = {
         "job": JobListing(**job) if isinstance(job, dict) else job,
         "match_score": 0,

@@ -137,10 +137,12 @@ def score_jobs_node(state: JobHunterState) -> dict:
     console.print(Panel("[bold blue]Scoring jobs...[/]", border_style="blue"))
 
     from job_hunter.scoring.engine import score_job
+    from job_hunter.config.constants import load_constants
 
     profile = state["profile"]
     config = state["config"]
     raw_jobs = state["raw_jobs"]
+    constants = load_constants()
 
     if profile is None:
         console.print("[red]ERROR: Profile is None, cannot score jobs[/]")
@@ -149,7 +151,7 @@ def score_jobs_node(state: JobHunterState) -> dict:
     scored = []
     for job in raw_jobs:
         job_dict = dict(job)
-        result = score_job(job_dict, profile, config)
+        result = score_job(job_dict, profile, config, constants)
         scored.append(result)
         score = result.get("match_score", 0)
         job_data = result.get("job", {})

@@ -13,9 +13,8 @@ from typing import Any
 from playwright.async_api import Page
 
 from job_hunter.config import SearchConfig
+from job_hunter.config.job_boards.naukri import NAUKRI
 from job_hunter.resume.schema import ResumeProfile
-
-NAUKRI_FRESHNESS_VALUES = [1, 3, 7, 15, 30]
 
 
 def _get_run_history_path() -> Path:
@@ -35,7 +34,7 @@ def _load_run_history() -> list[dict]:
 
 def _map_days_to_freshness(days: int) -> int:
     """Map days since last run to the smallest Naukri freshness value >= days."""
-    for value in NAUKRI_FRESHNESS_VALUES:
+    for value in NAUKRI.freshness_values:
         if value >= days:
             return value
     return 30
@@ -193,7 +192,7 @@ async def _extract_job_data(
                 "/jobs/" in href or "/job-details/" in href or "/job-listing/" in href
             ):
                 apply_url = (
-                    href if href.startswith("http") else f"https://www.naukri.com{href}"
+                    href if href.startswith("http") else f"NAUKRI.base_url{href}"
                 )
                 break
 
@@ -203,7 +202,7 @@ async def _extract_job_data(
                 apply_url = (
                     card_href
                     if card_href.startswith("http")
-                    else f"https://www.naukri.com{card_href}"
+                    else f"NAUKRI.base_url{card_href}"
                 )
 
         if not apply_url and all_links:
@@ -211,9 +210,7 @@ async def _extract_job_data(
                 href = await link.get_attribute("href")
                 if href and len(href) > 10:
                     apply_url = (
-                        href
-                        if href.startswith("http")
-                        else f"https://www.naukri.com{href}"
+                        href if href.startswith("http") else f"NAUKRI.base_url{href}"
                     )
                     break
 
@@ -431,14 +428,14 @@ async def scrape_jobs_from_page(
         try:
             if location:
                 if page_num == 1:
-                    url = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
                 else:
-                    url = f"https://www.naukri.com/{keyword_encoded}-jobs-{page_num}-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs-{page_num}-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
             else:
                 if page_num == 1:
-                    url = f"https://www.naukri.com/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
                 else:
-                    url = f"https://www.naukri.com/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
 
             print(f"    Page {page_num}: {url}")
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)

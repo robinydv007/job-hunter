@@ -1,0 +1,84 @@
+# Scoring Constants — domain knowledge, not user preferences.
+# These values are used across the scoring engine and can be tuned
+# without touching code. Do NOT put user-specific values here.
+
+skill_aliases:
+  node.js: [nodejs, "node js", node]
+  typescript: [ts, "type script"]
+  javascript: [js, "java script", ecmascript]
+  postgresql: [postgres, psql]
+  mongodb: ["mongo db", mongo]
+  express: [express.js, expressjs]
+  nestjs: ["nest js", nest.js]
+  react: [react.js, reactjs]
+  angular: [angular.js, angularjs]
+  aws: ["amazon web services"]
+  gcp: ["google cloud platform", "google cloud"]
+  kafka: ["apache kafka"]
+  redis: ["redis cache"]
+  python: [py]
+  fastapi: ["fast api"]
+  laravel: ["laravel php"]
+  php: ["php laravel"]
+  rabbitmq: ["rabbit mq"]
+  microservices: ["micro services"]
+  ci/cd: [cicd, "ci cd", "continuous integration", "continuous delivery", "continuous deployment"]
+  system design: ["distributed systems", "scalable architecture"]
+  observability: [monitoring, logging, tracing]
+
+company_rating_bands:
+  4.5: 100
+  4.0: 90
+  3.5: 75
+  3.0: 60
+  2.5: 40
+
+company_rating_default: 20
+
+review_count_boosts:
+  10000: 10
+  1000: 5
+
+experience_penalties:
+  over:
+    2: 90
+    4: 75
+    6: 55
+    default_formula: "40 - (over - 6) * 8"
+  under:
+    1: 70
+    2: 50
+    3: 30
+    default_formula: "20 - (under - 3) * 10"
+
+role_overlap_thresholds:
+  0.5: 80
+  0.3: 60
+  0.01: 40
+
+role_overlap_default: 20
+
+work_mode_scores:
+  hybrid:
+    hybrid: 100
+    remote: 80
+    onsite: 50
+    default: 60
+  remote:
+    remote: 100
+    hybrid: 70
+    default: 30
+  onsite:
+    onsite: 100
+    hybrid: 70
+    default: 40
+  default: 60
+
+metro_cities:
+  bangalore: [bengaluru, bangalore]
+  delhi: [delhi, ncr, gurgaon, gurugram, noida, faridabad]
+  mumbai: [mumbai, bombay, "navi mumbai", thane, pune]
+  hyderabad: [hyderabad, secunderabad]
+  chennai: [chennai, madras]
+  pune: [pune]
+  kolkata: [kolkata, calcutta]

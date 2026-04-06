@@ -9,6 +9,8 @@ from typing import Any
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright, Page, Browser, BrowserContext
 
+from job_hunter.config.job_boards.naukri import NAUKRI
+
 load_dotenv()
 
 
@@ -69,7 +71,7 @@ class BrowserManager:
         try:
             print("[INFO] Logging into Naukri...")
             await self._page.goto(
-                "https://www.naukri.com/nlogin/login",
+                NAUKRI.login_url,
                 wait_until="domcontentloaded",
                 timeout=30000,
             )
