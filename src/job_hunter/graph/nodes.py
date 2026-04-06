@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import datetime
 from pathlib import Path
 
@@ -11,87 +9,13 @@ from rich.console import Console
 from rich.panel import Panel
 
 from job_hunter.graph.state import JobHunterState
+from job_hunter.graph.helpers import record_run, update_run_stats
+from job_hunter.graph.utils import (
+    deduplicate_jobs,
+    apply_exclusion_filters,
+    apply_title_keyword_filter,
+)
 from job_hunter.resume.parser import load_profile, parse_resume
-
-console = Console()
-
-NAUKRI_FRESHNESS_VALUES = [1, 3, 7, 15, 30]
-
-
-def _get_run_history_path() -> Path:
-    return Path(__file__).resolve().parents[3] / "data" / "run_history.json"
-
-
-def _load_run_history() -> list[dict]:
-    path = _get_run_history_path()
-    if not path.exists():
-        return []
-    try:
-        with open(path) as f:
-            return json.load(f)
-    except (json.JSONDecodeError, IOError):
-        return []
-
-
-def _save_run_history(history: list[dict]) -> None:
-    path = _get_run_history_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
-        json.dump(history, f, indent=2)
-
-
-def resolve_freshness(config_freshness: int, platform: str = "naukri") -> int:
-    """Resolve freshness value based on config and run history.
-
-    Args:
-        config_freshness: User-configured freshness (0=auto, 1/3/7/15/30=days)
-        platform: Platform name (default: naukri)
-
-    Returns:
-        Resolved freshness value for the dd URL parameter
-    """
-    history = _load_run_history()
-    platform_history = [h for h in history if h.get("platform") == platform]
-
-    if config_freshness > 0:
-        if not platform_history:
-            return config_freshness
-        last_run = platform_history[-1]
-        last_ts = datetime.fromisoformat(last_run["timestamp"])
-        days_since = (datetime.now() - last_ts).days
-        auto_value = _map_days_to_freshness(days_since)
-        return max(config_freshness, auto_value)
-
-    if not platform_history:
-        return 7
-
-    last_run = platform_history[-1]
-    last_ts = datetime.fromisoformat(last_run["timestamp"])
-    days_since = (datetime.now() - last_ts).days
-    return _map_days_to_freshness(days_since)
-
-
-def _map_days_to_freshness(days: int) -> int:
-    """Map days since last run to the smallest Naukri freshness value >= days."""
-    for value in NAUKRI_FRESHNESS_VALUES:
-        if value >= days:
-            return value
-    return 30
-
-
-def record_run(platform: str, freshness_used: int, jobs_found: int) -> None:
-    """Append a run record to data/run_history.json."""
-    history = _load_run_history()
-    history.append(
-        {
-            "timestamp": datetime.now().isoformat(),
-            "freshness_used": freshness_used,
-            "jobs_found": jobs_found,
-            "platform": platform,
-        }
-    )
-    _save_run_history(history)
-
 
 console = Console()
 
@@ -113,7 +37,6 @@ def parse_resume_node(state: JobHunterState) -> dict:
     console.print(Panel("[bold blue]Processing resume...[/]", border_style="blue"))
     resume_path = state["resume_path"]
 
-    # Only use cache when no explicit resume was supplied
     if not resume_path:
         existing = load_profile()
         if existing and existing.name:
@@ -152,8 +75,6 @@ def search_jobs_node(state: JobHunterState) -> dict:
     if page is None:
         raise RuntimeError("Browser page is None, cannot search jobs")
 
-    # Priority: user.yaml preferred_roles > profile.json target_roles
-    # user.yaml is explicit user intent; profile.json is LLM-inferred from resume
     if config.profile.preferred_roles:
         console.print(
             f"[dim]Search roles: using user.yaml preferred_roles → {config.profile.preferred_roles}[/]"
@@ -169,6 +90,8 @@ def search_jobs_node(state: JobHunterState) -> dict:
     all_jobs = []
     for platform in config.search.platforms:
         if platform == "naukri":
+            from job_hunter.search.naukri import resolve_freshness
+
             freshness = resolve_freshness(config.search.freshness, platform)
             console.print(f"[dim]Freshness filter: dd={freshness}[/]")
             max_jobs_per_query = getattr(config.search, "max_jobs_per_query", 50) or 50
@@ -188,81 +111,23 @@ def search_jobs_node(state: JobHunterState) -> dict:
                 f"[yellow]Platform '{platform}' not yet implemented (Phase 2)[/]"
             )
 
-    # Deduplicate by title + company + location fingerprint
-    seen = set()
-
-    # Pre-populate seen set with jobs from past runs
     output_dir = Path(__file__).resolve().parents[3] / "output"
-    if output_dir.exists():
-        import csv
-
-        for csv_file in output_dir.glob("shortlist_*.csv"):
-            try:
-                with open(csv_file, "r", encoding="utf-8") as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        fp = hashlib.md5(
-                            f"{row.get('job_title', '')}|{row.get('company', '')}|{row.get('location', '')}".lower().encode()
-                        ).hexdigest()
-                        seen.add(fp)
-            except Exception as e:
-                console.print(
-                    f"[dim]Warning: Could not read past CSV {csv_file.name} for deduplication.[/]"
-                )
-
-    unique_jobs = []
-    for job in all_jobs:
-        fp = hashlib.md5(
-            f"{job.get('title', '')}|{job.get('company', '')}|{job.get('location', '')}".lower().encode()
-        ).hexdigest()
-        if fp not in seen:
-            seen.add(fp)
-            unique_jobs.append(job)
-
+    unique_jobs = deduplicate_jobs(all_jobs, output_dir)
     console.print(f"[green]After deduplication: {len(unique_jobs)} unique jobs[/]")
 
-    # Apply exclusion filters from config
-    excluded_companies = [c.lower() for c in config.search.excluded_companies]
-    excluded_keywords = [k.lower() for k in config.search.excluded_keywords]
+    unique_jobs = apply_exclusion_filters(
+        unique_jobs,
+        config.search.excluded_companies,
+        config.search.excluded_keywords,
+    )
+    if config.search.excluded_companies or config.search.excluded_keywords:
+        console.print(f"[green]After exclusion filters: {len(unique_jobs)} jobs[/]")
 
-    if excluded_companies or excluded_keywords:
-        filtered = []
-        for job in unique_jobs:
-            company = job.get("company", "").lower()
-            title = job.get("title", "").lower()
-            description = job.get("description", "").lower()
-            text = f"{title} {description}"
-
-            if excluded_companies and company in excluded_companies:
-                continue
-            if excluded_keywords and any(kw in text for kw in excluded_keywords):
-                continue
-            filtered.append(job)
-        console.print(f"[green]After exclusion filters: {len(filtered)} jobs[/]")
-        unique_jobs = filtered
-
-    # Drop jobs whose title contains any word from title_exclude_keywords
-    # Uses word-boundary matching so "Java" won't block "JavaScript"
-    title_exclude = [w.lower() for w in config.search.title_exclude_keywords]
-    if title_exclude:
-        import re
-
-        before = len(unique_jobs)
-        filtered = []
-        for job in unique_jobs:
-            title = job.get("title", "").lower()
-            excluded = any(
-                re.search(r"\b" + re.escape(w) + r"\b", title) for w in title_exclude
-            )
-            if not excluded:
-                filtered.append(job)
-        dropped = before - len(filtered)
-        if dropped:
-            console.print(
-                f"[dim]Title keyword filter: dropped {dropped} jobs "
-                f"(keywords: {', '.join(config.search.title_exclude_keywords)})[/]"
-            )
-        unique_jobs = filtered
+    unique_jobs = apply_title_keyword_filter(
+        unique_jobs, config.search.title_exclude_keywords
+    )
+    if config.search.title_exclude_keywords:
+        console.print(f"[green]After title keyword filter: {len(unique_jobs)} jobs[/]")
 
     return {"raw_jobs": unique_jobs}
 
@@ -301,13 +166,11 @@ def filter_shortlist_node(state: JobHunterState) -> dict:
     config = state["config"]
     threshold = config.scoring.shortlist_threshold
 
-    # Filter and sort by score descending
     shortlisted = [
         j for j in state["scored_jobs"] if j.get("match_score", 0) >= threshold
     ]
     shortlisted.sort(key=lambda j: j.get("match_score", 0), reverse=True)
 
-    # Take top N
     if hasattr(config.search, "max_jobs") and config.search.max_jobs > 0:
         shortlisted = shortlisted[: config.search.max_jobs]
 
@@ -317,6 +180,7 @@ def filter_shortlist_node(state: JobHunterState) -> dict:
             border_style="green",
         )
     )
+
     return {"shortlisted_jobs": shortlisted}
 
 
@@ -334,3 +198,17 @@ def export_csv_node(state: JobHunterState) -> dict:
     export_to_csv(state["shortlisted_jobs"], csv_path)
     console.print(f"[green]CSV exported: {csv_path}[/]")
     return {"csv_path": csv_path}
+
+
+def update_history_node(state: JobHunterState) -> dict:
+    """Update run history with final stats after pipeline completes."""
+    shortlisted = state.get("shortlisted_jobs", [])
+    shortlisted_count = len(shortlisted)
+    applied_count = len([j for j in shortlisted if j.get("apply_status") == "Applied"])
+
+    update_run_stats(shortlisted_count, applied_count)
+    console.print(
+        f"[dim]Run history updated: {shortlisted_count} shortlisted, {applied_count} applied[/]"
+    )
+
+    return {}
