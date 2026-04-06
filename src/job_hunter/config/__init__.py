@@ -110,7 +110,7 @@ REQUIRED_PROFILE_FIELDS = [
 def load_config_dict(config_path: str | Path | None = None) -> dict[str, Any]:
     """Load raw YAML dict without Pydantic validation (for pre-validation prompting)."""
     if config_path is None:
-        config_path = Path(__file__).resolve().parents[2] / "config" / "user.yaml"
+        config_path = Path(__file__).resolve().parents[3] / "config" / "user.yaml"
     config_path = Path(config_path)
 
     if not config_path.exists():
@@ -165,7 +165,7 @@ def prompt_missing_fields(missing: list[str]) -> dict[str, Any]:
 def save_config(updates: dict[str, Any], config_path: str | Path | None = None) -> None:
     """Merge updates into the profile section of the YAML config."""
     if config_path is None:
-        config_path = Path(__file__).resolve().parents[2] / "config" / "user.yaml"
+        config_path = Path(__file__).resolve().parents[3] / "config" / "user.yaml"
     config_path = Path(config_path)
 
     with open(config_path) as f:
@@ -179,7 +179,7 @@ def save_config(updates: dict[str, Any], config_path: str | Path | None = None) 
 
 def load_config(config_path: str | Path | None = None) -> AppConfig:
     if config_path is None:
-        config_path = Path(__file__).resolve().parents[2] / "config" / "user.yaml"
+        config_path = Path(__file__).resolve().parents[3] / "config" / "user.yaml"
     config_path = Path(config_path)
 
     if not config_path.exists():

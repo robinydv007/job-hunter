@@ -48,4 +48,6 @@
 | ENH-008 | Anti-blocking: Playwright stealth mode (webdriver masking) | P2 | open | 2 | [→](details/ENH-008.md) |
 | ENH-009 | Anti-blocking: exponential backoff on consecutive failures | P2 | open | 2 | [→](details/ENH-009.md) |
 | ENH-011 | Improve search_naukri method: add more parameters for flexibility | P2 | open | 2 | _(simple)_ |
-| ENH-012 | Refactor nodes.py: extract platform-specific code to separate files | P2 | open | 2 | _(simple)_ |
+| ENH-012 | Refactor nodes.py: extract platform-specific code to separate files | P2 | resolved | 1 | [→](details/ENH-012.md) |
+| ENH-013 | Extract static scoring data to config/constants.yaml | P1 | resolved | 1 | [→](details/ENH-013.md) |
+| ENH-014 | Refactor CSV export: single source of truth for columns | P2 | resolved | 1 | [→](details/ENH-014.md) |

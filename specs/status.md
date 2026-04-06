@@ -49,6 +49,12 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **Location weight = 0.0** in scoring engine (intentional — remote/hybrid listings unreliable)
 
 ## Recent Changes
+- 2026-04-06: enh(ENH-013) — extract static scoring data to `config/constants.yaml`; add scoring weights to user.yaml; strip ~270 lines of hardcoded data from engine.py
+- 2026-04-06: enh(ENH-012) — fix Naukri base_url bug by extracting to `config/job_boards/naukri.py`
+- 2026-04-06: enh(ENH-014) — refactor CSV export with single source of truth (`ROW_MAPPING` dict)
+- 2026-04-06: fix(scoring) — experience penalty key type mismatch (YAML int keys vs string conversion)
+- 2026-04-06: fix(config) — path resolution for config/__init__.py (parents[2] -> parents[3])
+- 2026-04-06: fix(console) — unicode encode error on Windows (→ ->)
 - 2026-04-06: feat(scoring) — revamp scoring v2 with 6 dimensions: skills 35%, role 20%, experience 20%, company 10%, location 8%, work_mode 7%; add skill aliases, word-boundary matching, concatenated skill splitting
 - 2026-04-06: feat(search) — add company rating & review extraction from Naukri job cards
 - 2026-04-06: feat(search) — implement pagination for Naukri search with smart page calculation (max 5 pages per query, exits early when max_jobs reached)

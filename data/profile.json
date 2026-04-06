@@ -1,7 +1,7 @@
 {
   "name": "ROBIN YADAV",
   "email": "robinydv007@gmail.com",
-  "phone": "9194167152",
+  "phone": "9199416711552",
   "skills": [
     "Node.js",
     "NestJS",
@@ -65,23 +65,7 @@
     "AWS",
     "GCP",
     "Firebase",
-    "RabbitMQ",
-    "Distributed Systems",
-    "System Design",
-    "Observability",
-    "Kestra",
-    "Temporal",
-    "SOLID Principles",
-    "Design Patterns",
-    "OOPS",
-    "Angular",
-    "React",
-    "Express",
-    "PHP",
-    "Laravel",
-    "Go",
-    "Python",
-    "FastAPI"
+    "RabbitMQ"
   ],
   "total_experience_years": 9.0,
   "past_roles": [
@@ -103,5 +87,5 @@
     "Bachelor of Business Administration",
     "High School Diploma"
   ],
-  "summary": "Technical Lead with 9+ years of experience in full-stack development and leadership. Expertise in System Design, Distributed systems, Node.js, NestJS, Microservices, and APIs. Hands-on with Angular and React, with proven success scaling logistics/e-commerce platforms to 1.5 lakh+ daily orders. Skilled in guiding teams on architecture, design principles, and performance."
+  "summary": "Technical Lead with 9+ years of experience in full-stack development and leadership. Expertise in System Design, Distributed systems, Node.js, NestJS, and APIs. Hands-on experience with Angular and React, with proven success in scaling logistics/e-commerce platforms to 1.5 lakh+ daily orders. Skilled in guiding teams on architecture, design principles, and performance."
 }

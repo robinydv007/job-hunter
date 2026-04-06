@@ -100,22 +100,18 @@ def _score_experience(job: dict, profile: ResumeProfile, constants: Constants) -
     if user_exp > max_exp:
         over = user_exp - max_exp
         over_map = penalties.get("over", {})
-        for threshold in sorted(int(k) for k in over_map if k != "default_formula"):
+        int_keys = [k for k in over_map.keys() if isinstance(k, int)]
+        for threshold in sorted(int_keys):
             if over <= threshold:
-                return over_map[str(threshold)]
-        formula_base = over_map.get("default_formula", 0)
-        if isinstance(formula_base, int):
-            return max(0, formula_base)
+                return over_map[threshold]
         return max(0, 40 - (over - 6) * 8)
 
     under = min_exp - user_exp
     under_map = penalties.get("under", {})
-    for threshold in sorted(int(k) for k in under_map if k != "default_formula"):
+    int_keys = [k for k in under_map.keys() if isinstance(k, int)]
+    for threshold in sorted(int_keys):
         if under <= threshold:
-            return under_map[str(threshold)]
-    formula_base = under_map.get("default_formula", 0)
-    if isinstance(formula_base, int):
-        return max(0, formula_base)
+            return under_map[threshold]
     return max(0, 20 - (under - 3) * 10)
 
 

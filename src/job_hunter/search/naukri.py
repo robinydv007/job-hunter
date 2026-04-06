@@ -192,7 +192,7 @@ async def _extract_job_data(
                 "/jobs/" in href or "/job-details/" in href or "/job-listing/" in href
             ):
                 apply_url = (
-                    href if href.startswith("http") else f"NAUKRI.base_url{href}"
+                    href if href.startswith("http") else f"{NAUKRI.base_url}{href}"
                 )
                 break
 
@@ -202,7 +202,7 @@ async def _extract_job_data(
                 apply_url = (
                     card_href
                     if card_href.startswith("http")
-                    else f"NAUKRI.base_url{card_href}"
+                    else f"{NAUKRI.base_url}{card_href}"
                 )
 
         if not apply_url and all_links:
@@ -210,7 +210,7 @@ async def _extract_job_data(
                 href = await link.get_attribute("href")
                 if href and len(href) > 10:
                     apply_url = (
-                        href if href.startswith("http") else f"NAUKRI.base_url{href}"
+                        href if href.startswith("http") else f"{NAUKRI.base_url}{href}"
                     )
                     break
 
@@ -428,14 +428,14 @@ async def scrape_jobs_from_page(
         try:
             if location:
                 if page_num == 1:
-                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
                 else:
-                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs-{page_num}-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
             else:
                 if page_num == 1:
-                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
                 else:
-                    url = f"NAUKRI.base_url/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
 
             print(f"    Page {page_num}: {url}")
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -443,7 +443,7 @@ async def scrape_jobs_from_page(
 
             page_text = await page.inner_text("body")
             if "Access Denied" in page_text:
-                print(f"    BLOCKED: Naukri is blocking access")
+                print("    BLOCKED: Naukri is blocking access")
                 break
 
             job_cards = await _find_job_cards(page)

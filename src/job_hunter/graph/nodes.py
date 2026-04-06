@@ -77,14 +77,14 @@ def search_jobs_node(state: JobHunterState) -> dict:
 
     if config.profile.preferred_roles:
         console.print(
-            f"[dim]Search roles: using user.yaml preferred_roles → {config.profile.preferred_roles}[/]"
+            f"[dim]Search roles: using user.yaml preferred_roles -> {config.profile.preferred_roles}[/]"
         )
         profile = profile.model_copy(
             update={"target_roles": config.profile.preferred_roles}
         )
     else:
         console.print(
-            f"[dim]Search roles: using profile.json target_roles → {profile.target_roles}[/]"
+            f"[dim]Search roles: using profile.json target_roles -> {profile.target_roles}[/]"
         )
 
     all_jobs = []
