@@ -1,12 +1,12 @@
 # Project Status
-**Last Updated**: 2026-04-05  
+**Last Updated**: 2026-04-06  
 **Current Phase**: Phase 1 — MVP Core Pipeline (`complete`)  
 **Latest Release**: v0.1.0  
 **Health**: On Track ✅
 
 ## Summary
 
-Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against the user's profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0 (Foundation) and 1 (MVP Pipeline) are complete. The agent is fully functional for the MVP use case. Phase 2 (Auto-Apply & Enrichment) is the next planned phase.
+Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0 (Foundation) and 1 (MVP Pipeline) are complete. The agent is fully functional for the MVP use case. Phase 2 (Auto-Apply & Enrichment) is the next planned phase.
 
 ## Completed Phases
 | Phase | Name | Status | Release |
@@ -19,7 +19,7 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 
 ## Upcoming Phases
 | Phase | Name | Status | Key Deliverables |
-|-------|------|--------|-----------------|
+|-------|------|--------|------------------|
 | 2 | Auto-Apply & Enrichment | 🔲 Not Started | Auto-apply to jobs above threshold, smart QA, multi-platform search, company intelligence |
 
 ## Blockers
@@ -49,6 +49,9 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **Location weight = 0.0** in scoring engine (intentional — remote/hybrid listings unreliable)
 
 ## Recent Changes
+- 2026-04-06: feat(scoring) — revamp scoring v2 with 6 dimensions: skills 35%, role 20%, experience 20%, company 10%, location 8%, work_mode 7%; add skill aliases, word-boundary matching, concatenated skill splitting
+- 2026-04-06: feat(search) — add company rating & review extraction from Naukri job cards
+- 2026-04-06: feat(search) — implement pagination for Naukri search with smart page calculation (max 5 pages per query, exits early when max_jobs reached)
 - 2026-04-05: feat(cli) — resume caching with --force-parse override; skips LLM parse when profile cached
 - 2026-04-05: feat(search) — user.yaml preferred_roles takes priority over parsed target_roles
 - 2026-04-05: feat(scoring) — title tech penalty halves score if job title requires tech user lacks
