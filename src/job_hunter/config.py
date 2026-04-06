@@ -35,7 +35,9 @@ class SearchConfig(BaseModel):
     job_types: list[str] = Field(default_factory=list)
     excluded_companies: list[str] = Field(default_factory=list)
     excluded_keywords: list[str] = Field(default_factory=list)
-    title_exclude_keywords: list[str] = Field(default_factory=list)  # drop jobs whose title contains these words
+    title_exclude_keywords: list[str] = Field(
+        default_factory=list
+    )  # drop jobs whose title contains these words
     delay_min_seconds: float = 3.0
     delay_max_seconds: float = 8.0
 
@@ -43,6 +45,14 @@ class SearchConfig(BaseModel):
 class ScoringConfig(BaseModel):
     shortlist_threshold: int = 60
     apply_threshold: int = 75
+
+
+class NaukriConfig(BaseModel):
+    login_required: bool = True
+    headless: bool = False
+    page_timeout: int = 30000
+    max_pages: int = 3
+    delay_between_pages: int = 3
 
 
 class AutoApplyConfig(BaseModel):
@@ -79,6 +89,7 @@ class AppConfig(BaseModel):
     profile: Profile = Field(default_factory=Profile)
     search: SearchConfig = Field(default_factory=SearchConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
+    naukri: NaukriConfig = Field(default_factory=NaukriConfig)
     screening_answers: ScreeningAnswers = Field(default_factory=ScreeningAnswers)
     auto_apply: AutoApplyConfig = Field(default_factory=AutoApplyConfig)
 
@@ -147,9 +158,7 @@ def prompt_missing_fields(missing: list[str]) -> dict[str, Any]:
     return answers
 
 
-def save_config(
-    updates: dict[str, Any], config_path: str | Path | None = None
-) -> None:
+def save_config(updates: dict[str, Any], config_path: str | Path | None = None) -> None:
     """Merge updates into the profile section of the YAML config."""
     if config_path is None:
         config_path = Path(__file__).resolve().parents[2] / "config" / "user.yaml"
@@ -176,6 +185,3 @@ def load_config(config_path: str | Path | None = None) -> AppConfig:
         raw: dict[str, Any] = yaml.safe_load(f) or {}
 
     return AppConfig(**raw)
-
-
-

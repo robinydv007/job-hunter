@@ -144,6 +144,33 @@ async def _extract_job_data(
         if not title or len(title) < 3:
             return None
 
+        # Extract company rating and review count
+        company_rating = ""
+        review_count = ""
+
+        # Try to find the company details wrapper
+        comp_dtls_el = await card.query_selector(
+            '.comp-dtls-wrap, [class*="comp-dtls"], .row2'
+        )
+        if comp_dtls_el:
+            # Extract rating
+            rating_el = await comp_dtls_el.query_selector('.rating, [class*="rating"]')
+            if rating_el:
+                rating_text = await rating_el.inner_text()
+                rating_match = re.search(r"(\d+\.?\d*)", rating_text)
+                if rating_match:
+                    company_rating = rating_match.group(1)
+
+            # Extract review count
+            review_el = await comp_dtls_el.query_selector('.review, [class*="review"]')
+            if review_el:
+                review_text = (await review_el.inner_text()).strip()
+                review_match = re.search(
+                    r"(\d[\d,]*)\s*Reviews?", review_text, re.IGNORECASE
+                )
+                if review_match:
+                    review_count = review_match.group(1)
+
         # Extract company - try multiple selectors
         company_selectors = [
             '.company-name, .companyName, [class*="orgName"]',
@@ -176,17 +203,11 @@ async def _extract_job_data(
             '.description, .jobDescription, .summary, .jd, [class*="desc"]'
         )
         if desc_el:
-            description = (await desc_el.inner_text()).strip()[:500]
+            description = (await desc_el.inner_text()).strip()[:1000]
 
         # Extract posted date - try multiple selectors
         date_selectors = [
-            ".date, .postedDate, .days-old, .time",
-            '[class*="date"]',
-            '[class*="Date"]',
-            '[class*="days"]',
-            '[class*="Days"]',
-            '[class*="posted"]',
-            '[class*="Posted"]',
+            ".job-post-day",
         ]
         for sel in date_selectors:
             date_el = await card.query_selector(sel)
@@ -243,9 +264,11 @@ async def _extract_job_data(
         if not skills and user_skills and description:
             skills = _match_user_skills_in_description(description, user_skills)
 
-        return {
+        job_data = {
             "title": title,
             "company": company,
+            "company_rating": company_rating,
+            "review_count": review_count,
             "location": location,
             "work_mode": "remote"
             if "remote" in location.lower() or "work from home" in location.lower()
@@ -260,6 +283,8 @@ async def _extract_job_data(
             "required_skills": skills,
             "data_source": "scraped",
         }
+        print(f"  Job extracted: {job_data}")
+        return job_data
 
     except Exception as e:
         print(f"  Error extracting job data: {e}")
@@ -275,12 +300,16 @@ async def _extract_skills_from_row5(card) -> list[str]:
         if row5_el:
             skills_text = (await row5_el.inner_text()).strip()
             if skills_text:
-                skills = [
-                    s.strip()
-                    for s in re.split(r"[,|•·]", skills_text)
-                    if s.strip() and len(s.strip()) > 1
-                ]
+                # Step 1: try proper separators
+                parts = re.split(r"[,\|•·]+", skills_text)
+
+                if len(parts) == 1:
+                    # Step 2: fallback to camel-case boundary split
+                    parts = re.split(r"(?<=[a-z])(?=[A-Z])", skills_text)
+
+                skills = [s.strip() for s in parts if s.strip() and len(s.strip()) > 1]
                 return skills
+
     except Exception:
         pass
     return []
@@ -309,116 +338,79 @@ async def scrape_jobs_from_page(
     location: str = "",
     days_old: int = 7,
     max_jobs: int = 100,
+    max_pages: int = 1,
     user_skills: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Scrape jobs from Naukri search with pagination."""
+    """Scrape jobs from Naukri search pages with pagination."""
     print(f"  Searching: {keyword}" + (f" in {location}" if location else ""))
 
-    try:
-        keyword_encoded = keyword.replace(" ", "%20").replace(".", "%2E")
-        if location:
-            loc_encoded = location.replace(" ", "%20").replace(",", "%2C")
-            base_url = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
-            url_pattern = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}-{{}}?k={keyword_encoded}&jobAge={days_old}"
-        else:
-            base_url = f"https://www.naukri.com/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
-            url_pattern = f"https://www.naukri.com/{keyword_encoded}-jobs-{{}}?k={keyword_encoded}&jobAge={days_old}"
+    all_jobs = []
+    keyword_encoded = keyword.replace(" ", "%20").replace(".", "%2E")
+    loc_encoded = location.replace(" ", "%20").replace(",", "%2C") if location else ""
 
-        jobs = []
-        seen_job_ids = set()
-        current_page = 1
+    for page_num in range(1, max_pages + 1):
+        if len(all_jobs) >= max_jobs:
+            break
 
-        while len(jobs) < max_jobs:
-            if current_page == 1:
-                url = base_url
+        try:
+            if location:
+                if page_num == 1:
+                    url = f"https://www.naukri.com/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+                else:
+                    url = f"https://www.naukri.com/{keyword_encoded}-jobs-{page_num}-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
             else:
-                url = url_pattern.format(current_page)
+                if page_num == 1:
+                    url = f"https://www.naukri.com/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
+                else:
+                    url = f"https://www.naukri.com/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
 
-            print(f"    Page {current_page}: {url}")
+            print(f"    Page {page_num}: {url}")
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             await asyncio.sleep(random.uniform(2, 5))
 
             page_text = await page.inner_text("body")
             if "Access Denied" in page_text:
-                print(f"  BLOCKED: Naukri is blocking access")
+                print(f"    BLOCKED: Naukri is blocking access")
                 break
 
             job_cards = await _find_job_cards(page)
-            print(f"    Found {len(job_cards)} job cards on page {current_page}")
-
-            if not job_cards:
-                print(
-                    f"    No more jobs found on page {current_page}, stopping pagination"
-                )
+            if not job_cards or len(job_cards) == 0:
+                no_results = await page.query_selector(".noResults")
+                if no_results:
+                    print(f"    No more results on page {page_num}")
+                    break
+                print(f"    No job cards found on page {page_num}")
                 break
 
-            new_jobs_count = 0
+            print(f"    Found {len(job_cards)} job cards")
+
             for card in job_cards:
-                if len(jobs) >= max_jobs:
+                if len(all_jobs) >= max_jobs:
                     break
                 job = await _extract_job_data(card, page, user_skills=user_skills)
                 if job and job.get("title"):
-                    job_id = f"{job['title'].lower().strip()}|{job['company'].lower().strip()}|{job.get('job_url', '')}"
-                    if job_id not in seen_job_ids:
-                        seen_job_ids.add(job_id)
-                        job["search_keyword"] = keyword
-                        jobs.append(job)
-                        new_jobs_count += 1
+                    job["search_keyword"] = keyword
+                    all_jobs.append(job)
 
-            print(
-                f"    Extracted {new_jobs_count} new jobs from page {current_page} (total: {len(jobs)})"
-            )
-
-            if new_jobs_count == 0:
-                print(f"    No new jobs on page {current_page}, stopping pagination")
+            if len(all_jobs) >= max_jobs:
+                print(f"    Reached max_jobs limit ({max_jobs})")
                 break
 
-            if len(jobs) < max_jobs:
-                scroll_count = random.randint(2, 4)
-                for _ in range(scroll_count):
-                    if len(jobs) >= max_jobs:
-                        break
-                    await page.evaluate(
-                        f"window.scrollBy(0, {random.randint(400, 800)})"
-                    )
-                    await asyncio.sleep(random.uniform(1.5, 3))
-                    more_cards = await _find_job_cards(page)
-                    if len(more_cards) > len(job_cards):
-                        job_cards = more_cards
-                        for card in job_cards:
-                            if len(jobs) >= max_jobs:
-                                break
-                            job_id_str = await card.get_attribute("data-job-id")
-                            if job_id_str and job_id_str not in seen_job_ids:
-                                job = await _extract_job_data(
-                                    card, page, user_skills=user_skills
-                                )
-                                if job and job.get("title"):
-                                    job_id = f"{job['title'].lower().strip()}|{job['company'].lower().strip()}|{job.get('job_url', '')}"
-                                    if job_id not in seen_job_ids:
-                                        seen_job_ids.add(job_id)
-                                        job["search_keyword"] = keyword
-                                        jobs.append(job)
-                                        new_jobs_count += 1
+            if page_num < max_pages:
+                await asyncio.sleep(random.uniform(1, 2))
 
-            if len(jobs) >= max_jobs:
-                print(f"    Reached max_jobs limit ({max_jobs}), stopping pagination")
-                break
+        except Exception as e:
+            print(f"    Error on page {page_num}: {e}")
+            break
 
-            current_page += 1
-            await asyncio.sleep(random.uniform(1.5, 3))
-
-    except Exception as e:
-        print(f"  Error scraping: {e}")
-        return []
-
-    print(f"    Total extracted: {len(jobs)} jobs")
-    return jobs
+    print(f"    Extracted {len(all_jobs)} jobs from {max_pages} page(s)")
+    return all_jobs
 
 
 def search_naukri(
     profile: ResumeProfile,
     search_config: SearchConfig,
+    naukri_config,
     page: Page,
     days_old: int = 7,
     max_jobs_per_query: int = 100,
@@ -440,6 +432,14 @@ def search_naukri(
     delay_max = search_config.delay_max_seconds
 
     user_skills = profile.skills + profile.tech_stack
+    max_pages = naukri_config.max_pages if naukri_config else 3
+
+    jobs_per_page_estimate = 20
+    max_pages_needed = min(
+        max_pages,
+        (max_jobs_per_query + jobs_per_page_estimate - 1) // jobs_per_page_estimate,
+    )
+    max_pages_needed = min(max_pages_needed, 5)
 
     for qi, query in enumerate(queries):
         try:
@@ -450,6 +450,7 @@ def search_naukri(
                     query["location"],
                     days_old=days_old,
                     max_jobs=max_jobs_per_query,
+                    max_pages=max_pages_needed,
                     user_skills=user_skills,
                 )
             )

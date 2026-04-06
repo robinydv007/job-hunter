@@ -158,7 +158,9 @@ def search_jobs_node(state: JobHunterState) -> dict:
         console.print(
             f"[dim]Search roles: using user.yaml preferred_roles → {config.profile.preferred_roles}[/]"
         )
-        profile = profile.model_copy(update={"target_roles": config.profile.preferred_roles})
+        profile = profile.model_copy(
+            update={"target_roles": config.profile.preferred_roles}
+        )
     else:
         console.print(
             f"[dim]Search roles: using profile.json target_roles → {profile.target_roles}[/]"
@@ -170,7 +172,12 @@ def search_jobs_node(state: JobHunterState) -> dict:
             freshness = resolve_freshness(config.search.freshness, platform)
             console.print(f"[dim]Freshness filter: dd={freshness}[/]")
             jobs = search_naukri(
-                profile, config.search, page, days_old=freshness, max_jobs_per_query=100
+                profile,
+                config.search,
+                config.naukri,
+                page,
+                days_old=freshness,
+                max_jobs_per_query=100,
             )
             all_jobs.extend(jobs)
             console.print(f"[green]Naukri: found {len(jobs)} jobs[/]")
@@ -238,13 +245,13 @@ def search_jobs_node(state: JobHunterState) -> dict:
     title_exclude = [w.lower() for w in config.search.title_exclude_keywords]
     if title_exclude:
         import re
+
         before = len(unique_jobs)
         filtered = []
         for job in unique_jobs:
             title = job.get("title", "").lower()
             excluded = any(
-                re.search(r"\b" + re.escape(w) + r"\b", title)
-                for w in title_exclude
+                re.search(r"\b" + re.escape(w) + r"\b", title) for w in title_exclude
             )
             if not excluded:
                 filtered.append(job)
