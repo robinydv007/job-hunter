@@ -1,0 +1,48 @@
+tech_experience:
+  Node.js: 5
+  NestJS: 3
+  TypeScript: 3
+  JavaScript: 5
+  Microservices: 4
+  MongoDB: 2
+  PostgreSQL: 2
+  MySQL: 2
+  Kafka: 1
+  Redis: 1
+  AWS: 2
+  GCP: 1
+  Firebase: 1
+  RabbitMQ: 1
+achievements:
+- Enabled 500+ B2B customers, processing 60k orders/month
+- Empowered 5k franchise partners to handle 1.5 lakh daily orders
+- Improved performance and reduced release cycles from 3-4 weeks to 2 days
+- Cutting 80% costs through hybrid solution
+- Enabled 20x growth in hyperlocal
+- Reduced code duplication by 70%
+- Improved maintainability and standardization across services
+challenges_solved:
+- Migrated legacy PHP monolith to microservices
+- Implemented vehicle routing optimization with OpenStreetMap APIs & Google Maps
+- Designed scalable APIs and integrations with Shopify, Unicommerce, ONDC, Shiprocket,
+  and more
+- Established Observability platform with OpenTelemetry, Grafana, Loki, Jaeger, Slack
+  alerts
+interests:
+- System Design
+- Distributed systems
+- Node.js
+- NestJS
+- Microservices
+- APIs
+- Angular
+- React
+key_responsibilities:
+- Technical leadership and team management
+- Architecture and design
+- Performance optimization
+- API design and development
+- Microservices development
+- Cloud computing (AWS, GCP, Firebase)
+- Database management (MongoDB, PostgreSQL, MySQL)
+- Message queues (Kafka, RabbitMQ)

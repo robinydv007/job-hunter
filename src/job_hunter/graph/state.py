@@ -22,7 +22,7 @@ class JobListing(TypedDict, total=False):
     description: str
     posted_date: str
     job_board: str
-    search_keyword: str   # keyword used to find this job (for title-remainder scoring)
+    search_keyword: str  # keyword used to find this job (for title-remainder scoring)
 
 
 class ScoredJob(TypedDict, total=False):
@@ -37,6 +37,9 @@ class JobHunterState(TypedDict):
     config: AppConfig
     resume_path: str
     profile: ResumeProfile | None
+    detailed_profile: (
+        dict | None
+    )  # Extended profile with tech_experience, achievements, etc.
     raw_jobs: list[JobListing]
     scored_jobs: list[ScoredJob]
     shortlisted_jobs: list[ScoredJob]

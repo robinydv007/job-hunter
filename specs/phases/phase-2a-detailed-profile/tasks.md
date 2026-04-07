@@ -1,46 +1,46 @@
 # Phase 2a — Tasks: Detailed Profile
 
-> **Status: PLANNED** — Ready to start
+> **Status: COMPLETE** ✅ — All tasks finished 2026-04-07
 
 ## Task Checklist
 
 ### 1. Config File Restructure
-- [ ] Create `config/screening.yaml` file with content moved from user.yaml
-- [ ] Remove `screening_answers` section from `config/user.yaml`
-- [ ] Add `screening_answers_extended` section to `screening.yaml`
-- [ ] Update `src/job_hunter/config/__init__.py`:
+- [x] Create `config/screening.yaml` file with content moved from user.yaml
+- [x] Remove `screening_answers` section from `config/user.yaml`
+- [x] Add `screening_answers_extended` section to `screening.yaml`
+- [x] Update `src/job_hunter/config/__init__.py`:
   - Create `ScreeningAnswers` model (already exists, verify)
   - Create `ScreeningConfig` model with `screening_answers` and `screening_answers_extended`
   - Add `screening: ScreeningConfig` field to `AppConfig`
   - Update `load_config()` to load both user.yaml and screening.yaml
-- [ ] Verify: `load_config()` returns combined config with screening
+- [x] Verify: `load_config()` returns combined config with screening
 
 ### 2. Resume Path Field
-- [ ] Add `resume_path` field to `Profile` model in `src/job_hunter/config/__init__.py`
-- [ ] Add `resume_path` to `config/user.yaml` template with default value `resume.pdf`
-- [ ] Implement default logic: if resume_path is empty/not set, use `resume.pdf` in project root
-- [ ] Verify: resume_path loaded in config, defaults to resume.pdf if not set
+- [x] Add `resume_path` field to `Profile` model in `src/job_hunter/config/__init__.py`
+- [x] Add `resume_path` to `config/user.yaml` template with default value `resume.pdf`
+- [x] Implement default logic: if resume_path is empty/not set, use `resume.pdf` in project root
+- [x] Verify: resume_path loaded in config, defaults to resume.pdf if not set
 
 ### 3. Single LLM Resume Extraction
-- [ ] Modify `src/job_hunter/resume/parser.py`:
+- [x] Modify `src/job_hunter/resume/parser.py`:
   - Create `parse_resume_full(resume_path)` returning `(ResumeProfile, dict)`
   - Update existing `parse_resume()` to use new function
   - LLM prompt extracts both basic and detailed sections in one call
-- [ ] Test: Single LLM call produces both basic and detailed data
-- [ ] Verify: Pydantic validation for basic profile works
+- [x] Test: Single LLM call produces both basic and detailed data
+- [x] Verify: Pydantic validation for basic profile works
 
 ### 4. Load Functions for Profile + Detailed
-- [ ] Implement `load_profile_with_detailed()` in `resume/parser.py`
+- [x] Implement `load_profile_with_detailed()` in `resume/parser.py`
   - Returns both basic profile and detailed profile together
   - For use wherever profile data is sent to LLM
-- [ ] Update any existing code that loads profile to optionally load detailed too
+- [x] Update any existing code that loads profile to optionally load detailed too
 
 ### 4. Detailed Profile File Management
-- [ ] Implement `save_detailed_profile(detailed_data)` in `resume/parser.py`
+- [x] Implement `save_detailed_profile(detailed_data)` in `resume/parser.py`
   - Save to `data/profile_detailed.yaml` with proper YAML formatting
-- [ ] Implement `load_detailed_profile()` in `resume/parser.py`
+- [x] Implement `load_detailed_profile()` in `resume/parser.py`
   - Load from `data/profile_detailed.yaml`, return dict
-- [ ] Verify: `profile_detailed.yaml` created with expected structure:
+- [x] Verify: `profile_detailed.yaml` created with expected structure:
   - tech_experience
   - achievements
   - challenges_solved

@@ -5,6 +5,7 @@ profile:
   - Technical Lead
   - Senior Software Engineer
   - AI Engineer
+  resume_path: resume.pdf
   expected_salary_lpa: 30
   notice_period: immediate joiner
   preferred_locations: []
@@ -58,25 +59,6 @@ scoring:
     shortlist_threshold: 30
     consider_location: false
     consider_work_mode: false
-screening_answers:
-  willing_to_relocate: true
-  comfortable_with_shifts: false
-  current_ctc_lpa: 22
-  expected_ctc_lpa: 30
-  notice_period: immediate joiner
-  reason_for_change: Looking for better growth opportunities and challenging role
-  visa_status: not applicable
-  remote_work_preference: flexible
-  current_employer: ""
-  current_designation: ""
-  years_in_current_role: 0
-  highest_qualification: ""
-  university_name: ""
-  passing_year: 0
-  gaps_in_employment: ""
-  work_authorization: ""
-  background_check_consent: true
-  references_available: true
 auto_apply:
   enabled: false
   max_per_day: 10
