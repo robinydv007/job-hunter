@@ -407,6 +407,57 @@ def _match_user_skills_in_description(
     return matched
 
 
+async def _click_next_button(page: Page, max_retries: int = 3) -> bool:
+    """Click the Next button in pagination. Returns True if successful."""
+    for attempt in range(max_retries):
+        try:
+            # Find Next button by text
+            next_btn = await page.query_selector('a:has-text("Next")')
+            if not next_btn:
+                print(f"    No Next button found")
+                return False
+
+            # Check if disabled
+            classes = await next_btn.get_attribute("class") or ""
+            if "disabled" in classes.lower() or "styles_disabled" in classes:
+                print(f"    Next button is disabled")
+                return False
+
+            # Click and wait for page to load
+            await next_btn.click()
+            await asyncio.sleep(random.uniform(2, 5))  # Same wait time
+
+            # Verify page changed by checking pagination indicator
+            selected = await page.query_selector("a.styles_selected__j3uvq")
+            if selected:
+                page_text = await selected.inner_text()
+                print(f"    Navigated to page {page_text}")
+
+            return True
+
+        except Exception as e:
+            print(f"    Click attempt {attempt + 1} failed: {e}")
+            await asyncio.sleep(1)
+
+    return False
+
+
+async def _build_page_url(
+    page_num: int, keyword_encoded: str, loc_encoded: str, location: str, days_old: int
+) -> str:
+    """Build URL for a specific page number."""
+    if location:
+        if page_num == 1:
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+        else:
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+    else:
+        if page_num == 1:
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
+        else:
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+
+
 async def scrape_jobs_from_page(
     page: Page,
     keyword: str,
@@ -422,32 +473,45 @@ async def scrape_jobs_from_page(
     all_jobs = []
     keyword_encoded = keyword.replace(" ", "%20").replace(".", "%2E")
     loc_encoded = location.replace(" ", "%20").replace(",", "%2C") if location else ""
+    seen_job_ids = set()  # Track job IDs to detect duplicates
 
-    for page_num in range(1, max_pages + 1):
-        if len(all_jobs) >= max_jobs:
-            break
+    # Page 1: Load using direct URL
+    page_num = 1
+    pages_scraped = 0
 
+    while pages_scraped < max_pages and len(all_jobs) < max_jobs:
         try:
-            if location:
-                if page_num == 1:
-                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
-                else:
-                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+            # Load current page (direct URL for page 1, clicking for others)
+            if page_num == 1:
+                # Page 1: Use direct URL
+                url = await _build_page_url(
+                    page_num, keyword_encoded, loc_encoded, location, days_old
+                )
+                print(f"    Page {page_num}: {url}")
+                await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                await asyncio.sleep(random.uniform(2, 5))
             else:
-                if page_num == 1:
-                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
-                else:
-                    url = f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+                # Page 2+: Try clicking Next button, fallback to direct URL
+                print(f"    Trying to navigate to page {page_num}...")
+                click_success = await _click_next_button(page)
 
-            print(f"    Page {page_num}: {url}")
-            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            await asyncio.sleep(random.uniform(2, 5))
+                if not click_success:
+                    # Fallback to direct URL navigation
+                    print(f"    Click failed, using direct URL for page {page_num}")
+                    url = await _build_page_url(
+                        page_num, keyword_encoded, loc_encoded, location, days_old
+                    )
+                    print(f"    Page {page_num}: {url}")
+                    await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                    await asyncio.sleep(random.uniform(2, 5))
 
+            # Check for access denied
             page_text = await page.inner_text("body")
             if "Access Denied" in page_text:
                 print("    BLOCKED: Naukri is blocking access")
                 break
 
+            # Find job cards
             job_cards = await _find_job_cards(page)
             if not job_cards or len(job_cards) == 0:
                 no_results = await page.query_selector(".noResults")
@@ -457,7 +521,11 @@ async def scrape_jobs_from_page(
                 print(f"    No job cards found on page {page_num}")
                 break
 
-            print(f"    Found {len(job_cards)} job cards")
+            print(f"    Found {len(job_cards)} job cards on page {page_num}")
+
+            # Track new job IDs to detect duplicates
+            new_job_ids = set()
+            current_page_jobs = []
 
             for card in job_cards:
                 if len(all_jobs) >= max_jobs:
@@ -465,20 +533,56 @@ async def scrape_jobs_from_page(
                 job = await _extract_job_data(card, page, user_skills=user_skills)
                 if job and job.get("title"):
                     job["search_keyword"] = keyword
+                    job_id = (
+                        job.get("job_id")
+                        or f"{job.get('title', '')}|{job.get('company', '')}"
+                    )
+                    new_job_ids.add(job_id)
+                    current_page_jobs.append(job)
+
+            # Duplicate detection: stop if all jobs on current page are duplicates
+            if new_job_ids.issubset(seen_job_ids):
+                print(
+                    f"    Duplicate content detected on page {page_num}, stopping pagination"
+                )
+                break
+
+            # Add new jobs to results
+            for job in current_page_jobs:
+                job_id = (
+                    job.get("job_id")
+                    or f"{job.get('title', '')}|{job.get('company', '')}"
+                )
+                if job_id not in seen_job_ids:
+                    seen_job_ids.add(job_id)
                     all_jobs.append(job)
 
+            print(
+                f"    Added {len(current_page_jobs)} unique jobs from page {page_num}"
+            )
+            pages_scraped += 1
+            page_num += 1
+
+            # Check if we should continue
             if len(all_jobs) >= max_jobs:
                 print(f"    Reached max_jobs limit ({max_jobs})")
                 break
 
-            if page_num < max_pages:
+            # Check if there are more pages
+            next_button = await page.query_selector('a:has-text("Next")')
+            if not next_button:
+                print(f"    No more pages available")
+                break
+
+            # Small delay before next page
+            if page_num <= max_pages:
                 await asyncio.sleep(random.uniform(1, 2))
 
         except Exception as e:
             print(f"    Error on page {page_num}: {e}")
             break
 
-    print(f"    Extracted {len(all_jobs)} jobs from {max_pages} page(s)")
+    print(f"    Extracted {len(all_jobs)} unique jobs from {pages_scraped} page(s)")
     return all_jobs
 
 

@@ -1,23 +1,22 @@
 # Project Status
 **Last Updated**: 2026-04-07  
-**Current Phase**: Phase 2a — Detailed Profile & Config Restructure (`in-progress`)  
-**Latest Release**: v0.1.0  
+**Current Phase**: Phase 2a — Detailed Profile & Config Restructure (`complete`)  
+**Latest Release**: v0.2.0 (planned)  
 **Health**: On Track ✅
 
 ## Summary
 
-Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0 and 1 are complete. Phase 2 is in progress (2a: Detailed Profile, then 2b: Auto-Apply).
+Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0, 1, and 2a are complete. Phase 2b is pending.
 
 ## Completed Phases
 | Phase | Name | Status | Release |
 |-------|------|--------|---------|
 | 0 | Foundation & Infrastructure | ✅ Complete | v0.0.1 |
 | 1 | MVP Core Pipeline | ✅ Complete | v0.1.0 |
+| 2a | Detailed Profile & Config Restructure | ✅ Complete | v0.2.0 (planned) |
 
 ## Active Phase
-| Phase | Name | Status | Progress |
-|-------|------|--------|----------|
-| 2a | Detailed Profile & Config Restructure | 🔲 In Progress | Started 2026-04-07 |
+*(No active phase — Phase 2a complete. Phase 2b not yet started.)*
 
 ## Upcoming Phases
 | Phase | Name | Status | Key Deliverables |

@@ -2,9 +2,7 @@ profile:
   name: Robin Yadav
   total_experience: 9
   preferred_roles:
-  - Technical Lead
-  - Senior Software Engineer
-  - AI Engineer
+  - ai engineer
   resume_path: resume.pdf
   expected_salary_lpa: 30
   notice_period: immediate joiner
@@ -12,32 +10,26 @@ profile:
   remote_preference: hybrid
   company_size_preference:
   - mid-size
-  - enterprise
-  industry_preference:
-  - SaaS
-  - Logistics
-  - eCommerce
-  - Fintech
-  - Artificial Intelligence
+  industry_preference: []
 search:
   platforms:
   - naukri
   salary_min_lpa: 20
   salary_max_lpa: 45
   experience_years: 9
-  max_jobs: 0  # max jobs in final shortlist (0 or empty = no limit)
-  max_jobs_per_query: 60  # max jobs to scrape per query per platform
-  freshness: 0  # 0=auto, 1=today, 3=3days, 7=week, 15=15days, 30=month
-  max_roles: 5  # max roles to search from profile
-  max_locations: 3  # max locations to search from profile
-  work_mode_filter: []  # e.g. [remote, hybrid, onsite]
-  job_types: []  # e.g. [full-time, contract]
-  excluded_companies: []  # companies to skip
-  excluded_keywords: []  # e.g. [intern, fresher, trainee]
-  title_exclude_keywords:  # drop jobs whose title contains these words (word-boundary match)
+  max_jobs: 0
+  max_jobs_per_query: 10
+  freshness: 0
+  max_roles: 5
+  max_locations: 3
+  work_mode_filter: []
+  job_types: []
+  excluded_companies: []
+  excluded_keywords: []
+  title_exclude_keywords:
   - Java
-  delay_min_seconds: 3.0  # min delay between queries
-  delay_max_seconds: 8.0  # max delay between queries
+  delay_min_seconds: 3.0
+  delay_max_seconds: 8.0
 naukri:
   login_required: true
   headless: false
@@ -45,18 +37,18 @@ naukri:
   max_pages: 3
   delay_between_pages: 3
 scoring:
-  shortlist_threshold: 30
+  shortlist_threshold: 50
   apply_threshold: 75
   skill_weight: 0.35
-  role_weight: 0.20
-  experience_weight: 0.20
-  company_weight: 0.10
+  role_weight: 0.2
+  experience_weight: 0.2
+  company_weight: 0.1
   location_weight: 0.08
   work_mode_weight: 0.07
   llm_scoring:
     enabled: true
     batch_size: 10
-    shortlist_threshold: 30
+    shortlist_threshold: 50
     consider_location: false
     consider_work_mode: false
 auto_apply:

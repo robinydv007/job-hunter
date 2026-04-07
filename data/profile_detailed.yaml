@@ -1,48 +1,54 @@
 tech_experience:
-  Node.js: 5
-  NestJS: 3
-  TypeScript: 3
-  JavaScript: 5
-  Microservices: 4
-  MongoDB: 2
-  PostgreSQL: 2
-  MySQL: 2
-  Kafka: 1
-  Redis: 1
-  AWS: 2
-  GCP: 1
-  Firebase: 1
-  RabbitMQ: 1
+  Node.js: 9
+  NestJS: 9
+  TypeScript: 9
+  JavaScript: 9
+  Microservices: 9
+  MongoDB: 9
+  PostgreSQL: 9
+  MySQL: 9
+  Kafka: 9
+  Redis: 9
+  AWS: 9
+  GCP: 9
+  Firebase: 9
+  RabbitMQ: 9
+  Angular: 9
+  React: 9
+  Express: 9
+  PHP: 9
+  Laravel: 9
+  Go: 9
+  Python: 9
+  FastApi: 9
+  Jira: 9
+  CI/CD pipelines: 9
+  Shopify: 9
+  WooCommerce: 9
+  Git: 9
 achievements:
-- Enabled 500+ B2B customers, processing 60k orders/month
-- Empowered 5k franchise partners to handle 1.5 lakh daily orders
-- Improved performance and reduced release cycles from 3-4 weeks to 2 days
-- Cutting 80% costs through hybrid solution
-- Enabled 20x growth in hyperlocal
-- Reduced code duplication by 70%
-- Improved maintainability and standardization across services
+- Enabled 500+ B2B customers, processing 60k orders/month.
+- Empowered 5k franchise partners to handle 1.5 lakh daily orders.
+- Migrated legacy PHP monolith to microservices, improving performance and reducing
+  release cycles from 3-4 weeks to 2 days.
+- Implemented vehicle routing optimization with OpenStreetMap APIs & Google Maps,
+  cutting 80% costs.
+- Awarded Smile Ratna Puruskar for exceptional contributions.
 challenges_solved:
-- Migrated legacy PHP monolith to microservices
-- Implemented vehicle routing optimization with OpenStreetMap APIs & Google Maps
-- Designed scalable APIs and integrations with Shopify, Unicommerce, ONDC, Shiprocket,
-  and more
-- Established Observability platform with OpenTelemetry, Grafana, Loki, Jaeger, Slack
-  alerts
+- Migrated legacy PHP monolith to microservices.
+- Implemented vehicle routing optimization with OpenStreetMap APIs & Google Maps.
+- Decommissioned 5+ redundant APIs and introduced single generic API for booking.
 interests:
 - System Design
-- Distributed systems
-- Node.js
-- NestJS
+- Distributed Systems
 - Microservices
-- APIs
-- Angular
-- React
+- API Development
+- Team Leadership
 key_responsibilities:
-- Technical leadership and team management
-- Architecture and design
-- Performance optimization
-- API design and development
-- Microservices development
-- Cloud computing (AWS, GCP, Firebase)
-- Database management (MongoDB, PostgreSQL, MySQL)
-- Message queues (Kafka, RabbitMQ)
+- Mentored and managed a team of 6+ developers.
+- Collaborated with Product & Engineering Managers on roadmap planning and customer
+  adoption.
+- Retained key clients by delivering urgent features quickly.
+- Designed scalable APIs and integrations with Shopify, Unicommerce, ONDC, Shiprocket.
+- Established Observability platform with OpenTelemetry, Grafana, Loki, Jaeger, Slack
+  alerts.

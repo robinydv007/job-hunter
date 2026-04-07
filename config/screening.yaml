@@ -17,7 +17,7 @@ screening_answers:
   university_name: ""
   passing_year: 0
   gaps_in_employment: ""
-  work_authorization: ""
+  work_authorization: not applicable
   background_check_consent: true
   references_available: true
 

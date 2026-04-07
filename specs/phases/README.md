@@ -5,7 +5,7 @@ Quick reference for all phases. See [roadmap](../roadmap/roadmap.md) for timelin
 |-------|------|--------|-----------|
 | 0 | Foundation & Infrastructure | ✅ Complete | `phase-0-foundation/` |
 | 1 | MVP Core Pipeline | ✅ Complete | `phase-1-mvp-pipeline/` |
-| 2a | Detailed Profile & Config Restructure | 🔲 In Progress | `phase-2a-detailed-profile/` |
+| 2a | Detailed Profile & Config Restructure | ✅ Complete | `phase-2a-detailed-profile/` |
 | 2b | Auto-Apply & Batch Screening | 🔲 Not Started | `phase-2b-auto-apply/` |
 
 Each phase directory contains:
@@ -21,6 +21,6 @@ Each phase directory contains:
 ```
 Phase 0 (Foundation & Infrastructure)     ← COMPLETE
 └── Phase 1 (MVP Core Pipeline)             ← COMPLETE
-    └── Phase 2a (Detailed Profile)         ← IN PROGRESS
+    └── Phase 2a (Detailed Profile)         ← COMPLETE
         └── Phase 2b (Auto-Apply)            ← NOT STARTED
 ```
