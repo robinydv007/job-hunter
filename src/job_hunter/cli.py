@@ -93,11 +93,19 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
 
     # Use cached profile only when resume was NOT explicitly provided and --force-parse not set
     # Explicit --resume always means "parse this resume"
+    # --force-parse also forces re-parse but still needs resume path from config
     if not explicit_resume and not force_parse and cached_profile_path.exists():
         console.print(
             "[dim]Cached profile found — skipping resume parse. Use --force-parse to re-parse.[/]"
         )
         resume = None  # signals parse_resume_node to use cache
+    elif force_parse and not explicit_resume:
+        # --force-parse without explicit --resume: use config's resume_path
+        if not resume and Path("resume.pdf").exists():
+            resume = "resume.pdf"
+        console.print("[dim]Forcing resume re-parse (--force-parse)[/]")
+    elif explicit_resume:
+        console.print(f"[dim]Parsing resume: {resume}[/]")
 
     async def run_pipeline():
         browser = BrowserManager(headless=headless)
@@ -115,7 +123,9 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
             initial_state = {
                 "config": app_config,
                 "resume_path": resume,
+                "force_parse": force_parse,
                 "profile": None,
+                "detailed_profile": None,
                 "raw_jobs": [],
                 "scored_jobs": [],
                 "shortlisted_jobs": [],
@@ -164,6 +174,40 @@ def status():
                 console.print(f"  - {f.name}")
         else:
             console.print("\n[yellow]No CSV exports yet[/]")
+
+
+@cli.command()
+def clean():
+    """Clear all cached data (profile, detailed profile, resume hash)."""
+    console.print(
+        Panel("[bold yellow]Clearing cache files...[/]", border_style="yellow")
+    )
+
+    data_dir = Path("data")
+    files_removed = []
+
+    # Files to clean
+    cache_files = [
+        data_dir / "profile.json",
+        data_dir / "profile_detailed.yaml",
+        data_dir / "resume_hash.txt",
+    ]
+
+    for f in cache_files:
+        if f.exists():
+            f.unlink()
+            files_removed.append(f.name)
+
+    if files_removed:
+        console.print(f"[green]Removed {len(files_removed)} cache file(s):[/]")
+        for name in files_removed:
+            console.print(f"  - {name}")
+    else:
+        console.print("[dim]No cache files to remove[/]")
+
+    console.print(
+        "[green]Cache cleaned! Run 'job-hunter run --force-parse' to re-parse resume.[/]"
+    )
 
 
 @cli.command()

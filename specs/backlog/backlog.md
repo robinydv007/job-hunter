@@ -1,5 +1,5 @@
 # Backlog
-**Last Updated**: 2026-04-06  
+**Last Updated**: 2026-04-07  
 **Convention**: Simple items stay in this table. Complex items get a detail file: `[→](details/ID.md)`
 
 ## Priority Levels
@@ -30,7 +30,7 @@
 | ID | Title | Priority | Status | Phase | Detail |
 |----|-------|----------|--------|-------|--------|
 | TD-001 | Unit tests: scoring engine, parser, scraper | P1 | open | 2 | _(simple)_ |
-| TD-002 | Resume cache invalidation on file change | P2 | open | 2 | _(simple — hash check)_ |
+| TD-002 | Resume cache invalidation on file change | P2 | resolved | 2a | Implemented in Phase 2a with SHA256 hash detection |
 | TD-003 | LLM-based required_skills extraction per job | P3 | open | 3 | _(expensive — phase 3 candidate)_ |
 | TD-004 | Prune unused fields from `JobHunterState` | P2 | resolved | 2 | [→](details/TD-004.md) |
 
@@ -52,3 +52,5 @@
 | ENH-013 | Extract static scoring data to config/constants.yaml | P1 | resolved | 1 | [→](details/ENH-013.md) |
 | ENH-014 | Refactor CSV export: single source of truth for columns | P2 | resolved | 1 | [→](details/ENH-014.md) |
 | ENH-015 | LLM-Based Job Scoring | P1 | open | 1 | [→](details/ENH-015.md) |
+| ENH-016 | Fix Naukri pagination using UI navigation | P1 | open | 2 | [→](details/ENH-016.md) |
+| ENH-017 | Reorder pipeline: parse resume before login | P1 | open | 2 | [→](details/ENH-017.md) |

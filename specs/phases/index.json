@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-04-05",
+  "generated": "2026-04-07",
   "description": "Maps each phase to topic keywords. Used by /sync-docs to find affected phases.",
   "phases": {
     "phase-0-foundation": {
@@ -12,6 +12,16 @@
       "name": "MVP Core Pipeline",
       "status": "complete",
       "keywords": ["resume", "parsing", "naukri", "scraping", "scoring", "rubric", "csv", "export", "deduplication", "workflow", "nodes", "mvp"]
+    },
+    "phase-2a-detailed-profile": {
+      "name": "Detailed Profile & Config Restructure",
+      "status": "in-progress",
+      "keywords": ["screening.yaml", "profile_detailed.yaml", "single-llm-call", "resume-path", "profile-enhancement", "config-split", "resume-change-detection"]
+    },
+    "phase-2b-auto-apply": {
+      "name": "Auto-Apply & Batch Screening",
+      "status": "planned",
+      "keywords": ["auto-apply", "naukri-apply", "batch-screening", "screening-handler", "apply-node", "csv-status", "user-confirmation"]
     }
   }
 }

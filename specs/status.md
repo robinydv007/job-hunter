@@ -1,26 +1,27 @@
 # Project Status
-**Last Updated**: 2026-04-06  
-**Current Phase**: Phase 1 — MVP Core Pipeline (`complete`)  
-**Latest Release**: v0.1.0  
+**Last Updated**: 2026-04-07  
+**Current Phase**: Phase 2a — Detailed Profile & Config Restructure (`complete`)  
+**Latest Release**: v0.2.0 (planned)  
 **Health**: On Track ✅
 
 ## Summary
 
-Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0 (Foundation) and 1 (MVP Pipeline) are complete. The agent is fully functional for the MVP use case. Phase 2 (Auto-Apply & Enrichment) is the next planned phase.
+Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0, 1, and 2a are complete. Phase 2b is pending.
 
 ## Completed Phases
 | Phase | Name | Status | Release |
 |-------|------|--------|---------|
 | 0 | Foundation & Infrastructure | ✅ Complete | v0.0.1 |
 | 1 | MVP Core Pipeline | ✅ Complete | v0.1.0 |
+| 2a | Detailed Profile & Config Restructure | ✅ Complete | v0.2.0 (planned) |
 
 ## Active Phase
-*(No active phase — Phase 1 is complete. Phase 2 not yet started.)*
+*(No active phase — Phase 2a complete. Phase 2b not yet started.)*
 
 ## Upcoming Phases
 | Phase | Name | Status | Key Deliverables |
 |-------|------|--------|------------------|
-| 2 | Auto-Apply & Enrichment | 🔲 Not Started | Auto-apply to jobs above threshold, smart QA, multi-platform search, company intelligence |
+| 2b | Auto-Apply & Batch Screening | 🔲 Not Started | Auto-apply to jobs above threshold, batch screening, CSV status tracking |
 
 ## Blockers
 | ID | Description | Severity |
@@ -35,11 +36,12 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 ## Open P1 Items
 | ID | Type | Description |
 |----|------|-------------|
-| _(none)_ | | |
+| ENH-016 | Enhancement | Fix Naukri pagination using UI navigation |
 
 ## Next Actions
-1. Write Phase 2 plan: `specs/phases/phase-2-auto-apply/overview.md`
-2. Run `/start-phase` to begin Phase 2
+1. Continue Phase 2a implementation
+2. Complete screening.yaml integration, single LLM call, profile_detailed.yaml generation
+3. Move to Phase 2b (Auto-Apply)
 
 ## Key Decisions Made
 - **UV** chosen as Python package manager (speed + native lockfile)
@@ -47,8 +49,14 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **Non-headless Playwright** as default (headless triggers Naukri bot detection)
 - **Groq primary / OpenAI fallback** for LLM calls
 - **Location weight = 0.0** in scoring engine (intentional — remote/hybrid listings unreliable)
+- **Phase 2 split**: 2a (Detailed Profile) prioritized first, then 2b (Auto-Apply)
+- **4-file config**: user.yaml, screening.yaml, profile.json, profile_detailed.yaml
+- **Single LLM call** for both basic and detailed profile extraction
 
 ## Recent Changes
+- 2026-04-07: phase(2a) — Phase 2a Detailed Profile started
+- 2026-04-07: docs(phase-2) — create Phase 2a and Phase 2b plan documents with overview, plan, tasks for each
+- 2026-04-07: enh(ENH-016) — fix Naukri pagination using UI navigation; replaced direct URL pagination with clicking "Next" button, added fallback and duplicate detection
 - 2026-04-06: enh(ENH-013) — extract static scoring data to `config/constants.yaml`; add scoring weights to user.yaml; strip ~270 lines of hardcoded data from engine.py
 - 2026-04-06: enh(ENH-012) — fix Naukri base_url bug by extracting to `config/job_boards/naukri.py`
 - 2026-04-06: enh(ENH-014) — refactor CSV export with single source of truth (`ROW_MAPPING` dict)

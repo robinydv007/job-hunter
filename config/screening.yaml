@@ -1,0 +1,36 @@
+# config/screening.yaml
+# Screening answers for job applications (moved from user.yaml)
+
+screening_answers:
+  willing_to_relocate: true
+  comfortable_with_shifts: false
+  current_ctc_lpa: 22
+  expected_ctc_lpa: 30
+  notice_period: immediate joiner
+  reason_for_change: Looking for better growth opportunities and challenging role
+  visa_status: not applicable
+  remote_work_preference: flexible
+  current_employer: ""
+  current_designation: ""
+  years_in_current_role: 0
+  highest_qualification: ""
+  university_name: ""
+  passing_year: 0
+  gaps_in_employment: ""
+  work_authorization: not applicable
+  background_check_consent: true
+  references_available: true
+
+# Extended answers - user can add custom responses (stored here or in profile_detailed.yaml)
+screening_answers_extended:
+  # User can add longer, more detailed answers here
+  # Example:
+  # reason_for_change: |
+  #   Looking for a role that offers greater technical challenges
+  #   and leadership opportunities...
+  # strengths: |
+  #   Strong problem-solving, quick learner, good communication...
+  # weaknesses: |
+  #   Sometimes take on too many tasks at once...
+  # what_can_you_bring: |
+  #   9 years full-stack experience, proven leadership...

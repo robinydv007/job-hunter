@@ -15,7 +15,12 @@ from job_hunter.graph.utils import (
     apply_exclusion_filters,
     apply_title_keyword_filter,
 )
-from job_hunter.resume.parser import load_profile, parse_resume
+from job_hunter.resume.parser import (
+    load_profile,
+    load_detailed_profile,
+    load_profile_with_detailed,
+    parse_resume_full,
+)
 
 console = Console()
 
@@ -33,15 +38,29 @@ def parse_resume_node(state: JobHunterState) -> dict:
 
     If an explicit resume path is provided, always re-parse it with the LLM.
     If no resume path is given, fall back to the cached profile in data/profile.json.
+    Uses parse_resume_full for single LLM call extracting both basic + detailed profiles.
     """
     console.print(Panel("[bold blue]Processing resume...[/]", border_style="blue"))
     resume_path = state["resume_path"]
+    config = state["config"]
+    force_parse = state.get("force_parse", False)
 
+    # Get resume path from config if not provided in state
     if not resume_path:
-        existing = load_profile()
+        resume_path = config.profile.resume_path if config else "resume.pdf"
+
+    # Resolve to absolute path - check if relative (resume.pdf) or absolute
+    if resume_path and not Path(resume_path).is_absolute():
+        resume_path = Path.cwd() / resume_path
+
+    if not resume_path or not Path(resume_path).exists():
+        # Try to load cached profile
+        existing, detailed = load_profile_with_detailed()
         if existing and existing.name:
             console.print(f"[green]Using cached profile: {existing.name}[/]")
-            return {"profile": existing}
+            if detailed:
+                console.print(f"[dim]Detailed profile loaded[/]")
+            return {"profile": existing, "detailed_profile": detailed}
         console.print("[red]No resume provided and no cached profile found.[/]")
         raise RuntimeError("No resume path and no cached profile available.")
 
@@ -52,11 +71,15 @@ def parse_resume_node(state: JobHunterState) -> dict:
     nest_asyncio.apply()
 
     loop = asyncio.get_event_loop()
-    profile = loop.run_until_complete(parse_resume(resume_path))
+    profile, detailed = loop.run_until_complete(
+        parse_resume_full(resume_path, force=force_parse)
+    )
     console.print(
         f"[green]Profile extracted: {profile.name}, {profile.total_experience_years}y exp, {len(profile.skills)} skills[/]"
     )
-    return {"profile": profile}
+    if detailed:
+        console.print(f"[dim]Detailed profile generated[/]")
+    return {"profile": profile, "detailed_profile": detailed}
 
 
 def search_jobs_node(state: JobHunterState) -> dict:

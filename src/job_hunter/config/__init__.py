@@ -19,6 +19,7 @@ class Profile(BaseModel):
     remote_preference: str = "hybrid"
     company_size_preference: list[str] = Field(default_factory=list)
     industry_preference: list[str] = Field(default_factory=list)
+    resume_path: str = "resume.pdf"
 
 
 class SearchConfig(BaseModel):
@@ -98,12 +99,24 @@ class ScreeningAnswers(BaseModel):
     references_available: bool = True
 
 
+class ScreeningAnswersExtended(BaseModel):
+    reason_for_change: str = ""
+    strengths: str = ""
+    weaknesses: str = ""
+    what_can_you_bring: str = ""
+
+
+class ScreeningConfig(BaseModel):
+    screening_answers: ScreeningAnswers = Field(default_factory=ScreeningAnswers)
+    screening_answers_extended: ScreeningAnswersExtended | None = None
+
+
 class AppConfig(BaseModel):
     profile: Profile = Field(default_factory=Profile)
     search: SearchConfig = Field(default_factory=SearchConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
     naukri: NaukriConfig = Field(default_factory=NaukriConfig)
-    screening_answers: ScreeningAnswers = Field(default_factory=ScreeningAnswers)
+    screening: ScreeningConfig = Field(default_factory=ScreeningConfig)
     auto_apply: AutoApplyConfig = Field(default_factory=AutoApplyConfig)
 
 
@@ -186,7 +199,10 @@ def save_config(updates: dict[str, Any], config_path: str | Path | None = None) 
         yaml.dump(raw, f, default_flow_style=False, sort_keys=False)
 
 
-def load_config(config_path: str | Path | None = None) -> AppConfig:
+def load_config(
+    config_path: str | Path | None = None,
+    screening_config_path: str | Path | None = None,
+) -> AppConfig:
     if config_path is None:
         config_path = Path(__file__).resolve().parents[3] / "config" / "user.yaml"
     config_path = Path(config_path)
@@ -196,5 +212,16 @@ def load_config(config_path: str | Path | None = None) -> AppConfig:
 
     with open(config_path) as f:
         raw: dict[str, Any] = yaml.safe_load(f) or {}
+
+    if screening_config_path is None:
+        screening_config_path = (
+            Path(__file__).resolve().parents[3] / "config" / "screening.yaml"
+        )
+    screening_config_path = Path(screening_config_path)
+
+    if screening_config_path.exists():
+        with open(screening_config_path) as f:
+            screening_raw: dict[str, Any] = yaml.safe_load(f) or {}
+        raw["screening"] = screening_raw
 
     return AppConfig(**raw)
