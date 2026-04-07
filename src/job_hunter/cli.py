@@ -175,6 +175,40 @@ def status():
 
 
 @cli.command()
+def clean():
+    """Clear all cached data (profile, detailed profile, resume hash)."""
+    console.print(
+        Panel("[bold yellow]Clearing cache files...[/]", border_style="yellow")
+    )
+
+    data_dir = Path("data")
+    files_removed = []
+
+    # Files to clean
+    cache_files = [
+        data_dir / "profile.json",
+        data_dir / "profile_detailed.yaml",
+        data_dir / "resume_hash.txt",
+    ]
+
+    for f in cache_files:
+        if f.exists():
+            f.unlink()
+            files_removed.append(f.name)
+
+    if files_removed:
+        console.print(f"[green]Removed {len(files_removed)} cache file(s):[/]")
+        for name in files_removed:
+            console.print(f"  - {name}")
+    else:
+        console.print("[dim]No cache files to remove[/]")
+
+    console.print(
+        "[green]Cache cleaned! Run 'job-hunter run --force-parse' to re-parse resume.[/]"
+    )
+
+
+@cli.command()
 def init():
     """Initialize Job Hunter for the current project."""
     console.print(
