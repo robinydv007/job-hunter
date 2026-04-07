@@ -93,11 +93,19 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
 
     # Use cached profile only when resume was NOT explicitly provided and --force-parse not set
     # Explicit --resume always means "parse this resume"
+    # --force-parse also forces re-parse but still needs resume path from config
     if not explicit_resume and not force_parse and cached_profile_path.exists():
         console.print(
             "[dim]Cached profile found — skipping resume parse. Use --force-parse to re-parse.[/]"
         )
         resume = None  # signals parse_resume_node to use cache
+    elif force_parse and not explicit_resume:
+        # --force-parse without explicit --resume: use config's resume_path
+        if not resume and Path("resume.pdf").exists():
+            resume = "resume.pdf"
+        console.print("[dim]Forcing resume re-parse (--force-parse)[/]")
+    elif explicit_resume:
+        console.print(f"[dim]Parsing resume: {resume}[/]")
 
     async def run_pipeline():
         browser = BrowserManager(headless=headless)
