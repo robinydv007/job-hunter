@@ -79,12 +79,9 @@ def search_jobs_node(state: JobHunterState) -> dict:
         console.print(
             f"[dim]Search roles: using user.yaml preferred_roles -> {config.profile.preferred_roles}[/]"
         )
-        profile = profile.model_copy(
-            update={"target_roles": config.profile.preferred_roles}
-        )
     else:
         console.print(
-            f"[dim]Search roles: using profile.json target_roles -> {profile.target_roles}[/]"
+            f"[dim]Search roles: using profile.json past_roles -> {profile.past_roles}[/]"
         )
 
     all_jobs = []
@@ -102,6 +99,7 @@ def search_jobs_node(state: JobHunterState) -> dict:
                 page,
                 days_old=freshness,
                 max_jobs_per_query=max_jobs_per_query,
+                config=config,
             )
             all_jobs.extend(jobs)
             console.print(f"[green]Naukri: found {len(jobs)} jobs[/]")
@@ -136,37 +134,57 @@ def score_jobs_node(state: JobHunterState) -> dict:
     """Score each job against the user profile."""
     console.print(Panel("[bold blue]Scoring jobs...[/]", border_style="blue"))
 
-    from job_hunter.scoring.engine import score_job
-    from job_hunter.config.constants import load_constants
-
     profile = state["profile"]
     config = state["config"]
     raw_jobs = state["raw_jobs"]
-    constants = load_constants()
 
     if profile is None:
         console.print("[red]ERROR: Profile is None, cannot score jobs[/]")
         return {"scored_jobs": []}
 
-    scored = []
-    for job in raw_jobs:
-        job_dict = dict(job)
-        result = score_job(job_dict, profile, config, constants)
-        scored.append(result)
-        score = result.get("match_score", 0)
-        job_data = result.get("job", {})
-        title = job_data.get("title", "Unknown")
-        company = job_data.get("company", "Unknown")
-        color = "green" if score >= config.scoring.shortlist_threshold else "dim"
-        console.print(f"  [{color}]{score}% - {title} at {company}[/]")
+    llm_scoring_config = getattr(config.scoring, "llm_scoring", None)
+    use_llm_scoring = llm_scoring_config and llm_scoring_config.enabled
 
-    return {"scored_jobs": scored}
+    if use_llm_scoring:
+        console.print("[dim]Using LLM-based scoring[/]")
+        from job_hunter.scoring.llm_scorer import score_jobs_with_llm_sync
+
+        scored = score_jobs_with_llm_sync(raw_jobs, profile, config)
+        threshold = llm_scoring_config.shortlist_threshold
+
+        for result in scored:
+            score = result.get("match_score", 0)
+            job_data = result.get("job", {})
+            title = job_data.get("title", "Unknown")
+            company = job_data.get("company", "Unknown")
+            color = "green" if score >= threshold else "dim"
+            console.print(f"  [{color}]{score}% - {title} at {company}[/]")
+    else:
+        from job_hunter.scoring.engine import score_job
+        from job_hunter.config.constants import load_constants
+
+        constants = load_constants()
+        threshold = config.scoring.shortlist_threshold
+
+        scored = []
+        for job in raw_jobs:
+            job_dict = dict(job)
+            result = score_job(job_dict, profile, config, constants)
+            scored.append(result)
+            score = result.get("match_score", 0)
+            job_data = result.get("job", {})
+            title = job_data.get("title", "Unknown")
+            company = job_data.get("company", "Unknown")
+            color = "green" if score >= threshold else "dim"
+            console.print(f"  [{color}]{score}% - {title} at {company}[/]")
+
+    return {"scored_jobs": scored, "threshold_used": threshold}
 
 
 def filter_shortlist_node(state: JobHunterState) -> dict:
     """Filter jobs above the shortlist threshold and select top max_jobs."""
     config = state["config"]
-    threshold = config.scoring.shortlist_threshold
+    threshold = state.get("threshold_used") or config.scoring.shortlist_threshold
 
     shortlisted = [
         j for j in state["scored_jobs"] if j.get("match_score", 0) >= threshold

@@ -75,7 +75,9 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
 
     # Find resume
     cached_profile_path = Path(__file__).resolve().parents[3] / "data" / "profile.json"
-    explicit_resume = resume is not None  # True only when --resume was explicitly passed
+    explicit_resume = (
+        resume is not None
+    )  # True only when --resume was explicitly passed
 
     if resume is None:
         if Path("resume.pdf").exists():
@@ -149,7 +151,7 @@ def status():
         console.print(f"[green]Cached profile: {profile.name}[/]")
         console.print(f"  Skills: {len(profile.skills)}")
         console.print(f"  Experience: {profile.total_experience_years}y")
-        console.print(f"  Target roles: {', '.join(profile.target_roles)}")
+        console.print(f"  Target roles: {', '.join(profile.past_roles)}")
     else:
         console.print("[yellow]No cached profile found[/]")
 

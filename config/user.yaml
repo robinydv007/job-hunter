@@ -52,6 +52,12 @@ scoring:
   company_weight: 0.10
   location_weight: 0.08
   work_mode_weight: 0.07
+  llm_scoring:
+    enabled: true
+    batch_size: 10
+    shortlist_threshold: 30
+    consider_location: false
+    consider_work_mode: false
 screening_answers:
   willing_to_relocate: true
   comfortable_with_shifts: false

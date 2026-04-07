@@ -40,6 +40,14 @@ class SearchConfig(BaseModel):
     delay_max_seconds: float = 8.0
 
 
+class ScoringLLMConfig(BaseModel):
+    enabled: bool = False
+    batch_size: int = 10
+    shortlist_threshold: int = 30
+    consider_location: bool = False
+    consider_work_mode: bool = False
+
+
 class ScoringConfig(BaseModel):
     shortlist_threshold: int = 60
     apply_threshold: int = 75
@@ -49,6 +57,7 @@ class ScoringConfig(BaseModel):
     company_weight: float = 0.10
     location_weight: float = 0.08
     work_mode_weight: float = 0.07
+    llm_scoring: ScoringLLMConfig | None = None
 
 
 class NaukriConfig(BaseModel):

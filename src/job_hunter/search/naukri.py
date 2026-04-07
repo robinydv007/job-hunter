@@ -12,7 +12,7 @@ from typing import Any
 
 from playwright.async_api import Page
 
-from job_hunter.config import SearchConfig
+from job_hunter.config import AppConfig, SearchConfig
 from job_hunter.config.job_boards.naukri import NAUKRI
 from job_hunter.resume.schema import ResumeProfile
 
@@ -89,7 +89,7 @@ def record_run(platform: str, freshness_used: int, jobs_found: int) -> None:
 
 
 def _build_search_queries(
-    profile: ResumeProfile, search_config: SearchConfig
+    profile: ResumeProfile, search_config: SearchConfig, config: "AppConfig"
 ) -> list[dict[str, str]]:
     """Build search queries: role-only, no skills, no arbitrary cap."""
     queries = []
@@ -99,8 +99,10 @@ def _build_search_queries(
         else []
     )
     roles = (
-        profile.target_roles[: search_config.max_roles]
-        if profile.target_roles
+        config.profile.preferred_roles[: search_config.max_roles]
+        if config.profile.preferred_roles
+        else profile.past_roles[: search_config.max_roles]
+        if profile.past_roles
         else ["Technical Lead"]
     )
 
@@ -487,6 +489,7 @@ def search_naukri(
     page: Page,
     days_old: int = 7,
     max_jobs_per_query: int = 0,
+    config: AppConfig | None = None,
 ) -> list[dict[str, Any]]:
     """Search Naukri for jobs using a persistent browser page."""
     import asyncio
@@ -497,7 +500,7 @@ def search_naukri(
     if max_jobs_per_query <= 0:
         max_jobs_per_query = 100
 
-    queries = _build_search_queries(profile, search_config)
+    queries = _build_search_queries(profile, search_config, config)
     print(f"  [INFO] Searching with {len(queries)} queries...")
 
     all_jobs = []

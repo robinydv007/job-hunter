@@ -115,11 +115,17 @@ def _score_experience(job: dict, profile: ResumeProfile, constants: Constants) -
     return max(0, 20 - (under - 3) * 10)
 
 
-def _score_role(job: dict, profile: ResumeProfile, constants: Constants) -> int:
+def _score_role(
+    job: dict, profile: ResumeProfile, config: AppConfig, constants: Constants
+) -> int:
     job_title = job.get("title", "").lower()
-    target_roles = [r.lower() for r in profile.target_roles]
+    preferred_roles = (
+        [r.lower() for r in config.profile.preferred_roles]
+        if config.profile.preferred_roles
+        else []
+    )
     past_roles = [r.lower() for r in profile.past_roles]
-    all_roles = target_roles + past_roles
+    all_roles = preferred_roles + past_roles
 
     if not all_roles:
         return 50
@@ -288,7 +294,7 @@ def score_job(
             return _create_zero_score_job(job, config)
 
     s_skills, matched_skills = _score_skills(job, profile, constants)
-    s_role = _score_role(job, profile, constants)
+    s_role = _score_role(job, profile, config, constants)
     s_exp = _score_experience(job, profile, constants)
     s_company = _score_company(job, constants)
     s_location = _score_location(job, profile, constants)
