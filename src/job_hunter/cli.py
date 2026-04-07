@@ -123,7 +123,9 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
             initial_state = {
                 "config": app_config,
                 "resume_path": resume,
+                "force_parse": force_parse,
                 "profile": None,
+                "detailed_profile": None,
                 "raw_jobs": [],
                 "scored_jobs": [],
                 "shortlisted_jobs": [],

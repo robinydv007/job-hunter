@@ -36,6 +36,7 @@ class ScoredJob(TypedDict, total=False):
 class JobHunterState(TypedDict):
     config: AppConfig
     resume_path: str
+    force_parse: bool  # Force re-parse resume even if cache exists
     profile: ResumeProfile | None
     detailed_profile: (
         dict | None

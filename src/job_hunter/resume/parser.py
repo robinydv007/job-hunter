@@ -170,6 +170,7 @@ async def parse_resume_full(
     file_path: str | Path,
     profile_path: str | Path | None = None,
     detailed_path: str | Path | None = None,
+    force: bool = False,
 ) -> tuple[ResumeProfile, dict]:
     """Parse resume and extract both basic + detailed profile in a single LLM call.
 
@@ -198,8 +199,13 @@ async def parse_resume_full(
     if hash_file.exists():
         stored_hash = hash_file.read_text().strip()
 
-    # Check if cache exists and resume hasn't changed
-    if stored_hash == current_hash and profile_path.exists() and detailed_path.exists():
+    # Check if cache exists and resume hasn't changed (unless force=True)
+    if (
+        not force
+        and stored_hash == current_hash
+        and profile_path.exists()
+        and detailed_path.exists()
+    ):
         # Load from cache
         profile = load_profile(profile_path)
         detailed = load_detailed_profile(detailed_path)

@@ -43,6 +43,7 @@ def parse_resume_node(state: JobHunterState) -> dict:
     console.print(Panel("[bold blue]Processing resume...[/]", border_style="blue"))
     resume_path = state["resume_path"]
     config = state["config"]
+    force_parse = state.get("force_parse", False)
 
     # Get resume path from config if not provided in state
     if not resume_path:
@@ -70,7 +71,9 @@ def parse_resume_node(state: JobHunterState) -> dict:
     nest_asyncio.apply()
 
     loop = asyncio.get_event_loop()
-    profile, detailed = loop.run_until_complete(parse_resume_full(resume_path))
+    profile, detailed = loop.run_until_complete(
+        parse_resume_full(resume_path, force=force_parse)
+    )
     console.print(
         f"[green]Profile extracted: {profile.name}, {profile.total_experience_years}y exp, {len(profile.skills)} skills[/]"
     )
