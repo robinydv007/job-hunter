@@ -117,29 +117,32 @@ AppConfig
 
 ### 5.1 Startup (outside LangGraph)
 
-Before the graph begins, the CLI performs two synchronous setup steps:
+Before the graph begins, the CLI performs setup:
 
 1. Loads config via `load_config(config_path)` 
-2. Initialises `BrowserManager`, calls `browser.start()` and `browser.login_naukri()` to authenticate a persistent Playwright session
+2. Initialises `BrowserManager` and calls `browser.start()` to create a persistent Playwright session
 
-The authenticated `page` object is injected into `initial_state["browser_page"]` so all scraping nodes inside the graph can reuse the same session.
+The `page` object is injected into `initial_state["browser_page"]` so all scraping nodes inside the graph can reuse the same session.
 
 ### 5.2 LangGraph Pipeline (Linear StateGraph)
 
 ```
-load_config → parse_resume → search_jobs → score_jobs → filter_shortlist → export_csv → END
+load_config → parse_resume → login → search_jobs → score_jobs → filter_shortlist → export_csv → END
 ```
+
+**Key change:** Login now happens inside the LangGraph workflow, after resume parsing. This ensures profile data is available before platform authentication, enabling personalized job searches and multi-platform support.
 
 ```mermaid
 graph LR
     CLI[CLI: job-hunter run] -->|loads config + starts browser| S((State))
     S --> N1[1. load_config]
     N1 -->|validate + prompt missing fields| N2[2. parse_resume]
-    N2 -->|LLM extraction or cache hit| N3[3. search_jobs]
-    N3 -->|Playwright DOM scrape| N4[4. score_jobs]
-    N4 -->|weighted rubric| N5[5. filter_shortlist]
-    N5 -->|threshold filter + top-N| N6[6. export_csv]
-    N6 --> OUT[output/shortlist_*.csv]
+    N2 -->|LLM extraction or cache hit| N3[3. login]
+    N3 -->|parallel platform auth| N4[4. search_jobs]
+    N4 -->|Playwright DOM scrape| N5[5. score_jobs]
+    N5 -->|weighted rubric| N6[6. filter_shortlist]
+    N6 -->|threshold filter + top-N| N7[7. export_csv]
+    N7 --> OUT[output/shortlist_*.csv]
 ```
 
 ### Node Responsibilities
@@ -148,6 +151,7 @@ graph LR
 |------|-------|--------|-----------|
 | `load_config` | `config` | `profile_validated = True` | Validates required fields; prompts interactively for any missing ones; saves answers back to `user.yaml` |
 | `parse_resume` | `resume_path` | `profile` | Checks `data/profile.json` cache first; if stale/absent, calls LLM via `parser.py`; persists new profile to disk. Cache can be overridden with `--force-parse` flag. |
+| `login` | `config`, `browser_page` | `logged_in_platforms` | Logs into each configured platform in parallel. Returns list of successfully logged-in platforms. |
 | `search_jobs` | `profile`, `browser_page` | `raw_jobs` | Builds search queries from profile (roles × skills × locations); scrapes Naukri; deduplicates within-run AND across past CSV exports. **Role priority:** `user.yaml` `preferred_roles` overrides parsed `target_roles` when set. |
 | `score_jobs` | `raw_jobs`, `profile` | `scored_jobs` | Applies 6-factor weighted rubric; generates human-readable `why_selected`; sets `apply_status` |
 | `filter_shortlist` | `scored_jobs` | `shortlisted_jobs` | Filters jobs ≥ `shortlist_threshold`; sorts descending by score; respects `max_jobs` cap |

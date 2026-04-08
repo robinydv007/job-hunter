@@ -1,6 +1,6 @@
 # Phase 2b — Tasks: Auto-Apply
 
-> **Status: PLANNED** — To start after Phase 2a
+> **Status: IN PROGRESS** — Exploration complete, implementation starting
 
 ## Prerequisites (Must complete Phase 2a first)
 

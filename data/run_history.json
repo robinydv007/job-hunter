@@ -118,5 +118,37 @@
     "platform": "naukri",
     "jobs_shortlisted": 0,
     "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-07T22:05:34.096460",
+    "freshness_used": 1,
+    "jobs_found": 0,
+    "platform": "naukri",
+    "jobs_shortlisted": 0,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-07T22:52:13.860711",
+    "freshness_used": 1,
+    "jobs_found": 16,
+    "platform": "naukri",
+    "jobs_shortlisted": 3,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-07T22:57:04.999091",
+    "freshness_used": 1,
+    "jobs_found": 16,
+    "platform": "naukri",
+    "jobs_shortlisted": 1,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-08T08:33:38.404104",
+    "freshness_used": 1,
+    "jobs_found": 18,
+    "platform": "naukri",
+    "jobs_shortlisted": 3,
+    "jobs_applied": 0
   }
 ]

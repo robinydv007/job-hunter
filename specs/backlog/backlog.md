@@ -54,3 +54,5 @@
 | ENH-015 | LLM-Based Job Scoring | P1 | open | 1 | [→](details/ENH-015.md) |
 | ENH-016 | Fix Naukri pagination using UI navigation | P1 | open | 2 | [→](details/ENH-016.md) |
 | ENH-017 | Reorder pipeline: parse resume before login | P1 | open | 2 | [→](details/ENH-017.md) |
+
+> **Note (2026-04-07)**: Current work-around is login in CLI before workflow. Implementation attempts inside LangGraph workflow have failed due to async/sync conflicts between login node and sync search_naukri function.

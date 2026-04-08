@@ -1,8 +1,8 @@
 # Phase 2b — Overview: Auto-Apply
 
-**Status:** Planned  
+**Status:** In Progress  
 **Target:** TBD  
-**Release:** v0.2.0 (planned)
+**Release:** v0.2.1 (planned)
 
 ---
 
@@ -268,7 +268,27 @@ src/job_hunter/
 
 ## Prerequisites
 
-- Phase 2a (Detailed Profile) must be complete
+- Phase 2a (Detailed Profile) is complete
 - `profile_detailed.yaml` exists with extended profile data
 - `screening.yaml` loaded in config
 - Resume path configured in user.yaml
+- ENH-017 (pipeline reordering) assumed complete before Phase 2b starts
+
+## Actual Naukri Apply Flow (Exploration Results)
+
+During exploration with Playwright on Naukri.com, the following was discovered:
+
+### Apply Trigger
+- **Selector:** `.apply-button`
+- **Behavior:** Clicking opens a sidebar on the RIGHT side of the screen (not a new page or modal)
+
+### Sidebar Form Fields (for logged-in users)
+- Resume upload: `input[type="file"]`
+- Experience dropdown: `#experienceDD`
+- Location input field
+
+### Key Implementation Notes
+- Apply is sidebar-based, not page-based
+- For logged-in users, most fields are pre-filled with profile data
+- Resume upload requires absolute file path
+- Need to handle sidebar open/close states

@@ -15,3 +15,9 @@ Topics: screening.yaml, profile_detailed.yaml, single-llm-call, resume-path, res
 Affects-phases: phase-2b-auto-apply
 Affects-docs: specs/status.md, src/job_hunter/config/__init__.py, src/job_hunter/resume/parser.py, src/job_hunter/graph/nodes.py, src/job_hunter/graph/state.py
 Detail: Implemented all Phase 2a features: (1) config/__init__.py loads screening.yaml, added resume_path to Profile with default resume.pdf, created ScreeningConfig model; (2) resume/parser.py has parse_resume_full() for single LLM call extracting both basic + detailed profiles, save_detailed_profile/load_detailed_profile functions, resume hash-based change detection in data/resume_hash.txt; (3) nodes.py parse_resume_node updated to use parse_resume_full and return detailed_profile; (4) state.py updated to include detailed_profile field.
+
+[FEATURE] 2026-04-07 — ENH-017: Reorder pipeline - parse resume before login
+Topics: enh-017, langgraph, pipeline-order, multi-platform
+Affects-phases: phase-2b-auto-apply
+Affects-docs: specs/architecture/overview.md, specs/changelog/2026-04.md
+Detail: Implemented enh-017 to reorder pipeline so resume parsing happens before login. Added login_platforms_node() for parallel multi-platform login, updated workflow edges to: load_config → parse_resume → login → search_jobs → ..., added logged_in_platforms to JobHunterState for tracking successful authentications, enables platform-agnostic design for future LinkedIn/Hirist/Instahyre support.

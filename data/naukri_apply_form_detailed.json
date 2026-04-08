@@ -1,0 +1,38 @@
+{
+  "job_url": "https://www.naukri.com/job-listings-technical-lead-tata-consultancy-services-kolkata-pune-chennai-5-to-10-years-180326036328?src=jobsearchDesk&sid=17750431827535292&xp=2&px=1",
+  "form_elements": [
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "id": "",
+      "name": "",
+      "placeholder": "Enter keyword / designation / companies",
+      "required": false
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "id": "experienceDD",
+      "name": "experienceDD",
+      "placeholder": "Select experience",
+      "required": false
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "id": "",
+      "name": "",
+      "placeholder": "Enter location",
+      "required": false
+    },
+    {
+      "tag": "INPUT",
+      "type": "file",
+      "id": "_ebrr55u51Uploader",
+      "name": "",
+      "placeholder": "",
+      "required": false
+    }
+  ],
+  "data_attributes": []
+}
