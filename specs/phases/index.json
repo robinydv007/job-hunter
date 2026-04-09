@@ -21,7 +21,7 @@
     "phase-2b-auto-apply": {
       "name": "Auto-Apply & Batch Screening",
       "status": "not_started",
-      "keywords": ["auto-apply", "naukri-apply", "state-machine", "contenteditable", "sequential-forms", "screening-handler", "apply-node", "csv-status", "user-confirmation"]
+      "keywords": ["auto-apply", "naukri-apply", "api-based", "/apply", "/respond", "batch-screening", "apply-node", "csv-status", "user-confirmation"]
     },
     "phase-3.0-async-foundation": {
       "name": "Async Architecture Foundation",

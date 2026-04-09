@@ -35,3 +35,9 @@ Topics: docs, tasks, prerequisites
 Affects-phases: phase-2b-auto-apply
 Affects-docs: specs/phases/phase-2b-auto-apply/tasks.md
 Detail: Removed duplicate prerequisite entries in tasks.md. All Phase 2a prerequisites are now correctly marked as complete ([x]) including resume change detection, cached profiles, and load_profile_with_detailed().
+
+[DISCOVERY] 2026-04-09 — Naukri API Flow Discovered
+Topics: naukri, api, /apply, /respond, network-inspection
+Affects-phases: phase-2b-auto-apply
+Affects-docs: specs/phases/phase-2b-auto-apply/overview.md, specs/phases/phase-2b-auto-apply/plan.md
+Detail: Through network inspection (DevTools → Network tab), discovered Naukri uses internal APIs for apply flow instead of browser form filling. Key finding: POST /apply returns ALL questions at once (not sequential), then POST /respond for each answer, then browser auto-submits. This replaces the fragile state machine approach with reliable API calls. Updated plan.md and overview.md with new API-based implementation approach.

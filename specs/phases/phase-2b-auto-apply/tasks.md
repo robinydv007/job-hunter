@@ -1,6 +1,6 @@
 # Phase 2b — Tasks: Auto-Apply
 
-> **Status: NOT STARTED** — Implementation needs to be replanned based on challenges
+> **Status: NOT STARTED** — Replanning with API-based approach
 
 ## Prerequisites (Phase 2a complete - all items checked)
 
@@ -14,37 +14,67 @@
 
 ## Task Checklist
 
+### 0. API Flow Verification (Exploration)
+- [ ] Run `scripts/explore_apply_api.py` to verify API flow
+- [ ] Capture and analyze API responses
+- [ ] Verify /apply returns all questions at once
+- [ ] Verify /respond works for each answer
+- [ ] Verify browser auto-submits after all responses
+- [ ] Document any additional findings
+
 ### 1. Apply Package Setup
 - [ ] Create `src/job_hunter/apply/__init__.py` package init
-- [ ] Create `src/job_hunter/apply/screening.py` for batch screening
+- [ ] Create `src/job_hunter/apply/api.py` for API client (/apply and /respond)
+- [ ] Create `src/job_hunter/apply/client.py` for session management
 - [ ] Create `src/job_hunter/apply/naukri_apply.py` for auto-apply logic
 
-### 2. Batch Screening Handler
-- [ ] Implement `scrape_all_questions(page)` in `screening.py`
-  - Find all input/select/textarea fields with labels
-  - Return list of question strings
-- [ ] Implement `answer_screening_batch(page, profile, config, detailed_profile)` in `screening.py`
-  - Single LLM call with all questions
-  - Returns dict mapping question → answer
-- [ ] Implement `fill_form_answers(page, answers)` in `screening.py`
-  - Fill all answered fields in the form
-  - Handle dropdown selects, radio buttons, text inputs, textareas
-- [ ] Test: Run on sample Naukri form to verify question extraction
+### 2. API Client (`api.py`)
+- [ ] Implement `get_questions(page, job_id, skills)` - Call /apply API
+  - Extract job_id from job data (not URL parsing)
+  - Get mandatory/optional skills from job or empty list
+  - Parse questionnaire from response
+  - Return list of questions with id, name, type, mandatory
+- [ ] Implement `send_response(page, job_id, question_id, answer, app_name)` - Call /respond API
+  - Build payload with input.text as answer
+  - Handle response to get next question
+  - Return response data
+- [ ] Implement `extract_conversation_id(response)` - Extract from /apply response
+- [ ] Test: Verify API calls work and return expected data
 
-### 3. Naukri Auto-Apply Module
-- [ ] Implement `navigate_to_job(page, url)` in `naukri_apply.py`
-- [ ] Implement `check_already_applied(page)` - detect "Applied" badge
-- [ ] Implement `fill_basic_info(page, profile)` - name, email, phone
-- [ ] Implement `upload_resume(page, resume_path)` - file input upload
-- [ ] Implement `find_and_click_apply_button(page)` - locate submit trigger
-- [ ] Implement `submit_application(page)` - click submit, detect success/failure
-- [ ] Implement `apply_to_job(page, job, profile, config, detailed_profile)` orchestrator
-- [ ] Add random delays between steps to avoid bot detection
+### 3. Session Management (`client.py`)
+- [ ] Implement `get_auth_headers(page)` - Extract auth tokens from browser context
+  - Or verify page.request can be used directly (inherits session)
+- [ ] Test: Verify API calls have correct authentication
+
+### 4. Naukri Auto-Apply Module (`naukri_apply.py`)
+- [ ] Implement `apply_to_job(page, job, profile, config, detailed_profile)` - Main orchestrator
+  - Step 1: Navigate to job detail page
+  - Step 2: Click Apply button to trigger /apply API
+  - Step 3: Get questions from intercepted response
+  - Step 4: Get LLM answers for all questions (batch)
+  - Step 5: Send each answer via /respond API
+  - Step 6: Wait for auto-submit (browser calls /apply with all answers)
+  - Step 7: Detect success/failure
+- [ ] Implement `get_questions_from_response(response)` - Parse questionnaire
+- [ ] Implement `navigate_to_job(page, url)` - Go to job detail
+- [ ] Implement `check_already_applied(page)` - Detect "Applied" badge
+- [ ] Implement `wait_for_submission(page, timeout)` - Wait for auto-submit
+  - Check for success message ("Thank for your response")
+  - Check for "Applied" badge
+- [ ] Implement `detect_submission_result(page)` - Determine if applied successfully
+- [ ] Add random delays between /respond calls
 - [ ] Handle CAPTCHA: pause and prompt user to solve manually
-- [ ] Handle form validation errors: log and mark as failed
+- [ ] Handle API errors: log and mark as failed
 - [ ] Test: Manual test with one job application
 
-### 4. Apply Jobs Node (LangGraph)
+### 5. LLM Batch Answering
+- [ ] Implement `get_llm_answers(questions, profile, config, detailed_profile)` in `naukri_apply.py`
+  - Send all questions to LLM in one call
+  - Return dict mapping questionId → answer
+- [ ] Handle LLM errors: retry once, then mark failed
+- [ ] Test: Verify LLM returns valid answers for all question types
+
+### 6. Apply Jobs Node (LangGraph)
 - [ ] Add `apply_jobs_node(state)` in `src/job_hunter/graph/nodes.py`
 - [ ] Filter jobs where `match_score >= apply_threshold` and `apply_status == "Pending"`
 - [ ] Implement user prompt: "Apply to '{title}' at {company}? [y/n/q]"
@@ -55,20 +85,22 @@
 - [ ] Call `apply_to_job()` for each user-confirmed job
 - [ ] Update workflow in `src/job_hunter/graph/workflow.py` to add new node
 
-### 5. CSV Export Enhancement
+### 7. CSV Export Enhancement
 - [ ] Add `apply_timestamp` column to CSV export in `src/job_hunter/export/csv_export.py`
 - [ ] Add `apply_error` column for failure details
 - [ ] Update `apply_status` values: Applied, Failed, Skipped, Already Applied
 - [ ] Re-export CSV with updated statuses after apply loop completes
 - [ ] Test: Verify CSV shows correct status after apply run
 
-### 6. Config & State Updates
+### 8. Config & State Updates
 - [ ] Add `auto_apply_config` to `JobHunterState` in `src/job_hunter/graph/state.py`
-- [ ] Ensure `require_confirmation: true` defaults in config
-- [ ] Ensure `enabled: false` defaults in config (user enables when ready)
-- [ ] Verify: config loads correctly from screening.yaml
+  - `enabled: bool` - Whether auto-apply is enabled
+  - `threshold: int` - Minimum match score to apply (default 75)
+  - `require_confirmation: bool` - Require user confirmation (default true)
+- [ ] Ensure config loads correctly
+- [ ] Verify: config loads from user.yaml
 
-### 7. End-to-End Validation
+### 9. End-to-End Validation
 - [ ] Run pipeline with auto_apply disabled - confirm no changes to behavior
 - [ ] Enable auto_apply in config, run pipeline with threshold set to low value (e.g., 30)
 - [ ] Confirm user prompted for each job above threshold
@@ -78,18 +110,22 @@
 - [ ] Test retry on failure: first attempt fails → retry → success/fail
 - [ ] Verify batch screening: all questions answered via single LLM call
 
-### 8. Documentation
+### 10. Documentation
 - [ ] Update `specs/status.md` - mark Phase 2b as in-progress
-- [ ] Add Phase 2b entry to `specs/changelog/YYYY-MM.md`
+- [ ] Add Phase 2b entry to `specs/changelog/2026-04.md`
 
 ---
 
-## Implementation Notes
+## Implementation Notes (API-Based)
 
-- Batch screening: scrape all questions first, then single LLM call for all answers
-- User confirms each application - no batch mode in Phase 2b
-- Auto-apply disabled by default - user explicitly enables via config
-- Resume uploaded from configured path in user.yaml
+- **API-based approach**: Use Naukri's /apply and /respond APIs instead of browser form filling
+- **No contenteditable handling needed**: API calls work reliably
+- **No Save/Next clicking**: API handles state transitions
+- **Job ID**: Extract from existing job data (not URL parsing)
+- **Authentication**: Use Playwright's page.request (inherits browser session)
+- **Batch LLM**: One call for all questions
+- **Auto-submit**: Browser auto-submits after all /respond calls complete
+- **Success detection**: Check for "Thank for your response" in sidebar
 
 ---
 
@@ -113,8 +149,9 @@
 | File | Change |
 |------|--------|
 | `src/job_hunter/apply/__init__.py` | New package init |
-| `src/job_hunter/apply/screening.py` | New - batch screening handler |
-| `src/job_hunter/apply/naukri_apply.py` | New - auto-apply logic |
+| `src/job_hunter/apply/api.py` | New - API client (/apply, /respond) |
+| `src/job_hunter/apply/client.py` | New - Session management |
+| `src/job_hunter/apply/naukri_apply.py` | New - Auto-apply orchestrator |
 | `src/job_hunter/graph/nodes.py` | Add apply_jobs_node |
 | `src/job_hunter/graph/workflow.py` | Add node to workflow |
 | `src/job_hunter/graph/state.py` | Add auto_apply_config to state |
