@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -321,7 +322,7 @@ def apply_jobs_node(state: JobHunterState) -> dict:
         if i < len(shortlisted):
             delay = auto_apply_config.delay_between_seconds
             console.print(f"  [dim]Waiting {delay}s before next job...[/]")
-            await asyncio.sleep(delay)
+            time.sleep(delay)
 
     console.print(
         Panel(
