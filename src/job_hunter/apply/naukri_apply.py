@@ -160,6 +160,7 @@ async def get_llm_answers(
         Dict mapping question_id to answer
     """
     from job_hunter.llm.provider import get_llm
+    import json
 
     llm = get_llm()
 
@@ -187,8 +188,22 @@ Return JSON (question_id -> answer):
 {{"38621838": "5", "38621846": "12", ...}}"""
 
     try:
-        result = await llm.generate_json(prompt)
-        return result
+        response = await llm.ainvoke(prompt)
+
+        # Extract JSON from response
+        content = response.content if hasattr(response, "content") else str(response)
+
+        # Find JSON in response
+        start = content.find("{")
+        end = content.rfind("}") + 1
+
+        if start >= 0 and end > start:
+            json_str = content[start:end]
+            answers = json.loads(json_str)
+            return answers
+        else:
+            raise ValueError("No JSON found in LLM response")
+
     except Exception as e:
         logger.error(f"LLM answer generation failed: {e}")
         raise
