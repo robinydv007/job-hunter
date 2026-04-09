@@ -60,16 +60,15 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str]:
     # Set up response handler BEFORE clicking
     questions_data = {}
 
-    def handle_response(response):
+    async def handle_response(response):
         url = response.url
         if "/apply-workflow/v1/apply" in url:
             try:
-                import asyncio
-
-                loop = asyncio.get_event_loop()
-                data = loop.run_until_complete(response.json())
+                data = await response.json()
                 questions_data["data"] = data
-                logger.info("Intercepted /apply API response")
+                logger.info(
+                    f"Intercepted /apply API response with {len(data.get('jobs', []))} jobs"
+                )
             except Exception as e:
                 logger.error(f"Failed to parse /apply response: {e}")
 
@@ -108,6 +107,13 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str]:
 
     if not data:
         logger.warning("No /apply API response intercepted")
+        # Check if sidebar opened
+        sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
+        if sidebar:
+            text = await sidebar.inner_text()
+            logger.warning(f"Sidebar opened but no API response. Content: {text[:500]}")
+        else:
+            logger.warning("Sidebar did NOT open!")
         return True, [], ""
 
     if data.get("statusCode") != 0:
