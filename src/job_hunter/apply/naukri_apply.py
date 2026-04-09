@@ -175,10 +175,10 @@ PROFILE:
 - Current Role: {profile.past_roles[0] if profile.past_roles else "N/A"}
 
 SCREENING ANSWERS:
-- Notice Period: {config.screening_answers.notice_period}
-- Expected CTC: {config.screening_answers.expected_ctc_lpa} LPA
-- Current CTC: {config.screening_answers.current_ctc_lpa} LPA
-- Willing to Relocate: {config.screening_answers.willing_to_relocate}
+- Notice Period: {config.screening.screening_answers.notice_period}
+- Expected CTC: {config.screening.screening_answers.expected_ctc_lpa} LPA
+- Current CTC: {config.screening.screening_answers.current_ctc_lpa} LPA
+- Willing to Relocate: {config.screening.screening_answers.willing_to_relocate}
 
 QUESTIONS:
 {question_list}
