@@ -51,15 +51,30 @@ async def navigate_to_job(page: Page, job_url: str) -> None:
     await asyncio.sleep(2)
 
 
-async def click_apply_button(page: Page) -> bool:
-    """Click the Apply button on job page.
-
-    Args:
-        page: Playwright page instance
+async def click_and_get_questions(page: Page) -> tuple[bool, list, str]:
+    """Click Apply button and intercept the API response.
 
     Returns:
-        True if button found and clicked
+        Tuple of (success, questions, conversation_id)
     """
+    # Set up response handler BEFORE clicking
+    questions_data = {}
+
+    def handle_response(response):
+        url = response.url
+        if "/apply-workflow/v1/apply" in url:
+            try:
+                import asyncio
+
+                loop = asyncio.get_event_loop()
+                data = loop.run_until_complete(response.json())
+                questions_data["data"] = data
+                logger.info("Intercepted /apply API response")
+            except Exception as e:
+                logger.error(f"Failed to parse /apply response: {e}")
+
+    page.on("response", handle_response)
+
     # Try multiple selectors for the apply button
     selectors = [
         ".apply-button",
@@ -74,18 +89,51 @@ async def click_apply_button(page: Page) -> bool:
         if apply_button:
             try:
                 await apply_button.click()
-                await asyncio.sleep(2)
                 logger.info(f"Clicked apply button with selector: {selector}")
-                return True
+                break
             except Exception as e:
                 logger.debug(f"Failed to click {selector}: {e}")
                 continue
+    else:
+        logger.warning("Apply button not found")
+        return False, [], ""
 
-    # Log page HTML for debugging
-    logger.warning("Apply button not found, dumping page for debug")
-    html = await page.content()
-    logger.warning(f"Page HTML (first 2000 chars): {html[:2000]}")
-    return False
+    # Wait for API response (max 15 seconds)
+    for _ in range(30):  # 30 * 0.5 = 15 seconds
+        await asyncio.sleep(0.5)
+        if questions_data.get("data"):
+            break
+
+    data = questions_data.get("data", {})
+
+    if not data:
+        logger.warning("No /apply API response intercepted")
+        return True, [], ""
+
+    if data.get("statusCode") != 0:
+        logger.error(f"API error: {data}")
+        return True, [], ""
+
+    jobs = data.get("jobs", [])
+    if not jobs:
+        return True, [], ""
+
+    questionnaire = jobs[0].get("questionnaire", [])
+    conversation_id = data.get("chatbotResponse", {}).get("conversation_session_id", "")
+
+    questions = []
+    for q in questionnaire:
+        questions.append(
+            {
+                "id": q["questionId"],
+                "name": q["questionName"],
+                "type": q.get("questionType", "Text Box"),
+                "mandatory": q.get("isMandatory", True),
+            }
+        )
+
+    logger.info(f"Got {len(questions)} questions from API")
+    return True, questions, conversation_id
 
 
 async def get_llm_answers(
@@ -197,7 +245,10 @@ async def apply_to_job(
                 timestamp=datetime.now().isoformat(),
             )
 
-        if not await click_apply_button(page):
+        # Click apply button and get questions in one go
+        success, questions, conversation_id = await click_and_get_questions(page)
+
+        if not success:
             return ApplyResult(
                 job_id=job_id,
                 status="Skipped",
@@ -205,15 +256,11 @@ async def apply_to_job(
                 timestamp=datetime.now().isoformat(),
             )
 
-        # Wait a bit for API call to complete, then intercept response
-        await asyncio.sleep(1)
-        questions, conversation_id = await api.get_questions_from_browser(page)
-
         if not questions:
             return ApplyResult(
                 job_id=job_id,
-                status="Failed",
-                error="No questions received from API",
+                status="Skipped",
+                error="No screening questions (possibly company site or already applied)",
                 timestamp=datetime.now().isoformat(),
             )
 
