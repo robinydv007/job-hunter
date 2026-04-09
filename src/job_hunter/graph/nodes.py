@@ -228,7 +228,7 @@ def filter_shortlist_node(state: JobHunterState) -> dict:
     return {"shortlisted_jobs": shortlisted}
 
 
-async def apply_jobs_node(state: JobHunterState) -> dict:
+def apply_jobs_node(state: JobHunterState) -> dict:
     """Apply to shortlisted jobs above apply threshold using Naukri APIs.
 
     Prompts user for each job, then uses API-based auto-apply.
