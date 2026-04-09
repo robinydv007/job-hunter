@@ -25,6 +25,7 @@
 | FEAT-003 | Multi-platform search (LinkedIn, Hirist, Instahyre, Foundit) | P1 | open | 2/3 | _(planned)_ |
 | FEAT-004 | Apply status CSV write-back | P1 | open | 2 | _(planned)_ |
 | FEAT-005 | Company intelligence enrichment columns | P2 | open | 3 | _(planned)_ |
+| ENH-018 | Review answers before apply (edit/regenerate) | P1 | open | 2b | [→](details/ENH-018.md) |
 
 ## Tech Debt
 | ID | Title | Priority | Status | Phase | Detail |
