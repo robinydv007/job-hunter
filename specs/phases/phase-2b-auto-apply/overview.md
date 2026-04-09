@@ -1,6 +1,6 @@
 # Phase 2b — Overview: Auto-Apply
 
-**Status:** Not Started (Replanning with API-based approach)  
+**Status:** IN PROGRESS - Implementation complete, testing  
 **Target:** TBD  
 **Release:** v0.2.1 (planned)
 
