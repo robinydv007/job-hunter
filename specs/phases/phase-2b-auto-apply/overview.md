@@ -272,7 +272,6 @@ src/job_hunter/
 - `profile_detailed.yaml` exists with extended profile data
 - `screening.yaml` loaded in config
 - Resume path configured in user.yaml
-- ENH-017 (pipeline reordering) assumed complete before Phase 2b starts
 
 ## Actual Naukri Apply Flow (Exploration Results)
 
@@ -302,7 +301,7 @@ During the implementation attempt on 2026-04-08, the following critical challeng
 ### 1. Naukri Search Blocking
 - **Issue:** Direct URL navigation to search results returns "Access Denied" or empty page after login
 - **Impact:** Currently returns 0 jobs - search phase completely blocked
-- **Status:** Unresolved - blocks entire pipeline, not just auto-apply
+- **Status:** Resolved - blocks entire pipeline, not just auto-apply, might be due to naukri anti-bot measures
 
 ### 2. Contenteditable Divs Instead of Input Elements
 - **Issue:** Naukri uses `<div contenteditable="true">` for text input fields, not standard `<input>` elements

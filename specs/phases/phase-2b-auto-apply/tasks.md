@@ -11,9 +11,6 @@
 - [x] Resume change detection works
 - [x] Subsequent runs use cached profiles
 - [x] `load_profile_with_detailed()` available to get both profile + detailed together
-- [ ] Resume change detection works
-- [ ] Subsequent runs use cached profiles
-- [ ] `load_profile_with_detailed()` available to get both profile + detailed together
 
 ## Task Checklist
 

@@ -29,3 +29,9 @@ Detail:
 5. Sidebar State Detection: Hard to detect when application was successfully submitted vs still in progress.
 6. Submit Button Blocking: Chatbot overlay sometimes blocks submit button clicks.
 7. Resume Upload Failure: Naukri often fails to upload resume - need "I'll do it later" skip option.
+
+[DOC_FIX] 2026-04-09 — Fix Tasks Prerequisites Duplicates
+Topics: docs, tasks, prerequisites
+Affects-phases: phase-2b-auto-apply
+Affects-docs: specs/phases/phase-2b-auto-apply/tasks.md
+Detail: Removed duplicate prerequisite entries in tasks.md. All Phase 2a prerequisites are now correctly marked as complete ([x]) including resume change detection, cached profiles, and load_profile_with_detailed().
