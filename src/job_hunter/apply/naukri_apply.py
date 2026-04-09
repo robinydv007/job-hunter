@@ -159,9 +159,9 @@ async def get_llm_answers(
     Returns:
         Dict mapping question_id to answer
     """
-    from job_hunter.llm.provider import get_llm_provider
+    from job_hunter.llm.provider import get_llm
 
-    llm = get_llm_provider()
+    llm = get_llm()
 
     question_list = "\n".join(f"- {q['id']}: {q['name']}" for q in questions)
 
