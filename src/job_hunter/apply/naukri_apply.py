@@ -205,12 +205,9 @@ async def apply_to_job(
                 timestamp=datetime.now().isoformat(),
             )
 
-        questions, conversation_id = await api.get_questions(
-            page,
-            job_id,
-            job.get("mandatory_skills"),
-            job.get("optional_skills"),
-        )
+        # Wait a bit for API call to complete, then intercept response
+        await asyncio.sleep(1)
+        questions, conversation_id = await api.get_questions_from_browser(page)
 
         if not questions:
             return ApplyResult(

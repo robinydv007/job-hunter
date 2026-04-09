@@ -23,6 +23,67 @@ class ApplyAPIError(Exception):
     pass
 
 
+async def get_questions_from_browser(page: Page) -> tuple[list[dict], str]:
+    """Intercept /apply API response from browser.
+
+    This is more reliable than calling API directly since browser handles
+    all authentication and payload automatically.
+
+    Returns:
+        Tuple of (questions list, conversation_id)
+    """
+    questions_data = {}
+    conversation_id = ""
+
+    def handle_response(response):
+        url = response.url
+        if "/apply-workflow/v1/apply" in url:
+            try:
+                data = response.json()
+                questions_data["data"] = data
+                logger.info("Intercepted /apply API response")
+            except:
+                pass
+
+    page.on("response", handle_response)
+
+    # Wait for response (max 10 seconds)
+    import asyncio
+
+    for _ in range(20):  # 20 * 0.5 = 10 seconds
+        await asyncio.sleep(0.5)
+        if questions_data.get("data"):
+            break
+
+    data = questions_data.get("data", {})
+
+    if not data:
+        raise ApplyAPIError("No /apply API response intercepted")
+
+    if data.get("statusCode") != 0:
+        raise ApplyAPIError(f"API error: {data}")
+
+    jobs = data.get("jobs", [])
+    if not jobs:
+        raise ApplyAPIError("No jobs in response")
+
+    questionnaire = jobs[0].get("questionnaire", [])
+    conversation_id = data.get("chatbotResponse", {}).get("conversation_session_id", "")
+
+    questions = []
+    for q in questionnaire:
+        questions.append(
+            {
+                "id": q["questionId"],
+                "name": q["questionName"],
+                "type": q.get("questionType", "Text Box"),
+                "mandatory": q.get("isMandatory", True),
+            }
+        )
+
+    return questions, conversation_id
+
+
 async def get_questions(
     page: Page,
     job_id: str,
