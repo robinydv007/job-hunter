@@ -140,9 +140,17 @@ async def apply_to_job(
         ApplyResult with status
     """
     job_id = job.get("id") or job.get("job_id")
-    job_url = job.get("url")
+    job_url = job.get("job_url")
     job_title = job.get("title", "Unknown")
     company = job.get("company", "Unknown")
+
+    if not job_url:
+        return ApplyResult(
+            job_id=job_id,
+            status="Failed",
+            error="No job URL found",
+            timestamp=datetime.now().isoformat(),
+        )
 
     logger.info(f"Applying to '{job_title}' at {company}")
 
