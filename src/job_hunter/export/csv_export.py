@@ -34,6 +34,8 @@ ROW_MAPPING: dict[str, callable[[Any], Any]] = {
         _get_nested(sj.get("job", {}), "description")
     ),
     "apply_status": lambda sj: sj.get("apply_status", "Pending"),
+    "apply_timestamp": lambda sj: sj.get("apply_timestamp", ""),
+    "apply_error": lambda sj: sj.get("apply_error", ""),
     "data_source": lambda sj: _get_nested(sj.get("job", {}), "data_source", "mock"),
 }
 

@@ -1,0 +1,207 @@
+"""Naukri Apply API client."""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from playwright.async_api import Page
+
+
+APPLY_ENDPOINT = "https://www.naukri.com/cloudgateway-workflow/workflow-services/apply-workflow/v1/apply"
+RESPOND_ENDPOINT = (
+    "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond"
+)
+
+
+class ApplyAPIError(Exception):
+    """Exception raised for API errors."""
+
+    pass
+
+
+async def get_questions(
+    page: Page,
+    job_id: str,
+    mandatory_skills: list[str] | None = None,
+    optional_skills: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Call /apply API to get all screening questions.
+
+    Args:
+        page: Playwright page instance
+        job_id: The job ID
+        mandatory_skills: List of mandatory skills from job
+        optional_skills: List of optional skills from job
+
+    Returns:
+        List of question dicts with id, name, type, mandatory
+    """
+    mandatory_skills = mandatory_skills or []
+    optional_skills = optional_skills or []
+
+    payload = {
+        "strJobsarr": [job_id],
+        "logstr": f"—cluster—{job_id}—",
+        "flowtype": "show",
+        "crossdomain": True,
+        "jquery": 1,
+        "rdxMsgId": "",
+        "chatBotSDK": True,
+        "applyTypeId": "107",
+        "closebtn": "y",
+        "applySrc": "cluster",
+        "sid": "",
+        "mid": "",
+        "mandatory_skills": mandatory_skills,
+        "optional_skills": optional_skills,
+    }
+
+    response = await page.request.post(APPLY_ENDPOINT, data=payload)
+
+    if not response.ok:
+        raise ApplyAPIError(f"Failed to get questions: {response.status}")
+
+    data = await response.json()
+
+    if data.get("statusCode") != 0:
+        raise ApplyAPIError(f"API error: {data}")
+
+    jobs = data.get("jobs", [])
+    if not jobs:
+        raise ApplyAPIError("No jobs in response")
+
+    questionnaire = jobs[0].get("questionnaire", [])
+    conversation_id = data.get("chatbotResponse", {}).get("conversation_session_id", "")
+
+    questions = []
+    for q in questionnaire:
+        questions.append(
+            {
+                "id": q["questionId"],
+                "name": q["questionName"],
+                "type": q.get("questionType", "Text Box"),
+                "mandatory": q.get("isMandatory", True),
+            }
+        )
+
+    return questions, conversation_id
+
+
+async def send_response(
+    page: Page,
+    job_id: str,
+    answer: str,
+    conversation_id: str | None = None,
+) -> dict[str, Any]:
+    """Send a single answer via /respond API.
+
+    Args:
+        page: Playwright page instance
+        job_id: The job ID
+        answer: The answer to submit
+        conversation_id: Optional conversation ID from /apply response
+
+    Returns:
+        Response data with next question info
+    """
+    app_name = f"{job_id}_apply"
+
+    payload = {
+        "input": {
+            "text": [answer],
+            "id": ["-1"],
+        },
+        "appName": app_name,
+        "domain": "Naukri",
+        "conversation": app_name,
+        "channel": "web",
+        "status": "Fresh",
+        "utmSource": "",
+        "utmContent": "",
+        "deviceType": "WEB",
+    }
+
+    response = await page.request.post(RESPOND_ENDPOINT, data=payload)
+
+    if not response.ok:
+        raise ApplyAPIError(f"Failed to send response: {response.status}")
+
+    data = await response.json()
+
+    return data
+
+
+async def submit_application(
+    page: Page,
+    job_id: str,
+    answers: dict[str, str],
+) -> dict[str, Any]:
+    """Submit application with all answers via final /apply call.
+
+    Args:
+        page: Playwright page instance
+        job_id: The job ID
+        answers: Dict of question_id -> answer
+
+    Returns:
+        Response data with status
+    """
+    payload = {
+        "strJobsarr": [job_id],
+        "logstr": f"—cluster—{job_id}—",
+        "flowtype": "show",
+        "crossdomain": True,
+        "jquery": 1,
+        "rdxMsgId": "",
+        "chatBotSDK": True,
+        "applyTypeId": "107",
+        "closebtn": "y",
+        "applySrc": "cluster",
+        "sid": "",
+        "mid": "",
+        "applyData": {
+            job_id: {
+                "answers": answers,
+            }
+        },
+        "qupData": {},
+    }
+
+    response = await page.request.post(APPLY_ENDPOINT, data=payload)
+
+    if not response.ok:
+        raise ApplyAPIError(f"Failed to submit application: {response.status}")
+
+    data = await response.json()
+
+    return data
+
+
+def is_submission_successful(data: dict[str, Any]) -> bool:
+    """Check if application was successful.
+
+    Args:
+        data: Response data from final /apply call
+
+    Returns:
+        True if application succeeded
+    """
+    jobs = data.get("jobs", [])
+    if not jobs:
+        return False
+
+    job = jobs[0]
+    return job.get("status") == 200
+
+
+def is_last_question(response_data: dict[str, Any]) -> bool:
+    """Check if this was the last question.
+
+    Args:
+        response_data: Response from /respond API
+
+    Returns:
+        True if this was the last question
+    """
+    return response_data.get("isLeafNode", False) is True
