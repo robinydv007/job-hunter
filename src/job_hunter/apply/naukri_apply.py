@@ -200,8 +200,8 @@ async def apply_to_job(
         if not await click_apply_button(page):
             return ApplyResult(
                 job_id=job_id,
-                status="Failed",
-                error="Could not find Apply button",
+                status="Skipped",
+                error="Apply button not found (likely company site)",
                 timestamp=datetime.now().isoformat(),
             )
 

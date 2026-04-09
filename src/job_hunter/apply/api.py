@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from playwright.async_api import Page
+
+logger = logging.getLogger(__name__)
 
 
 APPLY_ENDPOINT = "https://www.naukri.com/cloudgateway-workflow/workflow-services/apply-workflow/v1/apply"
