@@ -60,11 +60,31 @@ async def click_apply_button(page: Page) -> bool:
     Returns:
         True if button found and clicked
     """
-    apply_button = await page.query_selector(".apply-button")
-    if apply_button:
-        await apply_button.click()
-        await asyncio.sleep(2)
-        return True
+    # Try multiple selectors for the apply button
+    selectors = [
+        ".apply-button",
+        "button.apply-button",
+        ".apply-button.n3",
+        "a.apply-button",
+        "[class*='applyBtn']",
+    ]
+
+    for selector in selectors:
+        apply_button = await page.query_selector(selector)
+        if apply_button:
+            try:
+                await apply_button.click()
+                await asyncio.sleep(2)
+                logger.info(f"Clicked apply button with selector: {selector}")
+                return True
+            except Exception as e:
+                logger.debug(f"Failed to click {selector}: {e}")
+                continue
+
+    # Log page HTML for debugging
+    logger.warning("Apply button not found, dumping page for debug")
+    html = await page.content()
+    logger.warning(f"Page HTML (first 2000 chars): {html[:2000]}")
     return False
 
 
@@ -139,10 +159,20 @@ async def apply_to_job(
     Returns:
         ApplyResult with status
     """
-    job_id = job.get("id") or job.get("job_id")
+    import re
+
+    # Get job_id (full slug like "job-listings-gen-ai-engineer-...-090426023045")
+    job_id_full = job.get("id") or job.get("job_id") or ""
+
+    # Extract numeric job ID (e.g., "090426023045")
+    match = re.search(r"(\d{10,})", job_id_full)
+    job_id = match.group(1) if match else job_id_full
+
     job_url = job.get("job_url")
     job_title = job.get("title", "Unknown")
     company = job.get("company", "Unknown")
+
+    logger.info(f"Job ID (full): {job_id_full}, numeric: {job_id}")
 
     if not job_url:
         return ApplyResult(

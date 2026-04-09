@@ -40,9 +40,15 @@ async def get_questions(
     mandatory_skills = mandatory_skills or []
     optional_skills = optional_skills or []
 
+    # Extract numeric job ID from full job ID (e.g., "090426023045" from "job-listings-gen-ai-engineer-...")
+    import re
+
+    match = re.search(r"(\d{10,})", job_id)
+    numeric_job_id = match.group(1) if match else job_id
+
     payload = {
-        "strJobsarr": [job_id],
-        "logstr": f"—cluster—{job_id}—",
+        "strJobsarr": [numeric_job_id],
+        "logstr": f"—cluster—1—{numeric_job_id}—",
         "flowtype": "show",
         "crossdomain": True,
         "jquery": 1,
@@ -51,15 +57,27 @@ async def get_questions(
         "applyTypeId": "107",
         "closebtn": "y",
         "applySrc": "cluster",
-        "sid": "",
+        "sid": numeric_job_id,
         "mid": "",
         "mandatory_skills": mandatory_skills,
         "optional_skills": optional_skills,
     }
 
-    response = await page.request.post(APPLY_ENDPOINT, data=payload)
+    logger.info(f"Calling /apply API with job_id: {numeric_job_id}")
+
+    try:
+        response = await page.request.post(APPLY_ENDPOINT, data=payload)
+    except Exception as e:
+        logger.error(f"Exception calling /apply API: {e}")
+        raise ApplyAPIError(f"Failed to call /apply API: {e}")
 
     if not response.ok:
+        logger.error(f"/apply API returned status: {response.status}")
+        try:
+            text = await response.text()
+            logger.error(f"Response text: {text[:500]}")
+        except:
+            pass
         raise ApplyAPIError(f"Failed to get questions: {response.status}")
 
     data = await response.json()
