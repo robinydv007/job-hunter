@@ -1,8 +1,10 @@
 # Phase 2b — Plan: Auto-Apply
 
+## Status: NOT STARTED - Replanning after implementation challenges
+
 ## Implementation Approach
 
-Build the auto-apply flow after the scoring phase in the LangGraph pipeline. Use batch screening to minimize LLM calls.
+Build the auto-apply flow after the scoring phase in the LangGraph pipeline. Use **state machine approach** (read-analyze-act loop) instead of original batch screening due to Naukri's sequential question display.
 
 ---
 
@@ -24,22 +26,36 @@ New node `apply_jobs` added after `filter_shortlist` and before `export_csv`.
 ```
 apply/
 ├── __init__.py       # Package exports
-├── screening.py     # Batch screening handler
-└── naukri_apply.py  # Naukri auto-apply logic
+├── analyzer.py       # LLM analysis of sidebar content → action decision
+├── actions.py        # Execute actions (fill, select, click, upload, submit)
+├── storage.py        # Store learned field mappings for optimization
+└── naukri_apply.py   # Main orchestrator - read-analyze-act loop
 ```
 
-**screening.py:**
-- `scrape_all_questions(page)` - Find all form fields with labels
-- `answer_screening_batch(page, profile, config, detailed_profile)` - Single LLM call
-- `fill_form_answers(page, answers)` - Fill all answered fields
+**Key Functions:**
 
-**naukri_apply.py:**
-- `navigate_to_job(page, url)` - Go to job detail
-- `check_already_applied(page)` - Detect "Applied" badge
-- `fill_basic_info(page, profile)` - Name, email, phone
-- `upload_resume(page, resume_path)` - Upload from configured path
-- `submit_application(page)` - Submit and detect result
-- `apply_to_job(page, job, ...)` - Orchestrator function
+- `analyzer.py`:
+  - `get_sidebar_content(page)` - Extract text, buttons, inputs from sidebar
+  - `analyze_sidebar(content, profile, config)` - LLM decides action
+  - `check_for_submit_state(content)` - Quick check if ready to submit
+
+- `actions.py`:
+  - `fill_field_action(page, field_label, answer)` - Handles input AND contenteditable
+  - `select_option_action(page, field_label, answer)` - Click matching option div
+  - `upload_resume_action(page, resume_path)` - Upload with skip fallback
+  - `click_button_action(page, button_text)` - Click by text
+  - `submit_action(page)` - Click final submit
+  - `execute_action(page, decision)` - Route to appropriate action
+
+- `naukri_apply.py`:
+  - `apply_to_job(page, job, config, resume_path)` - Main orchestrator
+  - `navigate_to_job(page, url)` - Go to job detail
+  - `check_already_applied(page)` - Detect "Applied" badge
+  - `open_apply_sidebar(page)` - Click apply button to open sidebar
+
+- `storage.py`:
+  - `load_field_mappings()` - Load from JSON
+  - `save_field_mappings(mappings)` - Save to JSON
 
 #### 2. Apply Jobs Node (`graph/nodes.py`)
 
@@ -55,6 +71,11 @@ apply/
 - `n` - Skip this job (mark as Skipped)
 - `q` - Quit apply loop (remaining jobs stay Pending)
 
+**Confirmation Flow:**
+- User confirms at START of each job (not after filling all fields)
+- Before clicking final Submit button, user is asked again to review
+- This allows user to see what's been filled before final submission
+
 #### 3. CSV Enhancement (`export/csv_export.py`)
 
 **Changes:**
@@ -65,7 +86,7 @@ apply/
 
 ---
 
-### Data Flow
+### Data Flow: State Machine Approach
 
 ```
 filter_shortlist returns shortlisted jobs
@@ -87,15 +108,16 @@ apply_jobs_node(state)
 apply_to_job  update status to "Skipped"
     │
     ▼
-┌─────────────────────────────┐
-│ 1. Navigate to job URL      │
-│ 2. Check already applied   │
-│ 3. Fill basic info         │
-│ 4. Upload resume           │
-│ 5. Batch screening (LLM)  │
-│ 6. Submit                 │
-│ 7. Detect result          │
-└─────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│ STATE MACHINE LOOP (max 20 iterations):            │
+│  1. Read sidebar content (.chatbot_DrawerContent)   │
+│  2. Send to LLM → get action + answer               │
+│  3. Execute action                                   │
+│  4. If fill/select → auto-click Save/Next           │
+│  5. Check if submit ready                           │
+│  6. If ready → ask user confirmation → submit      │
+│  7. Detect success/failure → break                  │
+└─────────────────────────────────────────────────────┘
     │
     ▼
 update apply_status → Applied/Failed
@@ -106,29 +128,43 @@ All jobs processed → export_csv (with updated statuses)
 
 ---
 
-### Batch Screening Flow
+### Batch Screening vs State Machine
 
+**Original Plan (Batch):**
 ```
-Page loads job application form
-         │
-         ▼
-scrape_all_questions()
-- Find all <input>, <select>, <textarea>
-- Extract labels for each field
-- Return list of question strings
-         │
-         ▼
-answer_screening_batch()
-- Build prompt with ALL questions
-- Include profile, detailed_profile, screening.yaml context
-- Single LLM call → JSON with all answers
-         │
-         ▼
-fill_form_answers()
-- Iterate through answered fields
-- Handle: text inputs, dropdowns, radio buttons, textareas
-- Return success/failure
+1. Scrape ALL questions from form
+2. Single LLM call with all questions
+3. Fill all answers
+4. Submit
 ```
+**Problem:** Naukri shows questions ONE AT A TIME, not all at once.
+
+**New Approach (State Machine):**
+```
+Loop:
+  1. Read current sidebar state
+  2. LLM analyzes and decides action
+  3. Execute action
+  4. Click Save/Next if needed
+  5. Repeat until submit
+```
+**Benefit:** Handles dynamic sequential form flow
+
+---
+
+### LLM Action Types
+
+The analyzer should return one of these actions:
+
+| Action | Description | Example |
+|--------|-------------|---------|
+| `fill_field` | Fill text in input or contenteditable | Current CTC, Expected CTC |
+| `select_option` | Click matching option (radio/div) | Notice Period: "Immediate" |
+| `upload_resume` | Upload resume file | Resume upload |
+| `click_button` | Click a button by text | "Save", "Next", "Continue" |
+| `skip` | Skip this question | "I'll do it later" for resume |
+| `submit` | Click final submit button | Application submission |
+| `wait` | Wait and retry | Form still loading |
 
 ---
 
@@ -139,6 +175,7 @@ fill_form_answers()
 - `screening.yaml` loaded in config
 - `resume_path` configured in user.yaml
 - LangGraph workflow updated with new node
+- **Naukri search must be working** (currently blocked)
 
 ---
 
@@ -146,13 +183,17 @@ fill_form_answers()
 
 | Risk | Mitigation |
 |------|------------|
+| Naukri search blocking | Must resolve before Phase 2b can work |
 | Naukri anti-bot triggers | Non-headless mode, random delays, user can intervene |
-| Form fields change | Log selectors used, clear error messages |
-| LLM rate limits | Single batch call instead of per-question |
-| Resume upload fails | Clear error, allow manual retry |
+| Form fields change | Store learned mappings, log selectors used |
+| LLM rate limits | One call per question (sequential nature) |
+| Resume upload fails | "I'll do it later" skip option |
+| Submit button blocked | Handle chatbot overlay, wait for it to disappear |
 
 ---
 
-## Effort
+### Effort
 
 ~3-4 days for Phase 2b - primarily browser automation and testing.
+
+**Note:** Naukri search must be fixed first (separate issue from Phase 2b).

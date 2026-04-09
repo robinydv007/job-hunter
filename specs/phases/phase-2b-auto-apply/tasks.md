@@ -1,13 +1,16 @@
 # Phase 2b — Tasks: Auto-Apply
 
-> **Status: IN PROGRESS** — Exploration complete, implementation starting
+> **Status: NOT STARTED** — Implementation needs to be replanned based on challenges
 
-## Prerequisites (Must complete Phase 2a first)
+## Prerequisites (Phase 2a complete - all items checked)
 
-- [ ] `config/screening.yaml` created and loaded
-- [ ] `config/user.yaml` updated (screening_answers removed, resume_path added with default resume.pdf)
-- [ ] Single LLM call extracts both basic and detailed profiles
-- [ ] `data/profile_detailed.yaml` created with extended profile (tech_experience, achievements, etc.)
+- [x] `config/screening.yaml` created and loaded
+- [x] `config/user.yaml` updated (screening_answers removed, resume_path added with default resume.pdf)
+- [x] Single LLM call extracts both basic and detailed profiles
+- [x] `data/profile_detailed.yaml` created with extended profile (tech_experience, achievements, etc.)
+- [x] Resume change detection works
+- [x] Subsequent runs use cached profiles
+- [x] `load_profile_with_detailed()` available to get both profile + detailed together
 - [ ] Resume change detection works
 - [ ] Subsequent runs use cached profiles
 - [ ] `load_profile_with_detailed()` available to get both profile + detailed together

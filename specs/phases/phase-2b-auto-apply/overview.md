@@ -292,3 +292,68 @@ During exploration with Playwright on Naukri.com, the following was discovered:
 - For logged-in users, most fields are pre-filled with profile data
 - Resume upload requires absolute file path
 - Need to handle sidebar open/close states
+
+---
+
+## Challenges Faced (Previous Implementation Attempt)
+
+During the implementation attempt on 2026-04-08, the following critical challenges were discovered:
+
+### 1. Naukri Search Blocking
+- **Issue:** Direct URL navigation to search results returns "Access Denied" or empty page after login
+- **Impact:** Currently returns 0 jobs - search phase completely blocked
+- **Status:** Unresolved - blocks entire pipeline, not just auto-apply
+
+### 2. Contenteditable Divs Instead of Input Elements
+- **Issue:** Naukri uses `<div contenteditable="true">` for text input fields, not standard `<input>` elements
+- **Impact:** Standard `.fill()` method doesn't work
+- **Solution:** Need to use `.evaluate()` with JavaScript to set innerText on contenteditable elements
+
+### 3. Sequential Question Flow (CRITICAL)
+- **Original Plan:** Scrape ALL form questions first → single LLM call → fill all fields
+- **Actual Behavior:** Naukri shows questions ONE AT A TIME in the sidebar
+- **Impact:** Batch approach doesn't work - need read-analyze-act loop instead
+- **Solution:** LLM analyzes each question as it appears, decides action, executes, then loops to next question
+
+### 4. Clickable Option Divs (Not Standard Selects)
+- **Issue:** Dropdowns like "Notice Period" use clickable `<div>` elements with role="radio", not `<select>` elements
+- **Example options:** "Immediate", "15-30 Days", "60 Days", "90 Days", "Serving Notice"
+- **Solution:** Need `select_option_action` that clicks matching text/role elements
+
+### 5. Submit Button Blocking
+- **Issue:** Chatbot overlay sometimes blocks submit button clicks
+- **Solution:** Need to handle overlay or wait for it to disappear
+
+### 6. Resume Upload Failures
+- **Issue:** Naukri often fails to upload resume programmatically
+- **Solution:** Must look for "I'll do it later" / "Skip" button when upload fails
+
+### 7. Submit State Detection
+- **Issue:** Hard to detect when application was successfully submitted vs still in progress
+- **Solution:** Check for success keywords ("successfully", "submitted", "thank you") in sidebar text
+
+---
+
+## Revised Approach (For Implementation)
+
+Based on learnings from previous attempt, the implementation should use a state machine approach:
+
+```
+Loop (max 20 iterations):
+  1. Read sidebar content (class: .chatbot_DrawerContentWrapper)
+  2. Send to LLM → get action (fill_field / select_option / upload / submit / skip / click_button)
+  3. Execute action
+  4. If action was fill/select → auto-click Save/Next/Continue button
+  5. Check for submit state
+  6. If submit ready → ask user for confirmation before final click
+  7. Detect success/failure → break loop
+```
+
+### Key Changes from Original Plan:
+- **Read-Analyze-Act loop** instead of batch processing
+- **Handle contenteditable divs** for text fields
+- **Handle clickable option divs** (radio-style) for dropdowns
+- **User confirmation BEFORE clicking Submit** (not at start of job application)
+- **Auto-save/next** after each field fill
+- **Store learned field mappings** for optimization
+- **Handle "I'll do it later"** for resume upload failures

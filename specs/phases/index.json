@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-04-07",
+  "generated": "2026-04-08",
   "description": "Maps each phase to topic keywords. Used by /sync-docs to find affected phases.",
   "phases": {
     "phase-0-foundation": {
@@ -20,8 +20,13 @@
     },
     "phase-2b-auto-apply": {
       "name": "Auto-Apply & Batch Screening",
+      "status": "not_started",
+      "keywords": ["auto-apply", "naukri-apply", "state-machine", "contenteditable", "sequential-forms", "screening-handler", "apply-node", "csv-status", "user-confirmation"]
+    },
+    "phase-3.0-async-foundation": {
+      "name": "Async Architecture Foundation",
       "status": "planned",
-      "keywords": ["auto-apply", "naukri-apply", "batch-screening", "screening-handler", "apply-node", "csv-status", "user-confirmation"]
+      "keywords": ["async", "langgraph", "event-loop", "nest-asyncio", "login-node", "multi-platform", "pipeline-reorder", "pure-async", "event-loop-conflict"]
     }
   }
 }
