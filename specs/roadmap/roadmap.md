@@ -20,6 +20,8 @@
 Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) → Phase 2b (Auto-Apply) → Phase 3.0 (Async Foundation) → Phase 3.1 (Multi-Platform)
 ```
 
+**Note:** Phase 3.0 can proceed independently of Phase 2b completion. Async conversion and login node implementation can be done separately from auto-apply functionality.
+
 ## Milestones
 | Milestone | Phase | Target Date | Status |
 |-----------|-------|-------------|--------|
