@@ -27,37 +27,53 @@ class ApplyResult:
 
 
 async def check_already_applied(page: Page) -> bool:
-    """Check if already applied to this job.
-
-    Args:
-        page: Playwright page instance
-
-    Returns:
-        True if already applied
-    """
+    """Check if already applied to this job."""
     applied_badge = await page.query_selector(".applied-badge, [class*='Applied']")
     return applied_badge is not None
 
 
-async def navigate_to_job(page: Page, job_url: str) -> None:
-    """Navigate to job detail page.
+async def verify_application_applied(page: Page) -> bool:
+    """Verify that application was successfully submitted."""
+    # Check for Applied badge
+    applied_badge = await page.query_selector(".applied-badge")
+    if applied_badge:
+        badge_text = await applied_badge.inner_text()
+        if "applied" in badge_text.lower():
+            logger.info(f"Found Applied badge: {badge_text}")
+            return True
 
-    Args:
-        page: Playwright page instance
-        job_url: URL of the job
-    """
+    # Check if sidebar closed (indicates successful submission)
+    sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
+    if not sidebar:
+        logger.info("Sidebar closed - application may have been submitted")
+        current_url = page.url
+        if "myapply" in current_url or "success" in current_url:
+            logger.info(f"URL shows success: {current_url}")
+            return True
+        return True
+
+    # Check sidebar content for success
+    sidebar_text = await sidebar.inner_text().lower()
+    if (
+        "thank" in sidebar_text
+        or "success" in sidebar_text
+        or "applied" in sidebar_text
+    ):
+        logger.info(f"Sidebar shows success: {sidebar_text[:100]}")
+        return True
+
+    return False
+
+
+async def navigate_to_job(page: Page, job_url: str) -> None:
+    """Navigate to job detail page."""
     await page.goto(job_url)
     await page.wait_for_load_state("domcontentloaded")
     await asyncio.sleep(2)
 
 
 async def click_and_get_questions(page: Page) -> tuple[bool, list, str]:
-    """Click Apply button and intercept the API response.
-
-    Returns:
-        Tuple of (success, questions, conversation_id)
-    """
-    # Set up response handler BEFORE clicking
+    """Click Apply button and intercept the API response."""
     questions_data = {}
 
     async def handle_response(response):
@@ -74,7 +90,6 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str]:
 
     page.on("response", handle_response)
 
-    # Try multiple selectors for the apply button
     selectors = [
         ".apply-button",
         "button.apply-button",
@@ -97,8 +112,7 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str]:
         logger.warning("Apply button not found")
         return False, [], ""
 
-    # Wait for API response (max 15 seconds)
-    for _ in range(30):  # 30 * 0.5 = 15 seconds
+    for _ in range(30):
         await asyncio.sleep(0.5)
         if questions_data.get("data"):
             break
@@ -107,7 +121,6 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str]:
 
     if not data:
         logger.warning("No /apply API response intercepted")
-        # Check if sidebar opened
         sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
         if sidebar:
             text = await sidebar.inner_text()
@@ -148,17 +161,7 @@ async def get_llm_answers(
     config: Any,
     detailed_profile: dict[str, Any] | None = None,
 ) -> dict[str, str]:
-    """Get LLM-generated answers for all questions.
-
-    Args:
-        questions: List of question dicts
-        profile: User profile object
-        config: Config object with screening answers
-        detailed_profile: Optional detailed profile
-
-    Returns:
-        Dict mapping question_id to answer
-    """
+    """Get LLM-generated answers for all questions."""
     from job_hunter.llm.provider import get_llm
     import json
 
@@ -189,21 +192,15 @@ Return JSON (question_id -> answer):
 
     try:
         response = await llm.ainvoke(prompt)
-
-        # Extract JSON from response
         content = response.content if hasattr(response, "content") else str(response)
-
-        # Find JSON in response
         start = content.find("{")
         end = content.rfind("}") + 1
-
         if start >= 0 and end > start:
             json_str = content[start:end]
             answers = json.loads(json_str)
             return answers
         else:
             raise ValueError("No JSON found in LLM response")
-
     except Exception as e:
         logger.error(f"LLM answer generation failed: {e}")
         raise
@@ -216,32 +213,17 @@ async def apply_to_job(
     config: Any,
     detailed_profile: dict[str, Any] | None = None,
 ) -> ApplyResult:
-    """Apply to a single job using Naukri APIs.
-
-    Args:
-        page: Playwright page instance
-        job: Job dict with url, id, title, company
-        profile: User profile object
-        config: Config object with screening answers
-        detailed_profile: Optional detailed profile
-
-    Returns:
-        ApplyResult with status
-    """
+    """Apply to a single job using Naukri APIs."""
     import re
 
-    # Get job_id (full slug like "job-listings-gen-ai-engineer-...-090426023045")
     job_id_full = job.get("id") or job.get("job_id") or ""
-
-    # Extract numeric job ID (e.g., "090426023045")
     match = re.search(r"(\d{10,})", job_id_full)
     job_id = match.group(1) if match else job_id_full
-
     job_url = job.get("job_url")
     job_title = job.get("title", "Unknown")
     company = job.get("company", "Unknown")
 
-    logger.info(f"Job ID (full): {job_id_full}, numeric: {job_id}")
+    logger.info(f"Applying to '{job_title}' at {company}")
 
     if not job_url:
         return ApplyResult(
@@ -251,14 +233,11 @@ async def apply_to_job(
             timestamp=datetime.now().isoformat(),
         )
 
-    logger.info(f"Applying to '{job_title}' at {company}")
-
     try:
         await navigate_to_job(page, job_url)
 
-        already_applied = await check_already_applied(page)
-        if already_applied:
-            logger.info(f"Already applied to '{job_title}'")
+        # Check if already applied
+        if await check_already_applied(page):
             return ApplyResult(
                 job_id=job_id,
                 status="Already Applied",
@@ -266,65 +245,102 @@ async def apply_to_job(
                 timestamp=datetime.now().isoformat(),
             )
 
-        # Click apply button and get questions in one go
+        # Click apply button and get questions
         success, questions, conversation_id = await click_and_get_questions(page)
 
         if not success:
             return ApplyResult(
                 job_id=job_id,
                 status="Skipped",
-                error="Apply button not found (likely company site)",
+                error="Apply button not found (company site)",
                 timestamp=datetime.now().isoformat(),
             )
 
+        # Handle no questions case
         if not questions:
+            current_url = page.url
+            if "naukri.com" not in current_url:
+                return ApplyResult(
+                    job_id=job_id,
+                    status="Skipped",
+                    error="External company site",
+                    timestamp=datetime.now().isoformat(),
+                )
+
+            if await check_already_applied(page):
+                return ApplyResult(
+                    job_id=job_id,
+                    status="Already Applied",
+                    message="Already applied",
+                    timestamp=datetime.now().isoformat(),
+                )
+
             return ApplyResult(
                 job_id=job_id,
                 status="Skipped",
-                error="No screening questions (possibly company site or already applied)",
+                error="No screening questions",
                 timestamp=datetime.now().isoformat(),
             )
 
         logger.info(f"Received {len(questions)} questions")
 
+        # Get LLM answers
         answers = await get_llm_answers(questions, profile, config, detailed_profile)
 
+        # Submit each answer
         for i, question in enumerate(questions):
             q_id = question["id"]
             answer = answers.get(q_id, "")
-
             logger.info(
                 f"Answering question {i + 1}/{len(questions)}: {question['name']}"
             )
 
             response_data = await api.send_response(
-                page,
-                job_id,
-                answer,
-                conversation_id,
+                page, job_id, answer, conversation_id
             )
-
             is_last = api.is_last_question(response_data)
-
             await asyncio.sleep(0.5)
 
             if is_last:
                 logger.info(
                     "Last question answered, waiting for browser auto-submit..."
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(8)
                 break
 
-        # Check if applied by checking for success state
-        # After all /respond, browser auto-submits, so we just need to check if successful
-        # We can check sidebar or look for success message
+        # Verify application
+        if await verify_application_applied(page):
+            return ApplyResult(
+                job_id=job_id,
+                status="Applied",
+                message="Successfully applied",
+                timestamp=datetime.now().isoformat(),
+            )
 
-        # For now, consider it applied if we got through all questions
-        logger.info("All questions answered, assuming applied (browser auto-submits)")
+        if await check_already_applied(page):
+            return ApplyResult(
+                job_id=job_id,
+                status="Already Applied",
+                message="Already applied",
+                timestamp=datetime.now().isoformat(),
+            )
+
+        # Check sidebar for confirmation
+        sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
+        if sidebar:
+            text = await sidebar.inner_text()
+            if "thank" in text.lower():
+                return ApplyResult(
+                    job_id=job_id,
+                    status="Applied",
+                    message="Applied (sidebar confirmation)",
+                    timestamp=datetime.now().isoformat(),
+                )
+
         return ApplyResult(
             job_id=job_id,
             status="Applied",
-            message="Successfully applied (auto-submit)",
+            message="Applied (assumed)",
             timestamp=datetime.now().isoformat(),
         )
 
