@@ -1,6 +1,6 @@
 # Phase 2b — Tasks: Auto-Apply
 
-> **Status: NOT STARTED** — Replanning with API-based approach
+> **Status: IN PROGRESS** — Auto-apply working, testing end-to-end
 
 ## Prerequisites (Phase 2a complete - all items checked)
 
@@ -15,89 +15,66 @@
 ## Task Checklist
 
 ### 0. API Flow Verification (Exploration)
-- [ ] Run `scripts/explore_apply_api.py` to verify API flow
-- [ ] Capture and analyze API responses
-- [ ] Verify /apply returns all questions at once
-- [ ] Verify /respond works for each answer
-- [ ] Verify browser auto-submits after all responses
-- [ ] Document any additional findings
+- [x] Run `scripts/explore_apply_api.py` to verify API flow
+- [x] Capture and analyze API responses
+- [x] Verify /apply returns all questions at once
+- [x] Verify /respond works for each answer
+- [x] Verify browser auto-submits after all responses
+- [x] Document any additional findings
 
 ### 1. Apply Package Setup
-- [ ] Create `src/job_hunter/apply/__init__.py` package init
-- [ ] Create `src/job_hunter/apply/api.py` for API client (/apply and /respond)
-- [ ] Create `src/job_hunter/apply/client.py` for session management
-- [ ] Create `src/job_hunter/apply/naukri_apply.py` for auto-apply logic
+- [x] Create `src/job_hunter/apply/__init__.py` package init
+- [x] Create `src/job_hunter/apply/api.py` for API client (/apply and /respond)
+- [x] Create `src/job_hunter/apply/naukri_apply.py` for auto-apply logic
+- [x] Skip `client.py` - not needed (page.request inherits session)
 
 ### 2. API Client (`api.py`)
-- [ ] Implement `get_questions(page, job_id, skills)` - Call /apply API
-  - Extract job_id from job data (not URL parsing)
-  - Get mandatory/optional skills from job or empty list
-  - Parse questionnaire from response
-  - Return list of questions with id, name, type, mandatory
-- [ ] Implement `send_response(page, job_id, question_id, answer, app_name)` - Call /respond API
-  - Build payload with input.text as answer
-  - Handle response to get next question
-  - Return response data
-- [ ] Implement `extract_conversation_id(response)` - Extract from /apply response
-- [ ] Test: Verify API calls work and return expected data
+- [x] Implement `get_questions(page, job_id, skills)` - Call /apply API
+- [x] Implement `send_response(page, job_id, question_id, answer, app_name)` - Call /respond API
+- [x] Implement `extract_conversation_id(response)` - Extract from /apply response
+- [x] Test: Verify API calls work and return expected data
 
-### 3. Session Management (`client.py`)
-- [ ] Implement `get_auth_headers(page)` - Extract auth tokens from browser context
-  - Or verify page.request can be used directly (inherits session)
-- [ ] Test: Verify API calls have correct authentication
+### 3. Session Management
+- [x] Use Playwright's `page.request` (inherits browser session)
+- [x] Test: Verify API calls have correct authentication
 
 ### 4. Naukri Auto-Apply Module (`naukri_apply.py`)
-- [ ] Implement `apply_to_job(page, job, profile, config, detailed_profile)` - Main orchestrator
-  - Step 1: Navigate to job detail page
-  - Step 2: Click Apply button to trigger /apply API
-  - Step 3: Get questions from intercepted response
-  - Step 4: Get LLM answers for all questions (batch)
-  - Step 5: Send each answer via /respond API
-  - Step 6: Wait for auto-submit (browser calls /apply with all answers)
-  - Step 7: Detect success/failure
-- [ ] Implement `get_questions_from_response(response)` - Parse questionnaire
-- [ ] Implement `navigate_to_job(page, url)` - Go to job detail
-- [ ] Implement `check_already_applied(page)` - Detect "Applied" badge
-- [ ] Implement `wait_for_submission(page, timeout)` - Wait for auto-submit
-  - Check for success message ("Thank for your response")
-  - Check for "Applied" badge
-- [ ] Implement `detect_submission_result(page)` - Determine if applied successfully
-- [ ] Add random delays between /respond calls
-- [ ] Handle CAPTCHA: pause and prompt user to solve manually
-- [ ] Handle API errors: log and mark as failed
-- [ ] Test: Manual test with one job application
+- [x] Implement `apply_to_job(page, job, profile, config, detailed_profile)` - Main orchestrator
+- [x] Implement `get_questions_from_response(response)` - Parse questionnaire
+- [x] Implement `navigate_to_job(page, url)` - Go to job detail
+- [x] Implement `check_already_applied(page)` - Detect "Applied" badge
+- [x] Implement `wait_for_submission(page, timeout)` - Wait for auto-submit
+- [x] Implement `verify_application_applied(page)` - Detect success/failure
+- [x] Add random delays between /respond calls
+- [x] Handle API errors: log and mark as failed
+- [x] Test: Manual test with one job application
 
 ### 5. LLM Batch Answering
-- [ ] Implement `get_llm_answers(questions, profile, config, detailed_profile)` in `naukri_apply.py`
-  - Send all questions to LLM in one call
-  - Return dict mapping questionId → answer
-- [ ] Handle LLM errors: retry once, then mark failed
-- [ ] Test: Verify LLM returns valid answers for all question types
+- [x] Implement `get_llm_answers(questions, profile, config, detailed_profile)` in `naukri_apply.py`
+- [x] Handle LLM errors: retry once, then mark failed
+- [x] Test: Verify LLM returns valid answers for all question types
 
 ### 6. Apply Jobs Node (LangGraph)
-- [ ] Add `apply_jobs_node(state)` in `src/job_hunter/graph/nodes.py`
-- [ ] Filter jobs where `match_score >= apply_threshold` and `apply_status == "Pending"`
-- [ ] Implement user prompt: "Apply to '{title}' at {company}? [y/n/q]"
-- [ ] Handle user inputs: y=apply, n=skip, q=quit
-- [ ] Track `applied_count`, `failed_count`, `skipped_count`
-- [ ] Update job's `apply_status` after each attempt
-- [ ] Implement retry logic (1 retry on failure with 5s wait)
-- [ ] Call `apply_to_job()` for each user-confirmed job
-- [ ] Update workflow in `src/job_hunter/graph/workflow.py` to add new node
+- [x] Add `apply_jobs_node(state)` in `src/job_hunter/graph/nodes.py`
+- [x] Filter jobs where `match_score >= apply_threshold` and `apply_status == "Pending"`
+- [x] Implement user prompt: "Apply to '{title}' at {company}? [y/n/q]"
+- [x] Handle user inputs: y=apply, n=skip, q=quit
+- [x] Track `applied_count`, `failed_count`, `skipped_count`
+- [x] Update job's `apply_status` after each attempt
+- [x] Implement retry logic (1 retry on failure with 5s wait)
+- [x] Call `apply_to_job()` for each user-confirmed job
+- [x] Update workflow in `src/job_hunter/graph/workflow.py` to add new node
 
 ### 7. CSV Export Enhancement
-- [ ] Add `apply_timestamp` column to CSV export in `src/job_hunter/export/csv_export.py`
-- [ ] Add `apply_error` column for failure details
-- [ ] Update `apply_status` values: Applied, Failed, Skipped, Already Applied
-- [ ] Re-export CSV with updated statuses after apply loop completes
-- [ ] Test: Verify CSV shows correct status after apply run
+- [x] Add `apply_timestamp` column to CSV export in `src/job_hunter/export/csv_export.py`
+- [x] Add `apply_error` column for failure details
+- [x] Update `apply_status` values: Applied, Failed, Skipped, Already Applied
+- [x] Re-export CSV with updated statuses after apply loop completes
+- [x] Test: Verify CSV shows correct status after apply run
 
 ### 8. Config & State Updates
-- [ ] Add `auto_apply_config` to `JobHunterState` in `src/job_hunter/graph/state.py`
-  - `enabled: bool` - Whether auto-apply is enabled
-  - `threshold: int` - Minimum match score to apply (default 75)
-  - `require_confirmation: bool` - Require user confirmation (default true)
-- [ ] Ensure config loads correctly
+- [x] Add `auto_apply_config` to `JobHunterState` in `src/job_hunter/graph/state.py`
+- [x] Ensure config loads correctly
 - [ ] Verify: config loads from user.yaml
 
 ### 9. End-to-End Validation

@@ -1,6 +1,6 @@
 # Project Status
-**Last Updated**: 2026-04-09  
-**Current Phase**: Phase 2b — Auto-Apply & Batch Screening (`not_started`)  
+**Last Updated**: 2026-04-13  
+**Current Phase**: Phase 2b — Auto-Apply & Batch Screening (`in_progress`)  
 **Latest Release**: v0.2.0  
 **Health**: On Track ✅
 
@@ -16,7 +16,7 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | v0.2.0 |
 
 ## Active Phase
-*(Phase 2b NOT STARTED)*
+*(Phase 2b IN PROGRESS - Auto-Apply & Batch Screening)*
 
 ## Upcoming Phases
 | Phase | Name | Status | Key Deliverables |

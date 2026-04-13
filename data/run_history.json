@@ -232,5 +232,17 @@
     "freshness_used": 3,
     "jobs_found": 34,
     "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-13T19:32:42.078093",
+    "freshness_used": 1,
+    "jobs_found": 33,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-13T19:47:31.823901",
+    "freshness_used": 1,
+    "jobs_found": 34,
+    "platform": "naukri"
   }
 ]
