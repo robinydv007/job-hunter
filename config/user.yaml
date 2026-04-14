@@ -37,8 +37,8 @@ naukri:
   max_pages: 3
   delay_between_pages: 3
 scoring:
-  shortlist_threshold: 50
-  apply_threshold: 60
+  shortlist_threshold: 30
+  apply_threshold: 30
   skill_weight: 0.35
   role_weight: 0.2
   experience_weight: 0.2
@@ -48,13 +48,13 @@ scoring:
   llm_scoring:
     enabled: false
     batch_size: 10
-    shortlist_threshold: 50
+    shortlist_threshold: 30
     consider_location: false
     consider_work_mode: false
 auto_apply:
   enabled: true
   max_per_day: 10
   max_per_run: 5
-  delay_between_seconds: 30
+  delay_between_seconds: 10
   require_confirmation: true
   skip_if_already_applied: true

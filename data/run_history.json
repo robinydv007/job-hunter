@@ -244,5 +244,111 @@
     "freshness_used": 1,
     "jobs_found": 34,
     "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T21:34:14.240500",
+    "freshness_used": 1,
+    "jobs_found": 37,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T22:02:33.023219",
+    "freshness_used": 1,
+    "jobs_found": 37,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T22:13:45.088065",
+    "freshness_used": 1,
+    "jobs_found": 38,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T22:21:22.404144",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri",
+    "jobs_shortlisted": 30,
+    "jobs_applied": 1
+  },
+  {
+    "timestamp": "2026-04-14T22:49:20.716949",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 0,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-14T22:50:25.555461",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 0,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-14T22:51:33.805965",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:00:22.501766",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:07:26.468379",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:18:19.472909",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:22:19.977632",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:28:19.132063",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:32:58.855617",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:47:08.285195",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-15T00:01:33.525810",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 11,
+    "jobs_applied": 1
+  },
+  {
+    "timestamp": "2026-04-15T00:11:49.278990",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 3,
+    "jobs_applied": 1
   }
 ]
