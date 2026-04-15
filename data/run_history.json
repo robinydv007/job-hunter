@@ -150,5 +150,217 @@
     "platform": "naukri",
     "jobs_shortlisted": 3,
     "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-09T15:20:35.898464",
+    "freshness_used": 1,
+    "jobs_found": 19,
+    "platform": "naukri",
+    "jobs_shortlisted": 15,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-09T16:50:31.182831",
+    "freshness_used": 1,
+    "jobs_found": 58,
+    "platform": "naukri",
+    "jobs_shortlisted": 31,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-09T21:01:41.409416",
+    "freshness_used": 1,
+    "jobs_found": 58,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T21:29:17.565471",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T21:30:01.505306",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T21:31:12.396393",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T21:34:38.838371",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T21:45:32.054294",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T21:51:13.068169",
+    "freshness_used": 1,
+    "jobs_found": 38,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T21:55:13.520811",
+    "freshness_used": 1,
+    "jobs_found": 38,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T22:06:00.753080",
+    "freshness_used": 1,
+    "jobs_found": 38,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-09T22:14:24.144315",
+    "freshness_used": 1,
+    "jobs_found": 38,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-13T19:28:44.020593",
+    "freshness_used": 3,
+    "jobs_found": 34,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-13T19:32:42.078093",
+    "freshness_used": 1,
+    "jobs_found": 33,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-13T19:47:31.823901",
+    "freshness_used": 1,
+    "jobs_found": 34,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T21:34:14.240500",
+    "freshness_used": 1,
+    "jobs_found": 37,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T22:02:33.023219",
+    "freshness_used": 1,
+    "jobs_found": 37,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T22:13:45.088065",
+    "freshness_used": 1,
+    "jobs_found": 38,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T22:21:22.404144",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri",
+    "jobs_shortlisted": 30,
+    "jobs_applied": 1
+  },
+  {
+    "timestamp": "2026-04-14T22:49:20.716949",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 0,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-14T22:50:25.555461",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 0,
+    "jobs_applied": 0
+  },
+  {
+    "timestamp": "2026-04-14T22:51:33.805965",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:00:22.501766",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:07:26.468379",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:18:19.472909",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:22:19.977632",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:28:19.132063",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:32:58.855617",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-14T23:47:08.285195",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-15T00:01:33.525810",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 11,
+    "jobs_applied": 1
+  },
+  {
+    "timestamp": "2026-04-15T00:11:49.278990",
+    "freshness_used": 1,
+    "jobs_found": 40,
+    "platform": "naukri",
+    "jobs_shortlisted": 3,
+    "jobs_applied": 1
+  },
+  {
+    "timestamp": "2026-04-15T21:09:34.492136",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri"
+  },
+  {
+    "timestamp": "2026-04-15T21:13:23.016532",
+    "freshness_used": 1,
+    "jobs_found": 39,
+    "platform": "naukri"
   }
 ]

@@ -358,7 +358,6 @@ async def _extract_job_data(
             "required_skills": skills,
             "data_source": "scraped",
         }
-        print(f"  Job extracted: {job_data}")
         return job_data
 
     except Exception as e:

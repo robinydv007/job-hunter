@@ -3,7 +3,8 @@
 **Phase 0 Complete**: 2026-04-04  
 **Phase 1 Complete**: 2026-04-05  
 **Phase 2a Complete**: 2026-04-07  
-**Phase 2 Target**: TBD
+**Phase 2b Complete**: 2026-04-15  
+**Latest Release**: v0.2.1
 
 ## Timeline
 | Phase | Name | Status | Start | End | Effort |
@@ -11,7 +12,7 @@
 | 0 | Foundation & Infrastructure | ✅ Complete | 2026-04-04 | 2026-04-04 | ~2 days |
 | 1 | MVP Core Pipeline | ✅ Complete | 2026-04-04 | 2026-04-05 | ~3 days |
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | 2026-04-07 | 2026-04-07 | ~1 day |
-| 2b | Auto-Apply & Batch Screening | 🔲 Not Started | TBD | TBD | ~4 days (est.) |
+| 2b | Auto-Apply & Batch Screening | ✅ Complete | 2026-04-07 | 2026-04-15 | ~8 days |
 | 3.0 | Async Architecture Foundation | 🔲 Not Started | TBD | TBD | ~3 days (est.) |
 | 3.1 | Multi-Platform Search | 🔲 Not Started | TBD | TBD | ~5 days (est.) | |
 
@@ -19,6 +20,8 @@
 ```
 Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) → Phase 2b (Auto-Apply) → Phase 3.0 (Async Foundation) → Phase 3.1 (Multi-Platform)
 ```
+
+**Note:** Phase 3.0 can proceed independently of Phase 2b completion. Async conversion and login node implementation can be done separately from auto-apply functionality.
 
 ## Milestones
 | Milestone | Phase | Target Date | Status |
@@ -29,7 +32,7 @@ Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) 
 | Scoring engine + CSV export | 1 | 2026-04-05 | ✅ Done |
 | End-to-end MVP pipeline working | 1 | 2026-04-05 | ✅ Done |
 | Detailed profile + config restructure | 2a | 2026-04-07 | ✅ Done |
-| Auto-apply to Naukri jobs | 2b | TBD | 🔲 Planned |
+| Auto-apply to Naukri jobs | 2b | 2026-04-15 | ✅ Done |
 | Async architecture foundation | 3.0 | TBD | 🔲 Planned |
 | Multi-platform search | 3.1 | TBD | 🔲 Planned |
 

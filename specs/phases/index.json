@@ -15,13 +15,13 @@
     },
     "phase-2a-detailed-profile": {
       "name": "Detailed Profile & Config Restructure",
-      "status": "in-progress",
+      "status": "complete",
       "keywords": ["screening.yaml", "profile_detailed.yaml", "single-llm-call", "resume-path", "profile-enhancement", "config-split", "resume-change-detection"]
     },
     "phase-2b-auto-apply": {
       "name": "Auto-Apply & Batch Screening",
-      "status": "not_started",
-      "keywords": ["auto-apply", "naukri-apply", "state-machine", "contenteditable", "sequential-forms", "screening-handler", "apply-node", "csv-status", "user-confirmation"]
+      "status": "complete",
+      "keywords": ["auto-apply", "naukri-apply", "api-based", "/apply", "/respond", "batch-screening", "apply-node", "csv-status", "user-confirmation"]
     },
     "phase-3.0-async-foundation": {
       "name": "Async Architecture Foundation",
