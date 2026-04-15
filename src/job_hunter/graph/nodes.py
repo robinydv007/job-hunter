@@ -235,6 +235,7 @@ def apply_jobs_node(state: JobHunterState) -> dict:
     Prompts user for each job, then uses API-based auto-apply.
     """
     import asyncio
+    import nest_asyncio
 
     from job_hunter.apply.naukri_apply import apply_to_job
 
@@ -272,6 +273,10 @@ def apply_jobs_node(state: JobHunterState) -> dict:
     if not page:
         console.print("[red]No browser page available for apply[/]")
         return {"shortlisted_jobs": state.get("shortlisted_jobs", [])}
+
+    # nest_asyncio allows asyncio.run() inside an already-running loop context
+    # (needed because the Playwright page was created in the outer event loop).
+    nest_asyncio.apply()
 
     applied_count = 0
     failed_count = 0
@@ -331,7 +336,12 @@ def apply_jobs_node(state: JobHunterState) -> dict:
         )
     )
 
-    return {"shortlisted_jobs": state.get("shortlisted_jobs", [])}
+    return {
+        "shortlisted_jobs": state.get("shortlisted_jobs", []),
+        "apply_applied_count": applied_count,
+        "apply_skipped_count": skipped_count,
+        "apply_failed_count": failed_count,
+    }
 
 
 def export_csv_node(state: JobHunterState) -> dict:
@@ -356,9 +366,14 @@ def update_history_node(state: JobHunterState) -> dict:
     shortlisted_count = len(shortlisted)
     applied_count = len([j for j in shortlisted if j.get("apply_status") == "Applied"])
 
-    update_run_stats(shortlisted_count, applied_count)
+    # Prefer counts tracked by apply_jobs_node (more accurate for user-skipped jobs)
+    skipped_count = state.get("apply_skipped_count", 0)
+    failed_count = state.get("apply_failed_count", 0)
+
+    update_run_stats(shortlisted_count, applied_count, skipped_count, failed_count)
     console.print(
-        f"[dim]Run history updated: {shortlisted_count} shortlisted, {applied_count} applied[/]"
+        f"[dim]Run history updated: {shortlisted_count} shortlisted, "
+        f"{applied_count} applied, {skipped_count} skipped, {failed_count} failed[/]"
     )
 
     return {}

@@ -55,6 +55,6 @@ auto_apply:
   enabled: true
   max_per_day: 10
   max_per_run: 5
-  delay_between_seconds: 10
-  require_confirmation: true
+  delay_between_seconds: 5
+  require_confirmation: false
   skip_if_already_applied: true
