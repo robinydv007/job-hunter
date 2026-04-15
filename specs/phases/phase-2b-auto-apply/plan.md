@@ -1,8 +1,10 @@
 # Phase 2b — Plan: Auto-Apply
 
+## Status: NOT STARTED - Replanning with API-based approach
+
 ## Implementation Approach
 
-Build the auto-apply flow after the scoring phase in the LangGraph pipeline. Use batch screening to minimize LLM calls.
+Build the auto-apply flow after the scoring phase in the LangGraph pipeline. Use **Naukri API approach** discovered via network inspection - much more reliable than browser automation.
 
 ---
 
@@ -16,6 +18,107 @@ New node `apply_jobs` added after `filter_shortlist` and before `export_csv`.
 
 ---
 
+### Key Discovery: Naukri Apply API Flow
+
+Through network inspection (DevTools → Network tab), discovered that Naukri uses APIs instead of browser form filling:
+
+```
+1. Click "Apply" button (browser) → triggers POST /apply → returns ALL questions
+2. For each question → POST /respond with answer
+3. After all /respond calls → browser auto-calls POST /apply with ALL answers → submits!
+```
+
+**Benefits:**
+- No need to handle contenteditable divs
+- No need to click Save/Next for each question
+- Just API calls - much more stable
+- Batch LLM: one call for all answers
+
+---
+
+### API Details
+
+#### 1. `/apply` - Get Questions (auto-triggered on click)
+
+```
+URL: POST https://www.naukri.com/cloudgateway-workflow/workflow-services/apply-workflow/v1/apply
+
+Headers:
+  - appid: 121
+  - clientid: d3skt0p
+  - systemid: jobseeker
+  - authorization: ACCESSTOKEN=<token from browser>
+  - content-type: application/json
+
+Payload:
+{
+  "strJobsarr": ["250326025777"],
+  "logstr": "—cluster-11-F-0-1—17757311497391557_1—",
+  "flowtype": "show",
+  "chatBotSDK": true,
+  "applyTypeId": "107",
+  "applySrc": "cluster",
+  "sid": "17757311497391557_1",
+  "mandatory_skills": ["Typescript"],
+  "optional_skills": ["Langchain", "Fullstack Development", "Node.Js", "React.Js", "Ai Platform"]
+}
+
+Response → "questionnaire": [
+  {
+    "questionId": "38621838",
+    "questionName": "How many years of experience do you have in Typescript?",
+    "questionType": "Text Box",
+    "isMandatory": true
+  },
+  ...
+]
+```
+
+#### 2. `/respond` - Send Each Answer
+
+```
+URL: POST https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond
+
+Headers:
+  - authorization: Bearer <token from browser>
+  - content-type: application/json
+
+Payload:
+{
+  "input": {
+    "text": ["5"],              // The answer
+    "id": ["-1"]
+  },
+  "appName": "250326025777_apply",
+  "domain": "Naukri",
+  "conversation": "250326025777_apply",
+  "channel": "web",
+  "status": "Fresh",
+  "deviceType": "WEB"
+}
+
+Response → Next question in "speechResponse", or success state with "Thank for your response"
+```
+
+#### 3. Final `/apply` - Auto-submit
+
+After all `/respond` calls complete, browser auto-calls `/apply` again with all answers in payload:
+```
+{
+  "applyData": {
+    "250326025777": {
+      "answers": {
+        "38621838": "5",
+        "38621840": "2",
+        ...
+      }
+    }
+  }
+}
+```
+
+---
+
 ### Module Design
 
 #### 1. Apply Package (`src/job_hunter/apply/`)
@@ -24,22 +127,26 @@ New node `apply_jobs` added after `filter_shortlist` and before `export_csv`.
 ```
 apply/
 ├── __init__.py       # Package exports
-├── screening.py     # Batch screening handler
-└── naukri_apply.py  # Naukri auto-apply logic
+├── api.py            # API client for /apply and /respond
+├── client.py         # Session & auth management
+└── naukri_apply.py   # Main orchestrator
 ```
 
-**screening.py:**
-- `scrape_all_questions(page)` - Find all form fields with labels
-- `answer_screening_batch(page, profile, config, detailed_profile)` - Single LLM call
-- `fill_form_answers(page, answers)` - Fill all answered fields
+**Key Functions:**
 
-**naukri_apply.py:**
-- `navigate_to_job(page, url)` - Go to job detail
-- `check_already_applied(page)` - Detect "Applied" badge
-- `fill_basic_info(page, profile)` - Name, email, phone
-- `upload_resume(page, resume_path)` - Upload from configured path
-- `submit_application(page)` - Submit and detect result
-- `apply_to_job(page, job, ...)` - Orchestrator function
+- `api.py`:
+  - `get_questions(page, job_id, skills)` - Call /apply to get all questions
+  - `send_response(page, job_id, question_id, answer)` - Call /respond for single answer
+  - `extract_conversation_id(response)` - Extract from /apply response
+
+- `client.py`:
+  - `get_auth_headers(page)` - Extract authorization tokens (or use page.request directly)
+
+- `naukri_apply.py`:
+  - `apply_to_job(page, job, profile, config)` - Main orchestrator
+  - `navigate_to_job(page, url)` - Go to job detail
+  - `check_already_applied(page)` - Detect "Applied" badge
+  - `wait_for_submission(page)` - Wait for auto-submit after all responses
 
 #### 2. Apply Jobs Node (`graph/nodes.py`)
 
@@ -55,6 +162,10 @@ apply/
 - `n` - Skip this job (mark as Skipped)
 - `q` - Quit apply loop (remaining jobs stay Pending)
 
+**Confirmation Flow:**
+- User confirms at START of each job
+- Show job info (title, company, match score) before applying
+
 #### 3. CSV Enhancement (`export/csv_export.py`)
 
 **Changes:**
@@ -65,7 +176,7 @@ apply/
 
 ---
 
-### Data Flow
+### Data Flow: API-Based Approach
 
 ```
 filter_shortlist returns shortlisted jobs
@@ -75,27 +186,27 @@ apply_jobs_node(state)
          │
          ▼
    ┌─────────────────────────────┐
-   │ For each job >= threshold: │
-   │   Prompt user (y/n/q)       │
+   │ For each job >= threshold:  │
+   │   Prompt user (y/n/q)        │
    └─────────────────────────────┘
          │
     ┌────┴────┐
     │         │
-   Apply    Skip
+   Apply     Skip
     │         │
     ▼         ▼
 apply_to_job  update status to "Skipped"
     │
     ▼
-┌─────────────────────────────┐
-│ 1. Navigate to job URL      │
-│ 2. Check already applied   │
-│ 3. Fill basic info         │
-│ 4. Upload resume           │
-│ 5. Batch screening (LLM)  │
-│ 6. Submit                 │
-│ 7. Detect result          │
-└─────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│ API-BASED APPLY FLOW:                              │
+│  1. Click Apply button (browser)                  │
+│  2. Intercept questions from /apply response       │
+│  3. Send all questions to LLM → get answers       │
+│  4. For each answer → POST /respond                │
+│  5. Wait for auto-submit (browser calls /apply)   │
+│  6. Detect success ("Thank for your response")     │
+└─────────────────────────────────────────────────────┘
     │
     ▼
 update apply_status → Applied/Failed
@@ -106,29 +217,19 @@ All jobs processed → export_csv (with updated statuses)
 
 ---
 
-### Batch Screening Flow
+### Exploration Script
 
+Before full implementation, create exploration script to verify API flow:
 ```
-Page loads job application form
-         │
-         ▼
-scrape_all_questions()
-- Find all <input>, <select>, <textarea>
-- Extract labels for each field
-- Return list of question strings
-         │
-         ▼
-answer_screening_batch()
-- Build prompt with ALL questions
-- Include profile, detailed_profile, screening.yaml context
-- Single LLM call → JSON with all answers
-         │
-         ▼
-fill_form_answers()
-- Iterate through answered fields
-- Handle: text inputs, dropdowns, radio buttons, textareas
-- Return success/failure
+scripts/explore_apply_api.py
 ```
+
+This will:
+1. Login to Naukri
+2. Navigate to a job
+3. Click Apply button
+4. Intercept all API responses
+5. Print captured data for verification
 
 ---
 
@@ -139,6 +240,7 @@ fill_form_answers()
 - `screening.yaml` loaded in config
 - `resume_path` configured in user.yaml
 - LangGraph workflow updated with new node
+- **Naukri search must be working** (currently blocked - ENH-016)
 
 ---
 
@@ -146,13 +248,16 @@ fill_form_answers()
 
 | Risk | Mitigation |
 |------|------------|
-| Naukri anti-bot triggers | Non-headless mode, random delays, user can intervene |
-| Form fields change | Log selectors used, clear error messages |
-| LLM rate limits | Single batch call instead of per-question |
-| Resume upload fails | Clear error, allow manual retry |
+| Naukri search blocking | Must resolve before Phase 2b can work (ENH-016) |
+| API changes | Log API payloads/responses for debugging |
+| Session expiry | Handle 401 errors, offer re-login |
+| Resume required | Some jobs may require resume upload separately |
+| Already applied | Check "Applied" badge before attempting |
 
 ---
 
-## Effort
+### Effort
 
-~3-4 days for Phase 2b - primarily browser automation and testing.
+~2-3 days for Phase 2b - primarily API integration and testing.
+
+**Note:** Naukri search must be fixed first (ENH-016 - pagination fix).

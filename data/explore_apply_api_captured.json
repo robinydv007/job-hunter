@@ -1,0 +1,649 @@
+[
+  {
+    "url": "https://www.naukri.com/cloudgateway-workflow/workflow-services/apply-workflow/v1/apply",
+    "method": "POST",
+    "data": {
+      "statusCode": 0,
+      "jobs": [
+        {
+          "jobId": "250326025777",
+          "isCustom": false,
+          "questionnaire": [
+            {
+              "questionId": "38621838",
+              "questionName": "How many years of experience do you have in Typescript?",
+              "questionType": "Text Box",
+              "isMandatory": true,
+              "categoryType": null,
+              "category": null,
+              "prefillData": null,
+              "answerOption": {},
+              "fieldStoreType": null,
+              "profileFieldName": null,
+              "jobFieldKey": null,
+              "questionnaireId": 10033392,
+              "subEntity": null,
+              "ddData": null,
+              "dynamicQuesMetaData": null
+            },
+            {
+              "questionId": "38621840",
+              "questionName": "How many years of experience do you have in Langchain?",
+              "questionType": "Text Box",
+              "isMandatory": true,
+              "categoryType": null,
+              "category": null,
+              "prefillData": null,
+              "answerOption": {},
+              "fieldStoreType": null,
+              "profileFieldName": null,
+              "jobFieldKey": null,
+              "questionnaireId": 10033392,
+              "subEntity": null,
+              "ddData": null,
+              "dynamicQuesMetaData": null
+            },
+            {
+              "questionId": "38621842",
+              "questionName": "How many years of experience do you have in Node.Js?",
+              "questionType": "Text Box",
+              "isMandatory": true,
+              "categoryType": null,
+              "category": null,
+              "prefillData": null,
+              "answerOption": {},
+              "fieldStoreType": null,
+              "profileFieldName": null,
+              "jobFieldKey": null,
+              "questionnaireId": 10033392,
+              "subEntity": null,
+              "ddData": null,
+              "dynamicQuesMetaData": null
+            },
+            {
+              "questionId": "38621844",
+              "questionName": "How many years of experience do you have in Fullstack Development?",
+              "questionType": "Text Box",
+              "isMandatory": true,
+              "categoryType": null,
+              "category": null,
+              "prefillData": null,
+              "answerOption": {},
+              "fieldStoreType": null,
+              "profileFieldName": null,
+              "jobFieldKey": null,
+              "questionnaireId": 10033392,
+              "subEntity": null,
+              "ddData": null,
+              "dynamicQuesMetaData": null
+            },
+            {
+              "questionId": "38621846",
+              "questionName": "What is your current CTC in Lacs per annum?",
+              "questionType": "Text Box",
+              "isMandatory": true,
+              "categoryType": null,
+              "category": null,
+              "prefillData": null,
+              "answerOption": {},
+              "fieldStoreType": null,
+              "profileFieldName": null,
+              "jobFieldKey": null,
+              "questionnaireId": 10033392,
+              "subEntity": null,
+              "ddData": null,
+              "dynamicQuesMetaData": null
+            },
+            {
+              "questionId": "38621848",
+              "questionName": "What is your expected CTC in Lacs per annum?",
+              "questionType": "Text Box",
+              "isMandatory": true,
+              "categoryType": null,
+              "category": null,
+              "prefillData": null,
+              "answerOption": {},
+              "fieldStoreType": null,
+              "profileFieldName": null,
+              "jobFieldKey": null,
+              "questionnaireId": 10033392,
+              "subEntity": null,
+              "ddData": null,
+              "dynamicQuesMetaData": null
+            },
+            {
+              "questionId": "38621850",
+              "questionName": "What is your notice period?",
+              "questionType": "Text Box",
+              "isMandatory": true,
+              "categoryType": null,
+              "category": null,
+              "prefillData": null,
+              "answerOption": {},
+              "fieldStoreType": null,
+              "profileFieldName": null,
+              "jobFieldKey": null,
+              "questionnaireId": 10033392,
+              "subEntity": null,
+              "ddData": null,
+              "dynamicQuesMetaData": null
+            }
+          ],
+          "companyName": "Teqfocus Consulting",
+          "jobTitle": "Full Stack AI Developer (Agentic AI)"
+        }
+      ],
+      "applyRedirectUrl": "https://www.naukri.com/myapply/saveApply?strJobsarr=[250326025777]&applytype=single&resId=269112566&ApplyMode=1&id=280164166&src=d3skt0p&logstr=--cluster-11-F-0-1--17757311497391557_1--cluster&applySrc=cluster&multiApplyResp=%7B%7D&jobTitle=Full%20Stack%20AI%20Developer%20%28Agentic%20AI%29",
+      "ncFlow": false,
+      "flowType": "default",
+      "aurusFlow": false,
+      "pzero": false,
+      "chatbotResponse": {
+        "speechResponse": [
+          {
+            "response": " Hi Robin Yadav, thank you for showing interest. Kindly answer all the recruiter's questions to successfully apply for the job.",
+            "type": "text"
+          },
+          {
+            "response": "How many years of experience do you have in Typescript?",
+            "type": "text"
+          }
+        ],
+        "options": [],
+        "ubaEvent": null,
+        "input": {
+          "type": "text",
+          "name": "Text",
+          "placeholder": ""
+        },
+        "isLeafNode": false,
+        "prefilled_value": [],
+        "prefilled": "",
+        "actionType": [],
+        "footer": [],
+        "progress": {
+          "percent1": 0,
+          "percent2": 0,
+          "percent3": 0,
+          "percent4": 0,
+          "percent": 0.0
+        },
+        "currentConversationName": "250326025777_apply",
+        "currentNodeName": "apply0",
+        "currentNode": 0,
+        "dataCommitted": false,
+        "controls": [],
+        "title": [
+          null
+        ],
+        "constraints": [
+          {
+            "name": "max_length",
+            "value": 100
+          }
+        ],
+        "showProgressBar": false,
+        "applyData": {
+          "250326025777": {
+            "answers": {}
+          }
+        },
+        "isApply": true,
+        "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+      }
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond",
+    "method": "POST",
+    "data": {
+      "editResponse": "I made a mistake",
+      "editResponseType": "1",
+      "speechResponse": [
+        {
+          "response": "How many years of experience do you have in Langchain?",
+          "type": "text"
+        }
+      ],
+      "options": [],
+      "ubaEvent": null,
+      "input": {
+        "type": "text",
+        "name": "Text",
+        "placeholder": ""
+      },
+      "isEditable": true,
+      "isLeafNode": false,
+      "prefilled_value": [],
+      "prefilled": "",
+      "actionType": [],
+      "footer": [],
+      "progress": {
+        "percent1": 0,
+        "percent2": 0,
+        "percent3": 0,
+        "percent4": 0,
+        "percent": 0.0
+      },
+      "currentConversationName": "250326025777_apply",
+      "currentNodeName": "apply1",
+      "currentNode": 1,
+      "dataCommitted": false,
+      "controls": [],
+      "title": [
+        null
+      ],
+      "constraints": [
+        {
+          "name": "max_length",
+          "value": 100
+        }
+      ],
+      "showProgressBar": false,
+      "applyData": {
+        "250326025777": {
+          "answers": {
+            "38621838": "1"
+          }
+        }
+      },
+      "isApply": true,
+      "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond",
+    "method": "POST",
+    "data": {
+      "editResponse": "I made a mistake",
+      "editResponseType": "1",
+      "speechResponse": [
+        {
+          "response": "How many years of experience do you have in Node.Js?",
+          "type": "text"
+        }
+      ],
+      "options": [],
+      "ubaEvent": null,
+      "input": {
+        "type": "text",
+        "name": "Text",
+        "placeholder": ""
+      },
+      "isEditable": true,
+      "isLeafNode": false,
+      "prefilled_value": [],
+      "prefilled": "",
+      "actionType": [],
+      "footer": [],
+      "progress": {
+        "percent1": 0,
+        "percent2": 0,
+        "percent3": 0,
+        "percent4": 0,
+        "percent": 0.0
+      },
+      "currentConversationName": "250326025777_apply",
+      "currentNodeName": "apply2",
+      "currentNode": 2,
+      "dataCommitted": false,
+      "controls": [],
+      "title": [
+        null
+      ],
+      "constraints": [
+        {
+          "name": "max_length",
+          "value": 100
+        }
+      ],
+      "showProgressBar": false,
+      "applyData": {
+        "250326025777": {
+          "answers": {
+            "38621838": "1",
+            "38621840": "1"
+          }
+        }
+      },
+      "isApply": true,
+      "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond",
+    "method": "POST",
+    "data": {
+      "editResponse": "I made a mistake",
+      "editResponseType": "1",
+      "speechResponse": [
+        {
+          "response": "How many years of experience do you have in Fullstack Development?",
+          "type": "text"
+        }
+      ],
+      "options": [],
+      "ubaEvent": null,
+      "input": {
+        "type": "text",
+        "name": "Text",
+        "placeholder": ""
+      },
+      "isEditable": true,
+      "isLeafNode": false,
+      "prefilled_value": [],
+      "prefilled": "",
+      "actionType": [],
+      "footer": [],
+      "progress": {
+        "percent1": 0,
+        "percent2": 0,
+        "percent3": 0,
+        "percent4": 0,
+        "percent": 0.0
+      },
+      "currentConversationName": "250326025777_apply",
+      "currentNodeName": "apply3",
+      "currentNode": 3,
+      "dataCommitted": false,
+      "controls": [],
+      "title": [
+        null
+      ],
+      "constraints": [
+        {
+          "name": "max_length",
+          "value": 100
+        }
+      ],
+      "showProgressBar": false,
+      "applyData": {
+        "250326025777": {
+          "answers": {
+            "38621838": "1",
+            "38621840": "1",
+            "38621842": "5"
+          }
+        }
+      },
+      "isApply": true,
+      "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond",
+    "method": "POST",
+    "data": {
+      "editResponse": "I made a mistake",
+      "editResponseType": "1",
+      "speechResponse": [
+        {
+          "response": "What is your current CTC in Lacs per annum?",
+          "type": "text"
+        }
+      ],
+      "options": [],
+      "ubaEvent": null,
+      "input": {
+        "type": "text",
+        "name": "Text",
+        "placeholder": ""
+      },
+      "isEditable": true,
+      "isLeafNode": false,
+      "prefilled_value": [],
+      "prefilled": "",
+      "actionType": [],
+      "footer": [],
+      "progress": {
+        "percent1": 0,
+        "percent2": 0,
+        "percent3": 0,
+        "percent4": 0,
+        "percent": 0.0
+      },
+      "currentConversationName": "250326025777_apply",
+      "currentNodeName": "apply4",
+      "currentNode": 4,
+      "dataCommitted": false,
+      "controls": [],
+      "title": [
+        null
+      ],
+      "constraints": [
+        {
+          "name": "max_length",
+          "value": 100
+        }
+      ],
+      "showProgressBar": false,
+      "applyData": {
+        "250326025777": {
+          "answers": {
+            "38621838": "1",
+            "38621840": "1",
+            "38621842": "5",
+            "38621844": "6"
+          }
+        }
+      },
+      "isApply": true,
+      "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond",
+    "method": "POST",
+    "data": {
+      "editResponse": "I made a mistake",
+      "editResponseType": "1",
+      "speechResponse": [
+        {
+          "response": "What is your expected CTC in Lacs per annum?",
+          "type": "text"
+        }
+      ],
+      "options": [],
+      "ubaEvent": null,
+      "input": {
+        "type": "text",
+        "name": "Text",
+        "placeholder": ""
+      },
+      "isEditable": true,
+      "isLeafNode": false,
+      "prefilled_value": [],
+      "prefilled": "",
+      "actionType": [],
+      "footer": [],
+      "progress": {
+        "percent1": 0,
+        "percent2": 0,
+        "percent3": 0,
+        "percent4": 0,
+        "percent": 0.0
+      },
+      "currentConversationName": "250326025777_apply",
+      "currentNodeName": "apply5",
+      "currentNode": 5,
+      "dataCommitted": false,
+      "controls": [],
+      "title": [
+        null
+      ],
+      "constraints": [
+        {
+          "name": "max_length",
+          "value": 100
+        }
+      ],
+      "showProgressBar": false,
+      "applyData": {
+        "250326025777": {
+          "answers": {
+            "38621842": "5",
+            "38621838": "1",
+            "38621840": "1",
+            "38621844": "6",
+            "38621846": "22"
+          }
+        }
+      },
+      "isApply": true,
+      "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond",
+    "method": "POST",
+    "data": {
+      "editResponse": "I made a mistake",
+      "editResponseType": "1",
+      "speechResponse": [
+        {
+          "response": "What is your notice period?",
+          "type": "text"
+        }
+      ],
+      "options": [],
+      "ubaEvent": null,
+      "input": {
+        "type": "text",
+        "name": "Text",
+        "placeholder": ""
+      },
+      "isEditable": true,
+      "isLeafNode": true,
+      "prefilled_value": [],
+      "prefilled": "",
+      "actionType": [],
+      "footer": [],
+      "progress": {
+        "percent1": 0,
+        "percent2": 0,
+        "percent3": 0,
+        "percent4": 0,
+        "percent": 0.0
+      },
+      "currentConversationName": "250326025777_apply",
+      "currentNodeName": "apply6",
+      "currentNode": 6,
+      "dataCommitted": false,
+      "controls": [],
+      "title": [
+        null
+      ],
+      "constraints": [
+        {
+          "name": "max_length",
+          "value": 100
+        }
+      ],
+      "showProgressBar": false,
+      "applyData": {
+        "250326025777": {
+          "answers": {
+            "38621844": "6",
+            "38621846": "22",
+            "38621842": "5",
+            "38621838": "1",
+            "38621840": "1",
+            "38621848": "30"
+          }
+        }
+      },
+      "isApply": true,
+      "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-chatbot/chatbot-services/botapi/v5/respond",
+    "method": "POST",
+    "data": {
+      "speechResponse": [
+        {
+          "response": "Thank you for your responses.",
+          "type": "text"
+        }
+      ],
+      "options": [],
+      "ubaEvent": null,
+      "isEditable": false,
+      "isLeafNode": true,
+      "actionType": [
+        {
+          "action": "CLOSE",
+          "time": "2000"
+        },
+        {
+          "action": "DISABLE_CHATBOX"
+        }
+      ],
+      "footer": [],
+      "progress": {
+        "percent1": 0,
+        "percent2": 0,
+        "percent3": 0,
+        "percent4": 0,
+        "percent": 0.0
+      },
+      "currentConversationName": "RecruiterQUP_educationDetails",
+      "currentNodeName": "Thank you",
+      "currentNode": 15,
+      "dataCommitted": true,
+      "controls": [],
+      "title": [
+        null
+      ],
+      "showProgressBar": false,
+      "collapseResponse": {
+        "speechResponse": [],
+        "options": []
+      },
+      "applyData": {
+        "250326025777": {
+          "answers": {
+            "38621846": "22",
+            "38621848": "30",
+            "38621838": "1",
+            "38621842": "5",
+            "38621844": "6",
+            "38621840": "1",
+            "38621850": "imeediate joiner"
+          }
+        }
+      },
+      "isApply": true,
+      "conversation_session_id": "d26cbab0-8c8d-43c6-9699-719ceac2e461"
+    }
+  },
+  {
+    "url": "https://www.naukri.com/cloudgateway-workflow/workflow-services/apply-workflow/v1/apply",
+    "method": "POST",
+    "data": {
+      "statusCode": 0,
+      "jobs": [
+        {
+          "status": 200,
+          "message": "You have successfully applied to this job.",
+          "jobId": "250326025777",
+          "isCustom": false
+        }
+      ],
+      "quotaDetails": {
+        "dailyApplied": 1,
+        "monthlyApplied": 3,
+        "monthlyQuota": 2000,
+        "dailyQuota": 50
+      },
+      "applyRedirectUrl": "https://www.naukri.com/myapply/saveApply?strJobsarr=[250326025777]&applytype=single&resId=269112566&ApplyMode=1&id=280164166&src=h&logstr=--cluster-11-F-0-1--17757311497391557_1--cluster&applySrc=cluster&multiApplyResp=%7B%22250326025777%22%3A200%7D&jobTitle=Full%20Stack%20AI%20Developer%20%28Agentic%20AI%29",
+      "ncFlow": false,
+      "flowType": "default",
+      "aurusFlow": false,
+      "applyStatus": {
+        "250326025777": 200
+      },
+      "pzero": false
+    }
+  }
+]

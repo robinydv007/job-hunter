@@ -5,6 +5,7 @@ from __future__ import annotations
 from langgraph.graph import END, StateGraph
 
 from job_hunter.graph.nodes import (
+    apply_jobs_node,
     export_csv_node,
     filter_shortlist_node,
     load_config_node,
@@ -26,6 +27,7 @@ def build_workflow():
     workflow.add_node("search_jobs", search_jobs_node)
     workflow.add_node("score_jobs", score_jobs_node)
     workflow.add_node("filter_shortlist", filter_shortlist_node)
+    workflow.add_node("apply_jobs", apply_jobs_node)
     workflow.add_node("export_csv", export_csv_node)
     workflow.add_node("update_history", update_history_node)
 
@@ -34,7 +36,8 @@ def build_workflow():
     workflow.add_edge("parse_resume", "search_jobs")
     workflow.add_edge("search_jobs", "score_jobs")
     workflow.add_edge("score_jobs", "filter_shortlist")
-    workflow.add_edge("filter_shortlist", "export_csv")
+    workflow.add_edge("filter_shortlist", "apply_jobs")
+    workflow.add_edge("apply_jobs", "export_csv")
     workflow.add_edge("export_csv", "update_history")
     workflow.add_edge("update_history", END)
 

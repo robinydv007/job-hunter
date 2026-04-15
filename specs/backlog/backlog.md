@@ -25,6 +25,7 @@
 | FEAT-003 | Multi-platform search (LinkedIn, Hirist, Instahyre, Foundit) | P1 | open | 2/3 | _(planned)_ |
 | FEAT-004 | Apply status CSV write-back | P1 | open | 2 | _(planned)_ |
 | FEAT-005 | Company intelligence enrichment columns | P2 | open | 3 | _(planned)_ |
+| ENH-018 | Review answers before apply (edit/regenerate) | P1 | open | 2b | [→](details/ENH-018.md) |
 
 ## Tech Debt
 | ID | Title | Priority | Status | Phase | Detail |
@@ -51,8 +52,8 @@
 | ENH-012 | Refactor nodes.py: extract platform-specific code to separate files | P2 | resolved | 1 | [→](details/ENH-012.md) |
 | ENH-013 | Extract static scoring data to config/constants.yaml | P1 | resolved | 1 | [→](details/ENH-013.md) |
 | ENH-014 | Refactor CSV export: single source of truth for columns | P2 | resolved | 1 | [→](details/ENH-014.md) |
-| ENH-015 | LLM-Based Job Scoring | P1 | open | 1 | [→](details/ENH-015.md) |
-| ENH-016 | Fix Naukri pagination using UI navigation | P1 | open | 2 | [→](details/ENH-016.md) |
+| ENH-015 | LLM-Based Job Scoring | P1 | resolved | 1 | [→](details/ENH-015.md) |
+| ENH-016 | Fix Naukri pagination using UI navigation | P1 | resolved | 2 | [→](details/ENH-016.md) |
 | ENH-017 | Reorder pipeline: parse resume before login | P1 | open | 2 | [→](details/ENH-017.md) |
 
 > **Note (2026-04-07)**: Current work-around is login in CLI before workflow. Implementation attempts inside LangGraph workflow have failed due to async/sync conflicts between login node and sync search_naukri function.

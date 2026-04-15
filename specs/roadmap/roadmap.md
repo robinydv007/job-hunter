@@ -12,12 +12,15 @@
 | 1 | MVP Core Pipeline | ✅ Complete | 2026-04-04 | 2026-04-05 | ~3 days |
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | 2026-04-07 | 2026-04-07 | ~1 day |
 | 2b | Auto-Apply & Batch Screening | 🔲 Not Started | TBD | TBD | ~4 days (est.) |
-| 3 | Multi-Platform & Intelligence | 🔲 Not Started | TBD | TBD | TBD |
+| 3.0 | Async Architecture Foundation | 🔲 Not Started | TBD | TBD | ~3 days (est.) |
+| 3.1 | Multi-Platform Search | 🔲 Not Started | TBD | TBD | ~5 days (est.) | |
 
 ## Phase Dependencies
 ```
-Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) → Phase 2b (Auto-Apply) → Phase 3 (Multi-Platform)
+Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) → Phase 2b (Auto-Apply) → Phase 3.0 (Async Foundation) → Phase 3.1 (Multi-Platform)
 ```
+
+**Note:** Phase 3.0 can proceed independently of Phase 2b completion. Async conversion and login node implementation can be done separately from auto-apply functionality.
 
 ## Milestones
 | Milestone | Phase | Target Date | Status |
@@ -29,7 +32,8 @@ Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) 
 | End-to-end MVP pipeline working | 1 | 2026-04-05 | ✅ Done |
 | Detailed profile + config restructure | 2a | 2026-04-07 | ✅ Done |
 | Auto-apply to Naukri jobs | 2b | TBD | 🔲 Planned |
-| Multi-platform search | 2/3 | TBD | 🔲 Planned |
+| Async architecture foundation | 3.0 | TBD | 🔲 Planned |
+| Multi-platform search | 3.1 | TBD | 🔲 Planned |
 
 ## Phase 2 Planned Scope (High-Level)
 - Fix BUG-001 (interactive config prompts)
@@ -40,7 +44,15 @@ Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) 
 - Resume change detection for cache invalidation
 - Unit tests (scoring engine, parser, scraper)
 
-## Phase 3 Planned Scope (High-Level)
+## Phase 3.0 Planned Scope (High-Level)
+- Async Architecture Foundation
+- Convert entire pipeline from sync+nest_asyncio to pure async
+- Add login node to LangGraph workflow (ENH-017)
+- Reorder pipeline: parse_resume → login_platforms → search_jobs
+- Remove nest-asyncio dependency
+- Enable multi-platform login support
+
+## Phase 3.1 Planned Scope (High-Level)
 - Multi-platform search: LinkedIn, Hirist, Instahyre, Foundit
 - Company intelligence columns: `company_size`, `glassdoor_rating`, `core_business`
 - Apply to LinkedIn / Indeed (if feasible)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -225,6 +227,111 @@ def filter_shortlist_node(state: JobHunterState) -> dict:
     )
 
     return {"shortlisted_jobs": shortlisted}
+
+
+def apply_jobs_node(state: JobHunterState) -> dict:
+    """Apply to shortlisted jobs above apply threshold using Naukri APIs.
+
+    Prompts user for each job, then uses API-based auto-apply.
+    """
+    import asyncio
+
+    from job_hunter.apply.naukri_apply import apply_to_job
+
+    config = state["config"]
+    threshold = config.scoring.apply_threshold
+    profile = state["profile"]
+    detailed_profile = state.get("detailed_profile")
+
+    auto_apply_config = config.auto_apply
+
+    if not auto_apply_config.enabled:
+        console.print("[dim]Auto-apply disabled, skipping apply phase[/]")
+        return {"shortlisted_jobs": state.get("shortlisted_jobs", [])}
+
+    shortlisted = [
+        j
+        for j in state.get("shortlisted_jobs", [])
+        if j.get("match_score", 0) >= threshold
+        and j.get("apply_status") != "Applied"
+        and j.get("apply_status") != "Already Applied"
+    ]
+
+    if not shortlisted:
+        console.print("[dim]No jobs above apply threshold to apply[/]")
+        return {"shortlisted_jobs": state.get("shortlisted_jobs", [])}
+
+    console.print(
+        Panel(
+            f"[bold yellow]{len(shortlisted)} jobs above apply threshold (>= {threshold})[/]",
+            border_style="yellow",
+        )
+    )
+
+    page = state.get("browser_page")
+    if not page:
+        console.print("[red]No browser page available for apply[/]")
+        return {"shortlisted_jobs": state.get("shortlisted_jobs", [])}
+
+    applied_count = 0
+    failed_count = 0
+    skipped_count = 0
+
+    for i, scored_job in enumerate(shortlisted, 1):
+        job = scored_job.get("job", {})
+        title = job.get("title", "Unknown")
+        company = job.get("company", "Unknown")
+        score = scored_job.get("match_score", 0)
+
+        console.print(
+            f"\n[bold cyan]{i}/{len(shortlisted)}[/] Applying to '{title}' at {company} (score: {score})"
+        )
+
+        if auto_apply_config.require_confirmation:
+            from rich.prompt import Prompt
+
+            confirm = Prompt.ask(
+                f"  Apply to '[bold]{title}[/]' at [bold]{company}[/]? [green]y[/]/[red]n[/]/[yellow]q[/]uit",
+                default="y",
+            )
+
+            if confirm.lower() == "n":
+                scored_job["apply_status"] = "Skipped"
+                skipped_count += 1
+                console.print("  [yellow]Skipped[/]")
+                continue
+            elif confirm.lower() == "q":
+                console.print("  [yellow]Quit. Remaining jobs stay pending.[/]")
+                break
+
+        result = asyncio.run(apply_to_job(page, job, profile, config, detailed_profile))
+
+        scored_job["apply_status"] = result.status
+        scored_job["apply_timestamp"] = result.timestamp
+        scored_job["apply_error"] = result.error or ""
+
+        if result.status == "Applied":
+            applied_count += 1
+            console.print(f"  [green]Applied successfully: {result.message}[/]")
+        elif result.status == "Already Applied":
+            console.print("  [dim]Already applied[/]")
+        else:
+            failed_count += 1
+            console.print(f"  [red]Failed: {result.error}[/]")
+
+        if i < len(shortlisted):
+            delay = auto_apply_config.delay_between_seconds
+            console.print(f"  [dim]Waiting {delay}s before next job...[/]")
+            time.sleep(delay)
+
+    console.print(
+        Panel(
+            f"[bold green]Applied: {applied_count}[/] | [red]Failed: {failed_count}[/] | [yellow]Skipped: {skipped_count}[/]",
+            border_style="green",
+        )
+    )
+
+    return {"shortlisted_jobs": state.get("shortlisted_jobs", [])}
 
 
 def export_csv_node(state: JobHunterState) -> dict:
