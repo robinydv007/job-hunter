@@ -1,12 +1,12 @@
 # Project Status
-**Last Updated**: 2026-04-13  
-**Current Phase**: Phase 2b — Auto-Apply & Batch Screening (`in_progress`)  
-**Latest Release**: v0.2.0  
+**Last Updated**: 2026-04-15  
+**Current Phase**: Phase 3.0 — Async Architecture Foundation (`planned`)  
+**Latest Release**: v0.2.1  
 **Health**: On Track ✅
 
 ## Summary
 
-Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0, 1, and 2a are complete. Phase 2b is next.
+Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0, 1, 2a, and 2b are complete. Phase 3.0 is next.
 
 ## Completed Phases
 | Phase | Name | Status | Release |
@@ -14,14 +14,14 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 | 0 | Foundation & Infrastructure | ✅ Complete | v0.0.1 |
 | 1 | MVP Core Pipeline | ✅ Complete | v0.1.0 |
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | v0.2.0 |
+| 2b | Auto-Apply & Batch Screening | ✅ Complete | v0.2.1 |
 
 ## Active Phase
-*(Phase 2b IN PROGRESS - Auto-Apply & Batch Screening)*
+*(Phase 3.0 NOT STARTED - Planned)*
 
 ## Upcoming Phases
 | Phase | Name | Status | Key Deliverables |
 |-------|------|--------|------------------|
-| 2b | Auto-Apply & Batch Screening | 🔲 Not Started | Auto-apply to jobs above threshold, batch screening, CSV status tracking |
 | 3.0 | Async Architecture Foundation | 🔲 Planned | Resolve ENH-017: async pipeline, login node, resume-before-login flow |
 | 3.1 | Multi-Platform & Intelligence | 🔲 Planned | Multi-platform search (LinkedIn, Hirist, etc.), company intelligence |
 
@@ -41,9 +41,8 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 | ENH-017 | Enhancement | Reorder pipeline: parse resume before login — **planned for Phase 3.0** (2 failed attempts, async/sync conflict) |
 
 ## Next Actions
-1. Start Phase 2b implementation (apply package, screening handler, auto-apply node)
-2. After Phase 2b: Phase 3.0 (async architecture foundation — resolves ENH-017)
-3. After Phase 3.0: Phase 3.1 (multi-platform search, enabled by async architecture)
+1. Start Phase 3.0 (async architecture foundation — resolves ENH-017)
+2. After Phase 3.0: Phase 3.1 (multi-platform search, enabled by async architecture)
 
 ## Key Decisions Made
 - **UV** chosen as Python package manager (speed + native lockfile)

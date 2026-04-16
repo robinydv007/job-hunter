@@ -1,6 +1,6 @@
 # Phase 2b — Tasks: Auto-Apply
 
-> **Status: IN PROGRESS** — Auto-apply working, testing end-to-end
+> **Status: Complete** — All tasks done, testing complete, user verified
 
 ## Prerequisites (Phase 2a complete - all items checked)
 
@@ -75,21 +75,21 @@
 ### 8. Config & State Updates
 - [x] Add `auto_apply_config` to `JobHunterState` in `src/job_hunter/graph/state.py`
 - [x] Ensure config loads correctly
-- [ ] Verify: config loads from user.yaml
+- [x] Verify: config loads from user.yaml
 
 ### 9. End-to-End Validation
-- [ ] Run pipeline with auto_apply disabled - confirm no changes to behavior
-- [ ] Enable auto_apply in config, run pipeline with threshold set to low value (e.g., 30)
-- [ ] Confirm user prompted for each job above threshold
-- [ ] Test apply flow: y → apply → success → CSV shows "Applied"
-- [ ] Test skip: n → CSV shows "Skipped"
-- [ ] Test quit: q → remaining jobs stay "Pending"
-- [ ] Test retry on failure: first attempt fails → retry → success/fail
-- [ ] Verify batch screening: all questions answered via single LLM call
+- [x] Run pipeline with auto_apply disabled - confirm no changes to behavior
+- [x] Enable auto_apply in config, run pipeline with threshold set to low value (e.g., 30)
+- [x] Confirm user prompted for each job above threshold
+- [x] Test apply flow: y → apply → success → CSV shows "Applied"
+- [x] Test skip: n → CSV shows "Skipped"
+- [x] Test quit: q → remaining jobs stay "Pending"
+- [x] Test retry on failure: first attempt fails → retry → success/fail
+- [x] Verify batch screening: all questions answered via single LLM call
 
 ### 10. Documentation
-- [ ] Update `specs/status.md` - mark Phase 2b as in-progress
-- [ ] Add Phase 2b entry to `specs/changelog/2026-04.md`
+- [x] Update `specs/status.md` - mark Phase 2b as in-progress
+- [x] Add Phase 2b entry to `specs/changelog/2026-04.md`
 
 ---
 

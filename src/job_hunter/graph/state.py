@@ -31,9 +31,13 @@ class ScoredJob(TypedDict, total=False):
     matched_skills: list[str]
     why_selected: str
     apply_status: str
+    apply_timestamp: str
+    apply_error: str
+    questionnaire: str
+    questionnaire_timestamp: str
 
 
-class JobHunterState(TypedDict):
+class JobHunterState(TypedDict, total=False):
     config: AppConfig
     resume_path: str
     force_parse: bool  # Force re-parse resume even if cache exists
@@ -46,3 +50,8 @@ class JobHunterState(TypedDict):
     shortlisted_jobs: list[ScoredJob]
     csv_path: str
     browser_page: Any  # Playwright Page object
+    threshold_used: int  # Shortlist threshold resolved at score time
+    # Apply outcome counters — populated by apply_jobs_node, consumed by update_history_node
+    apply_applied_count: int
+    apply_skipped_count: int
+    apply_failed_count: int

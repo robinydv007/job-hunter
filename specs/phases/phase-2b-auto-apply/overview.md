@@ -1,6 +1,6 @@
 # Phase 2b — Overview: Auto-Apply
 
-**Status:** IN PROGRESS - Implementation complete, testing  
+**Status:** Complete  
 **Target:** TBD  
 **Release:** v0.2.1 (planned)
 
@@ -335,12 +335,12 @@ Output as JSON (questionId → answer):
 
 ## Acceptance Criteria
 
-- [ ] `apply_jobs_node` prompts for each job above threshold
-- [ ] User can type `y` (apply), `n` (skip), `q` (quit)
-- [ ] Successfully applied jobs show `Applied` status in CSV
-- [ ] Failed applications show `Failed` with error message in CSV
-- [ ] Batch screening answers all questions in single LLM call
-- [ ] Auto-apply can be disabled via config (`enabled: false`)
+- [x] `apply_jobs_node` prompts for each job above threshold
+- [x] User can type `y` (apply), `n` (skip), `q` (quit)
+- [x] Successfully applied jobs show `Applied` status in CSV
+- [x] Failed applications show `Failed` with error message in CSV
+- [x] Batch screening answers all questions in single LLM call
+- [x] Auto-apply can be disabled via config (`enabled: false`)
 
 ---
 
@@ -369,7 +369,6 @@ src/job_hunter/
 ├── apply/
 │   ├── __init__.py          # Package init
 │   ├── api.py               # API client (/apply, /respond)
-│   ├── client.py            # Session management
 │   └── naukri_apply.py      # Main orchestrator
 ├── graph/
 │   └── nodes.py             # ADD: apply_jobs_node

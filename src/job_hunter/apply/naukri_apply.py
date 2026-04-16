@@ -25,13 +25,22 @@ class ApplyResult:
     message: str = ""
     error: str | None = None
     timestamp: str = ""
+    questions: list[dict] = None
+    answers: dict[str, str] = None
+
+    def __post_init__(self):
+        if self.questions is None:
+            self.questions = []
+        if self.answers is None:
+            self.answers = {}
 
 
 async def check_already_applied(page: Page) -> bool:
     """Check if already applied to this job."""
     try:
         applied_badge = await page.query_selector(".applied-badge, [class*='Applied']")
-        print(f"Applied badge found: {applied_badge}")
+        if applied_badge:
+            logger.debug("Applied badge found on page")
         return applied_badge is not None
     except Exception as e:
         logger.debug(f"Could not check already applied: {e}")
@@ -39,7 +48,13 @@ async def check_already_applied(page: Page) -> bool:
 
 
 async def verify_application_applied(page: Page) -> bool:
-    """Verify that application was successfully submitted."""
+    """Verify that application was successfully submitted.
+
+    Returns True only when there is a positive confirmation signal:
+    - Applied badge present with 'applied' text, or
+    - Sidebar is absent AND URL contains a success/myapply indicator.
+    Returns False when no confirm signal is found (sidebar absent alone is NOT enough).
+    """
     try:
         applied_badge = await page.query_selector(".applied-badge")
         if applied_badge:
@@ -53,12 +68,15 @@ async def verify_application_applied(page: Page) -> bool:
     try:
         sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
         if not sidebar:
-            logger.info("Sidebar closed - application may have been submitted")
             current_url = page.url
+            logger.debug(
+                f"Sidebar absent — checking URL for confirmation: {current_url}"
+            )
             if "myapply" in current_url or "success" in current_url:
-                logger.info(f"URL shows success: {current_url}")
+                logger.info(f"URL shows success after sidebar close: {current_url}")
                 return True
-            return True
+            # Sidebar being absent alone is not a confirmation signal
+            return False
     except Exception as e:
         logger.debug(f"Could not check sidebar: {e}")
 
@@ -75,17 +93,19 @@ async def navigate_to_job(page: Page, job_url: str) -> None:
         # wait for it to settle then retry once.
         err_str = str(e).lower()
         if "interrupted" in err_str or "another navigation" in err_str:
-            logger.warning(f"[navigate] Interrupted ({e}) — waiting for redirect to settle")
+            logger.warning(
+                f"[navigate] Interrupted ({e}) — waiting for redirect to settle"
+            )
             try:
                 await page.wait_for_load_state("domcontentloaded", timeout=8000)
             except Exception:
                 pass
             await asyncio.sleep(1)
             await page.goto(job_url, wait_until="domcontentloaded")
-            print(f"[navigate] Retried after redirect. Now at: {page.url}")
+            logger.info(f"[navigate] Retried after redirect. Now at: {page.url}")
         else:
             raise
-    print(f"Navigated to job URL: {job_url}")
+    logger.debug(f"Navigated to job URL: {job_url}")
     await asyncio.sleep(2)
 
 
@@ -104,14 +124,14 @@ async def answer_questions_via_ui(
       Input:  div.textArea[contenteditable='true']     (inside .chatbot_InputContainer)
       Submit: div.sendMsg                               (inside div.send — 'disabled' class removed after typing)
     """
+
     # Intercept real /respond requests for diagnostic logging
     async def log_respond_request(request):
         if "/respond" in request.url:
             try:
                 body = request.post_data
-                print(f"[BROWSER /respond] URL={request.url}")
-                print(f"[BROWSER /respond] Payload={body}")
-                logger.info(f"[BROWSER /respond] payload={body}")
+                logger.debug(f"[BROWSER /respond] URL={request.url}")
+                logger.debug(f"[BROWSER /respond] Payload={body}")
             except Exception as e:
                 logger.debug(f"Could not log /respond request: {e}")
 
@@ -120,7 +140,6 @@ async def answer_questions_via_ui(
     # Wait for chatbot drawer to open
     try:
         await page.wait_for_selector(".chatbot_DrawerContentWrapper", timeout=12000)
-        print("[UI] Chatbot drawer is open")
         logger.info("[UI] Chatbot drawer confirmed open")
     except Exception as e:
         logger.warning(f"[UI] Chatbot drawer did not open: {e}")
@@ -145,8 +164,7 @@ async def answer_questions_via_ui(
     for i, question in enumerate(questions):
         q_id = question["id"]
         answer = answers.get(q_id, "")
-        print(f"[UI] Q{i+1}/{len(questions)}: {question['name']!r} -> {answer!r}")
-        logger.info(f"[UI] Answering Q{i+1}: {question['name']} -> {answer!r}")
+        logger.info(f"[UI] Answering Q{i + 1}: {question['name']} -> {answer!r}")
 
         # Wait up to 10 s for a visible, enabled contenteditable input
         input_el = None
@@ -155,7 +173,7 @@ async def answer_questions_via_ui(
                 el = await page.query_selector(sel)
                 if el and await el.is_visible():
                     input_el = el
-                    print(f"[UI] Found input via: {sel}")
+                    logger.debug(f"[UI] Found input via: {sel}")
                     break
             if input_el:
                 break
@@ -165,10 +183,11 @@ async def answer_questions_via_ui(
             drawer = await page.query_selector(".chatbot_DrawerContentWrapper")
             if drawer:
                 html = await drawer.inner_html()
-                print(f"[UI] Drawer HTML (no input found):\n{html[:2000]}")
-                logger.warning(f"[UI] No input found for Q{i+1}. Drawer HTML: {html[:2000]}")
+                logger.warning(
+                    f"[UI] No input found for Q{i + 1}. Drawer HTML: {html[:2000]}"
+                )
             else:
-                logger.warning(f"[UI] No input and no drawer for Q{i+1}")
+                logger.warning(f"[UI] No input and no drawer for Q{i + 1}")
             return False
 
         # Click to focus, then type the answer.
@@ -180,7 +199,7 @@ async def answer_questions_via_ui(
         await page.keyboard.press("Control+a")
         await page.keyboard.press("Delete")
         await page.keyboard.type(answer)
-        print(f"[UI] Typed answer: {answer!r}")
+        logger.debug(f"[UI] Typed answer: {answer!r}")
         await asyncio.sleep(0.5)  # Give time for 'disabled' class to be removed
 
         # Click the send div (not a button — Playwright .click() works on any element)
@@ -189,16 +208,14 @@ async def answer_questions_via_ui(
             btn = await page.query_selector(sel)
             if btn and await btn.is_visible():
                 await btn.click()
-                print(f"[UI] Submitted via: {sel}")
-                logger.info(f"[UI] Q{i+1} submitted via {sel}")
+                logger.info(f"[UI] Q{i + 1} submitted via {sel}")
                 submitted = True
                 break
 
         if not submitted:
             # Fallback: Enter key
             await input_el.press("Enter")
-            print("[UI] Submitted via Enter key")
-            logger.info(f"[UI] Q{i+1} submitted via Enter")
+            logger.info(f"[UI] Q{i + 1} submitted via Enter key (fallback)")
 
         # Wait for chatbot to process and render next question
         await asyncio.sleep(2)
@@ -233,19 +250,47 @@ def _pick_best_option(answer: str, options: list[dict]) -> str:
             return opt["value"]
 
     # 3. Semantic yes/no detection
-    yes_words = {"yes", "y", "ok", "okay", "sure", "can", "will", "immediately",
-                 "comfortable", "agree", "available", "currently"}
-    no_words = {"no", "not", "cannot", "can't", "won't", "don't", "haven't",
-                "shouldn't", "uncomfortable", "disagree"}
+    yes_words = {
+        "yes",
+        "y",
+        "ok",
+        "okay",
+        "sure",
+        "can",
+        "will",
+        "immediately",
+        "comfortable",
+        "agree",
+        "available",
+        "currently",
+    }
+    no_words = {
+        "no",
+        "not",
+        "cannot",
+        "can't",
+        "won't",
+        "don't",
+        "haven't",
+        "shouldn't",
+        "uncomfortable",
+        "disagree",
+    }
 
     answer_words = set(re.findall(r"\b\w+\b", answer_lower))
     if answer_words & yes_words:
         for opt in options:
-            if "yes" in opt.get("value", "").lower() or "yes" in opt.get("name", "").lower():
+            if (
+                "yes" in opt.get("value", "").lower()
+                or "yes" in opt.get("name", "").lower()
+            ):
                 return opt["value"]
     if answer_words & no_words:
         for opt in options:
-            if "no" in opt.get("value", "").lower() or "no" in opt.get("name", "").lower():
+            if (
+                "no" in opt.get("value", "").lower()
+                or "no" in opt.get("name", "").lower()
+            ):
                 return opt["value"]
 
     # 4. Default: first option
@@ -284,7 +329,21 @@ def _find_matching_question(
     chatbot_norm = normalize(chatbot_text)
     chatbot_words = set(chatbot_norm.split())
     # Filter short stop words
-    stop = {"is", "are", "you", "do", "have", "your", "in", "to", "the", "a", "of", "or", "and"}
+    stop = {
+        "is",
+        "are",
+        "you",
+        "do",
+        "have",
+        "your",
+        "in",
+        "to",
+        "the",
+        "a",
+        "of",
+        "or",
+        "and",
+    }
     chatbot_words -= stop
 
     best_q = None
@@ -317,8 +376,7 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
     Returns:
         (success, questions, conversation_id, chatbot_response, initial_node)
     """
-    print("Clicking apply button...")
-    print('outside handle response method...')
+    logger.debug("Clicking apply button...")
 
     # Find the apply button first
     selectors = [
@@ -339,8 +397,9 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
             break
 
     if not apply_button:
-        logger.warning("Apply button not found — likely 'Apply on company site' job, skipping")
-        print("Apply button not found")
+        logger.warning(
+            "Apply button not found — likely 'Apply on company site' job, skipping"
+        )
         return False, [], "", {}, -1
 
     # Use expect_response to correctly intercept and await the async JSON parse.
@@ -354,7 +413,6 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
             await apply_button.click()
             logger.info(f"Clicked apply button with selector: {matched_selector}")
 
-        print('handle response method called...')
         response = await response_info.value
         data = await response.json()
         logger.info(
@@ -367,7 +425,9 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
             text = await sidebar.inner_text()
             logger.warning(f"Sidebar opened but no API response. Content: {text[:500]}")
         else:
-            logger.warning("Sidebar did NOT open!")
+            logger.warning("Sidebar did NOT open after clicking apply")
+        # success=True means the button was found and clicked; empty questions means
+        # either no-question flow or we couldn't intercept the response.
         return True, [], "", {}, -1
 
     if not data:
@@ -386,10 +446,9 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
     chatbot_response = data.get("chatbotResponse", {})
     conversation_id = chatbot_response.get("conversation_session_id", "")
 
-    # Log full chatbotResponse so we can see ALL available fields if needed
-    print(f"[/apply] Full chatbotResponse: {chatbot_response}")
     logger.info(f"[/apply] chatbotResponse keys: {list(chatbot_response.keys())}")
     logger.info(f"[/apply] conversation_session_id: {conversation_id}")
+    logger.debug(f"[/apply] Full chatbotResponse: {chatbot_response}")
 
     # Find already-answered question IDs from applyData.
     # When a session is resumed (same job applied again), some questions are pre-answered.
@@ -397,10 +456,13 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
     apply_data = chatbot_response.get("applyData", {})
     already_answered_ids: set[str] = set()
     for job_answers in apply_data.values():
-        already_answered_ids.update(str(k) for k in job_answers.get("answers", {}).keys())
+        already_answered_ids.update(
+            str(k) for k in job_answers.get("answers", {}).keys()
+        )
     if already_answered_ids:
-        print(f"[/apply] Already answered question IDs (skipping): {already_answered_ids}")
-        logger.info(f"[/apply] Skipping already-answered: {already_answered_ids}")
+        logger.info(
+            f"[/apply] Skipping already-answered question IDs: {already_answered_ids}"
+        )
 
     all_questions = []
     for q in questionnaire:
@@ -418,7 +480,7 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
     # Only return questions that still need to be answered
     questions = [q for q in all_questions if q["id"] not in already_answered_ids]
     logger.info(f"Total questions: {len(all_questions)}, unanswered: {len(questions)}")
-    print(f"[/apply] Unanswered questions to answer: {[q['name'] for q in questions]}")
+    logger.debug(f"[/apply] Unanswered questions: {[q['name'] for q in questions]}")
 
     return True, questions, conversation_id, chatbot_response, initial_node
 
@@ -437,8 +499,7 @@ async def get_llm_answers(
 
     # Include type so LLM knows when to give a short option value vs free text
     question_list = "\n".join(
-        f"- {q['id']}: {q['name']} [type: {q['type']}]"
-        for q in questions
+        f"- {q['id']}: {q['name']} [type: {q['type']}]" for q in questions
     )
 
     prompt = f"""You are a job seeker filling out a job application form on Naukri.
@@ -471,14 +532,13 @@ Return JSON only (question_id -> answer string):
     try:
         response = await llm.ainvoke(prompt)
         content = response.content if hasattr(response, "content") else str(response)
-        print(f"[LLM] Raw response:\n{content}")
-        logger.info(f"[LLM] Raw response: {content}")
+        logger.debug(f"[LLM] Raw response:\n{content}")
+        logger.info(f"[LLM] Raw response length: {len(content)} chars")
         start = content.find("{")
         end = content.rfind("}") + 1
         if start >= 0 and end > start:
             json_str = content[start:end]
             answers = json.loads(json_str)
-            print(f"[LLM] Parsed answers: {answers}")
             logger.info(f"[LLM] Parsed answers: {answers}")
             return answers
         else:
@@ -511,6 +571,7 @@ async def apply_to_job(
     if job_url and "sid=" in job_url:
         try:
             from urllib.parse import urlparse, parse_qs
+
             parsed = urlparse(job_url)
             qs = parse_qs(parsed.query)
             sid = qs.get("sid", [""])[0]
@@ -545,8 +606,16 @@ async def apply_to_job(
             )
 
         # Click apply button and get questions
-        success, questions, conversation_id, chatbot_response_data, chatbot_initial_node = await click_and_get_questions(page)
-        print(f"Success: {success}, Questions: {questions}, Conversation ID: {conversation_id}")
+        (
+            success,
+            questions,
+            conversation_id,
+            chatbot_response_data,
+            chatbot_initial_node,
+        ) = await click_and_get_questions(page)
+        logger.info(
+            f"click_and_get_questions: success={success}, questions={len(questions)}, conversation_id={conversation_id!r}"
+        )
         if not success:
             return ApplyResult(
                 job_id=job_id,
@@ -555,7 +624,9 @@ async def apply_to_job(
                 timestamp=datetime.now().isoformat(),
             )
 
-        # Handle no questions case
+        # Handle no-question jobs (questionnaire is empty).
+        # Naukri applies these immediately on button click — no chatbot needed.
+        # Wait briefly and verify via badge or sidebar text before deciding outcome.
         if not questions:
             current_url = page.url
             if "naukri.com" not in current_url:
@@ -566,18 +637,48 @@ async def apply_to_job(
                     timestamp=datetime.now().isoformat(),
                 )
 
+            # Give Naukri a moment to process the instant apply
+            await asyncio.sleep(2)
+
             if await check_already_applied(page):
+                logger.info(f"No-question job applied (badge confirmed): {job_title}")
                 return ApplyResult(
                     job_id=job_id,
-                    status="Already Applied",
-                    message="Already applied",
+                    status="Applied",
+                    message="Applied (no screening questions, badge confirmed)",
                     timestamp=datetime.now().isoformat(),
                 )
 
+            # Check sidebar text for thank-you/success message
+            try:
+                sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
+                if sidebar:
+                    text = await sidebar.inner_text()
+                    logger.debug(f"[no-question] Sidebar text: {text[:300]}")
+                    if any(
+                        kw in text.lower() for kw in ("thank", "applied", "success")
+                    ):
+                        logger.info(
+                            f"No-question job applied (sidebar confirmed): {job_title}"
+                        )
+                        return ApplyResult(
+                            job_id=job_id,
+                            status="Applied",
+                            message="Applied (no screening questions, sidebar confirmed)",
+                            timestamp=datetime.now().isoformat(),
+                        )
+            except Exception as e:
+                logger.debug(f"Could not read sidebar for no-question job: {e}")
+
+            # Could not positively confirm — mark as unconfirmed rather than flat-out Skipped
+            logger.warning(
+                f"No-question job — could not confirm apply for '{job_title}'. "
+                "May have been applied. Check Naukri applied jobs."
+            )
             return ApplyResult(
                 job_id=job_id,
-                status="Skipped",
-                error="No screening questions",
+                status="Applied",
+                message="Applied (no screening questions, unconfirmed — verify manually)",
                 timestamp=datetime.now().isoformat(),
             )
 
@@ -613,9 +714,10 @@ async def apply_to_job(
             q_id = matched_q["id"]
             q_type = matched_q.get("type", "Text Box")
             answer = answers.get(q_id, "")
-            logger.info(f"[iter {iteration+1}] Chatbot asks: {repr(current_prompt[:80])}")
-            logger.info(f"[iter {iteration+1}] Matched: {repr(matched_q['name'])} [{q_type}] -> {answer!r}")
-            print(f"[loop] Q matched: {repr(matched_q['name'])} -> {answer!r}")
+            logger.info(
+                f"[iter {iteration + 1}] Chatbot asks: {repr(current_prompt[:80])}"
+            )
+            logger.info(f"[loop] Matched Q: {repr(matched_q['name'])} -> {answer!r}")
 
             max_retries = 3
             for attempt in range(max_retries + 1):
@@ -626,8 +728,12 @@ async def apply_to_job(
                 except Exception as e:
                     logger.error(f"[respond] failed: {e} — falling back to UI")
                     remaining = [q for q in questions if q["id"] not in answered_ids]
-                    remaining_answers = {q["id"]: answers.get(q["id"], "") for q in remaining}
-                    ui_success = await answer_questions_via_ui(page, remaining, remaining_answers)
+                    remaining_answers = {
+                        q["id"]: answers.get(q["id"], "") for q in remaining
+                    }
+                    ui_success = await answer_questions_via_ui(
+                        page, remaining, remaining_answers
+                    )
                     if not ui_success:
                         return ApplyResult(
                             job_id=job_id,
@@ -643,21 +749,50 @@ async def apply_to_job(
                     )
 
                 current_node = response_data.get("currentNode", -1)
-                logger.info(f"[respond] attempt {attempt+1}: prevNode={prev_node}, currentNode={current_node}, dataCommitted={response_data.get('dataCommitted')}")
-                print(f"[/respond] iter={iteration+1} attempt={attempt+1} node={current_node} response: {response_data}")
+                logger.info(
+                    f"[respond] attempt {attempt + 1}: prevNode={prev_node}, currentNode={current_node}, dataCommitted={response_data.get('dataCommitted')}"
+                )
+                logger.debug(
+                    f"[/respond] iter={iteration + 1} attempt={attempt + 1} node={current_node} response: {response_data}"
+                )
 
                 # dataCommitted = chatbot conversation complete → trigger Phase 3 apply
                 if response_data.get("dataCommitted"):
-                    logger.info("dataCommitted=True — calling submit_application (Phase 3)")
-                    print("[/respond] dataCommitted=True — submitting application via /apply")
+                    logger.info(
+                        "dataCommitted=True — calling submit_application (Phase 3)"
+                    )
 
                     final_apply_data = response_data.get("applyData", {})
-                    job_answers = final_apply_data.get(job_id, {}).get("answers", {})
-                    print(f"[submit] answers={job_answers}, sid={sid!r}")
+                    logger.debug(
+                        f"[submit] applyData keys: {list(final_apply_data.keys())}"
+                    )
+
+                    # applyData key may be the numeric job_id or a different format.
+                    # Try exact match first, then fall back to the first available key.
+                    job_apply_entry = (
+                        final_apply_data.get(job_id)
+                        or (
+                            next(iter(final_apply_data.values()), None)
+                            if final_apply_data
+                            else None
+                        )
+                        or {}
+                    )
+                    job_answers = job_apply_entry.get("answers", {})
+                    if not job_answers:
+                        logger.warning(
+                            f"[submit] No answers found in applyData for job_id={job_id!r}. "
+                            f"applyData keys: {list(final_apply_data.keys())}. Submitting empty answers."
+                        )
+                    logger.info(
+                        f"[submit] Submitting {len(job_answers)} answers, sid={sid!r}"
+                    )
 
                     try:
                         submit_result = await api.submit_application(
-                            page, job_id, job_answers,
+                            page,
+                            job_id,
+                            job_answers,
                             mandatory_skills=mandatory_skills,
                             optional_skills=optional_skills,
                             sid=sid,
@@ -669,11 +804,15 @@ async def apply_to_job(
                                 status="Applied",
                                 message="Successfully applied (confirmed)",
                                 timestamp=datetime.now().isoformat(),
+                                questions=questions,
+                                answers=answers,
                             )
                         else:
-                            logger.warning(f"[submit] Non-200: {submit_result}")
+                            logger.warning(
+                                f"[submit] Non-200 response: {submit_result}"
+                            )
                     except Exception as e:
-                        logger.error(f"[submit] Error: {e}")
+                        logger.error(f"[submit] submit_application raised: {e}")
 
                     # Fallback: reload and check badge
                     await asyncio.sleep(3)
@@ -686,6 +825,8 @@ async def apply_to_job(
                         status="Applied",
                         message=f"Applied (dataCommitted, badge={'confirmed' if applied else 'pending'})",
                         timestamp=datetime.now().isoformat(),
+                        questions=questions,
+                        answers=answers,
                     )
 
                 # Answer accepted when chatbot node advanced
@@ -696,7 +837,9 @@ async def apply_to_job(
                     current_prompt = _extract_question_text(
                         response_data.get("speechResponse", [])
                     )
-                    logger.info(f"Answer accepted. Next chatbot prompt: {repr(current_prompt[:80])}")
+                    logger.info(
+                        f"Answer accepted. Next chatbot prompt: {repr(current_prompt[:80])}"
+                    )
                     break  # move to next iteration
 
                 # Same node = answer rejected
@@ -704,11 +847,14 @@ async def apply_to_job(
                 if options and attempt < max_retries:
                     old_answer = answer
                     answer = _pick_best_option(answer, options)
-                    logger.warning(f"Rejected (node={current_node}), retry: {old_answer!r} -> {answer!r}")
-                    print(f"[retry] retrying with {answer!r}")
+                    logger.warning(
+                        f"Rejected (node={current_node}), retry: {old_answer!r} -> {answer!r}"
+                    )
                 else:
                     # Give up on this question — mark answered to avoid infinite loop
-                    logger.warning(f"Could not answer {matched_q['name']!r} after {attempt+1} attempts, skipping")
+                    logger.warning(
+                        f"Could not answer {matched_q['name']!r} after {attempt + 1} attempts, skipping"
+                    )
                     answered_ids.add(q_id)
                     current_prompt = _extract_question_text(
                         response_data.get("speechResponse", [])
@@ -716,7 +862,6 @@ async def apply_to_job(
                     break
 
             await asyncio.sleep(0.5)
-
 
         # Verify application (with error handling for navigation)
         try:
@@ -740,9 +885,12 @@ async def apply_to_job(
             sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
             if sidebar:
                 text = await sidebar.inner_text()
-                print(f"[Verify] Chatbot drawer text: {text[:500]}")
                 logger.info(f"[Verify] Chatbot drawer text: {text[:500]}")
-                if "thank" in text.lower() or "applied" in text.lower() or "success" in text.lower():
+                if (
+                    "thank" in text.lower()
+                    or "applied" in text.lower()
+                    or "success" in text.lower()
+                ):
                     return ApplyResult(
                         job_id=job_id,
                         status="Applied",
@@ -750,8 +898,7 @@ async def apply_to_job(
                         timestamp=datetime.now().isoformat(),
                     )
             else:
-                print("[Verify] Chatbot drawer closed after submission — treating as success")
-                logger.info("[Verify] Sidebar closed, assuming applied")
+                logger.info("[Verify] Sidebar already closed after submission")
         except Exception as e:
             logger.warning(
                 f"Error during verification (possibly due to navigation): {e}"
@@ -762,6 +909,8 @@ async def apply_to_job(
                 status="Applied",
                 message="Applied (assuming success after all responses)",
                 timestamp=datetime.now().isoformat(),
+                questions=questions,
+                answers=answers,
             )
 
         return ApplyResult(
@@ -769,6 +918,8 @@ async def apply_to_job(
             status="Applied",
             message="Applied (assumed)",
             timestamp=datetime.now().isoformat(),
+            questions=questions,
+            answers=answers,
         )
 
     except Exception as e:

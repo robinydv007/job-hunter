@@ -42,11 +42,18 @@ def record_run(platform: str, freshness_used: int, jobs_found: int) -> None:
     _save_run_history(history)
 
 
-def update_run_stats(jobs_shortlisted: int, jobs_applied: int) -> None:
-    """Update the last run record with final stats after pipeline completes."""
+def update_run_stats(
+    jobs_shortlisted: int,
+    jobs_applied: int,
+    jobs_skipped: int = 0,
+    jobs_failed: int = 0,
+) -> None:
+    """Update the last run record with final apply stats after pipeline completes."""
     history = _load_run_history()
     if not history:
         return
     history[-1]["jobs_shortlisted"] = jobs_shortlisted
     history[-1]["jobs_applied"] = jobs_applied
+    history[-1]["jobs_skipped"] = jobs_skipped
+    history[-1]["jobs_failed"] = jobs_failed
     _save_run_history(history)
