@@ -18,6 +18,10 @@
     "packaging": ["specs/architecture/overview.md#technology-stack"],
     "backlog": ["specs/backlog/backlog.md"],
     "roadmap": ["specs/roadmap/roadmap.md"],
-    "status": ["specs/status.md"]
+    "status": ["specs/status.md"],
+    "async-architecture": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"],
+    "nest_asyncio-removal": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"],
+    "login-node": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"],
+    "pipeline-reorder": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"]
   }
 }
