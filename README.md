@@ -67,49 +67,208 @@ playwright install
    job-hunter init
    ```
 
-4. **Edit `config/user.yaml`** with your search preferences:
-   ```yaml
-   profile:
-     name: Your Name
-     total_experience: 5
-     preferred_roles:
-       - software engineer
-     resume_path: resume.pdf
-     expected_salary_lpa: 20
-     notice_period: immediate
+4. **Edit `config/user.yaml`** with your search preferences.
 
-   search:
-     platforms:
-       - naukri
-     salary_min_lpa: 15
-     salary_max_lpa: 30
-     max_jobs: 20
+## Configuration Files
 
-   scoring:
-     shortlist_threshold: 30
-   ```
+This project uses several configuration files. Here's what each does:
 
-## Usage
+### config/user.yaml
 
-```bash
-# Run with your resume
-job-hunter run --resume resume.pdf
+Main configuration file with your profile and search preferences.
 
-# Run in headless mode (not recommended for first login)
-job-hunter run --resume resume.pdf --headless
+```yaml
+profile:
+  name: Your Name
+  total_experience: 5
+  preferred_roles:
+    - software engineer
+    - full stack developer
+  resume_path: resume.pdf
+  expected_salary_lpa: 20
+  notice_period: immediate
+  remote_preference: hybrid  # remote, hybrid, or onsite
 
-# Check status
-job-hunter status
+search:
+  platforms:
+    - naukri
+  salary_min_lpa: 15
+  salary_max_lpa: 30
+  max_jobs: 50           # 0 = no limit
+  max_jobs_per_query: 20
+  max_roles: 5           # number of search queries to generate
+  max_locations: 3
+  excluded_companies: []  # company names to skip
+  excluded_keywords: []   # keywords in job title to skip
+  delay_min_seconds: 3.0   # anti-blocking: random delay between actions
+  delay_max_seconds: 8.0
+
+naukri:
+  login_required: true
+  headless: false         # NOT recommended - triggers bot detection
+  page_timeout: 30000
+  max_pages: 3           # pages to scrape per query
+  delay_between_pages: 3
+
+scoring:
+  shortlist_threshold: 30  # jobs below this won't be listed
+  apply_threshold: 30      # jobs below this won't be auto-applied
+  skill_weight: 0.35       # most important!
+  role_weight: 0.2
+  experience_weight: 0.2
+  company_weight: 0.1
+  location_weight: 0.08
+  work_mode_weight: 0.07
+
+auto_apply:
+  enabled: true
+  max_per_day: 10
+  max_per_run: 5
+  delay_between_seconds: 5
+  require_confirmation: false  # true = prompts before each apply
+  skip_if_already_applied: true
 ```
+
+### config/screening.yaml
+
+Answers to common screening questions asked during applications.
+
+```yaml
+screening_answers:
+  willing_to_relocate: true
+  comfortable_with_shifts: false
+  current_ctc_lpa: 15
+  expected_ctc_lpa: 20
+  notice_period: immediate
+  reason_for_change: Looking for better growth opportunities
+  remote_work_preference: flexible
+
+screening_answers_extended:
+  # Optional longer answers:
+  # reason_for_change: |
+  #   Detailed reason here...
+  # strengths: |
+  #   Your key strengths...
+```
+
+### config/constants.yaml
+
+Domain knowledge used by the scoring engine. You can tune these without touching code:
+
+- **skill_aliases** — Alternative names for skills (e.g., "node" = "node.js")
+- **company_rating_bands** — Score boosts based on company ratings
+- **experience_penalties** — Score reductions for over/under-qualified roles
+- **metro_cities** — City name variations for location matching
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `job-hunter init` | Initialize config and directories |
-| `job-hunter run` | Run the full pipeline |
-| `job-hunter status` | Show cached data and outputs |
-| `job-hunter clean` | Clear cached files |
+### job-hunter init
+
+Initialize the project. Creates `config/user.yaml` and `data/`/`output/` directories.
+
+```bash
+job-hunter init
+```
+
+### job-hunter run
+
+Run the full pipeline. Options:
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--resume` | `-r` | Path to resume file (PDF, DOCX, or TXT) |
+| `--config` | `-c` | Path to config YAML file |
+| `--headless` | | Run browser in headless mode (not recommended) |
+| `--force-parse` | | Force re-parse resume even if cached |
+
+```bash
+# Basic usage
+job-hunter run --resume resume.pdf
+
+# With custom config
+job-hunter run --resume resume.pdf --config custom.yaml
+
+# Force re-parse cached resume
+job-hunter run --force-parse
+```
+
+### job-hunter status
+
+Show cached profile data and recent CSV exports.
+
+```bash
+job-hunter status
+```
+
+### job-hunter clean
+
+Clear all cached data (parsed profile, detailed profile, resume hash).
+
+```bash
+job-hunter clean
+```
+
+## Tips for Better Results
+
+1. **Use non-headless mode** — Running headless triggers bot detection on Naukri. Always run with a visible browser for the first few runs.
+
+2. **Set accurate preferred_roles** — The scoring engine weights role matching at 20%. Use exact titles like "Software Engineer" not "Software".
+
+3. **Tune scoring weights** — Default weights work for most cases, but you can adjust:
+   - Higher `skill_weight` (0.35) if skills are your priority
+   - Higher `role_weight` (0.2) if title matching matters most
+   - Set `location_weight: 0` if location is flexible
+
+4. **Configure excluded_companies/keywords** — Block companies or title keywords you don't want:
+   ```yaml
+   search:
+     excluded_companies:
+       - TCS
+       - Infosys
+     excluded_keywords:
+       - Java    # if you don't want Java roles
+       - Manager
+   ```
+
+5. **Set appropriate thresholds** — Start with lower thresholds and adjust based on results:
+   ```yaml
+   scoring:
+     shortlist_threshold: 30   # jobs below this won't appear in CSV
+     apply_threshold: 30       # jobs below this won't be auto-applied
+   ```
+
+6. **Enable LLM scoring for better matching** — For more accurate scoring using AI:
+   ```yaml
+   scoring:
+     llm_scoring:
+       enabled: true
+       batch_size: 10
+       shortlist_threshold: 30
+       custom_requirements: |
+         - For AI/ML jobs, experience can be relaxed with relevant skills.
+   ```
+
+7. **Use confirmation mode initially** — When trying auto-apply for the first time:
+   ```yaml
+   auto_apply:
+     require_confirmation: true
+   ```
+   This lets you review each application before submission.
+
+8. **Keep your resume updated** — The tool detects resume changes via hash. Use `--force-parse` if you've updated your resume.
+
+9. **Respect rate limits** — Don't set `max_jobs` too high in a single run. Naukri may temporarily block excessive requests.
+
+## Data & Outputs
+
+After running, you'll find:
+
+| Directory | Contents |
+|----------|----------|
+| `data/profile.json` | Cached parsed resume |
+| `data/profile_detailed.yaml` | Extended profile from resume |
+| `data/resume_hash.txt` | SHA256 hash for change detection |
+| `output/shortlist_*.csv` | Exported job listings |
 
 ## Disclaimer
 

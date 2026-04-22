@@ -318,4 +318,5 @@ def load_profile_with_detailed() -> tuple[ResumeProfile | None, dict | None]:
     """
     profile = load_profile()
     detailed = load_detailed_profile()
+    console.print(f"[dim] Detailed profile loaded from YAML: {detailed}[/]")
     return profile, detailed

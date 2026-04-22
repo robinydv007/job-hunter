@@ -9,6 +9,8 @@ profile:
   notice_period: immediate joiner
   preferred_locations: []
   remote_preference: hybrid
+  title_exclude_keywords:
+  - PHP
   company_size_preference:
   - mid-size
   industry_preference: []

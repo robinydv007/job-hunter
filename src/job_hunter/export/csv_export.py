@@ -16,29 +16,29 @@ def _get_nested(job: dict, key: str, default: Any = "") -> Any:
 
 
 ROW_MAPPING: dict[str, callable[[Any], Any]] = {
-    "job_title": lambda sj: _get_nested(sj.get("job", {}), "title"),
-    "company": lambda sj: _get_nested(sj.get("job", {}), "company"),
-    "job_board": lambda sj: _get_nested(sj.get("job", {}), "job_board"),
-    "location": lambda sj: _get_nested(sj.get("job", {}), "location"),
-    "work_mode": lambda sj: _get_nested(sj.get("job", {}), "work_mode"),
-    "experience_required": lambda sj: _get_nested(
+    "Job Title": lambda sj: _get_nested(sj.get("job", {}), "title"),
+    "Company": lambda sj: _get_nested(sj.get("job", {}), "company"),
+    "Location": lambda sj: _get_nested(sj.get("job", {}), "location"),
+    "Experience Required": lambda sj: _get_nested(
         sj.get("job", {}), "experience_required"
     ),
-    "salary_lpa": lambda sj: _get_nested(sj.get("job", {}), "salary_lpa"),
-    "match_score": lambda sj: sj.get("match_score", 0),
-    "matched_skills": lambda sj: "; ".join(sj.get("matched_skills", [])),
-    "why_selected": lambda sj: sj.get("why_selected", "").replace("\n", " | "),
-    "job_url": lambda sj: _get_nested(sj.get("job", {}), "job_url"),
-    "posted_date": lambda sj: _get_nested(sj.get("job", {}), "posted_date"),
-    "job_description": lambda sj: _truncate(
+    "Match Score": lambda sj: sj.get("match_score", 0),
+    "Job Description": lambda sj: _truncate(
         _get_nested(sj.get("job", {}), "description")
     ),
-    "apply_status": lambda sj: sj.get("apply_status", "Pending"),
-    "apply_timestamp": lambda sj: sj.get("apply_timestamp", ""),
-    "apply_error": lambda sj: sj.get("apply_error", ""),
-    "questionnaire": lambda sj: sj.get("questionnaire", "[]"),
-    "questionnaire_timestamp": lambda sj: sj.get("questionnaire_timestamp", ""),
-    "data_source": lambda sj: _get_nested(sj.get("job", {}), "data_source", "mock"),
+    "Why Selected": lambda sj: sj.get("why_selected", "").replace("\n", " | "),
+    "Matched Skills": lambda sj: "; ".join(sj.get("matched_skills", [])),
+    "Questionnaire": lambda sj: sj.get("questionnaire", "[]"),
+    "Job Board": lambda sj: _get_nested(sj.get("job", {}), "job_board"),
+    "Job URL": lambda sj: _get_nested(sj.get("job", {}), "job_url"),
+    "Work Mode": lambda sj: _get_nested(sj.get("job", {}), "work_mode"),
+    "Salary LPA": lambda sj: _get_nested(sj.get("job", {}), "salary_lpa"),
+    "Posted Date": lambda sj: _get_nested(sj.get("job", {}), "posted_date"),
+    "Data Source": lambda sj: _get_nested(sj.get("job", {}), "data_source", "mock"),
+    "Apply Status": lambda sj: sj.get("apply_status", "Pending"),
+    "Apply Timestamp": lambda sj: sj.get("apply_timestamp", ""),
+    "Questionnaire Timestamp": lambda sj: sj.get("questionnaire_timestamp", ""),
+    "Apply Error": lambda sj: sj.get("apply_error", ""),
 }
 
 

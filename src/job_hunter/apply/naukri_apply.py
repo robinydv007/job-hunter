@@ -11,9 +11,12 @@ from typing import Any
 
 from playwright.async_api import Page
 
+from rich.console import Console
+
 from job_hunter.apply import api
 
 logger = logging.getLogger(__name__)
+console = Console()
 
 
 @dataclass
@@ -732,6 +735,8 @@ async def apply_to_job(
 
         # Get LLM answers
         answers = await get_llm_answers(questions, profile, config, detailed_profile)
+        console.print(f"[green]LLM answers: {answers}[/]")
+        logger.info(f"LLM answers log: {answers}")
 
         # Submit answers — RESPONSE-DRIVEN loop.
         # The chatbot tells us what it wants next via speechResponse.

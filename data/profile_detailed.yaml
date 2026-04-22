@@ -1,59 +1,33 @@
 tech_experience:
-  Node.js: 20
-  NestJS: 10
-  TypeScript: 10
-  JavaScript: 10
-  Microservices: 10
-  MongoDB: 10
-  PostgreSQL: 10
-  MySQL: 10
-  Kafka: 10
-  Redis: 10
-  AWS: 10
-  GCP: 10
-  Firebase: 10
-  RabbitMQ: 10
-  Selenium: 10
-  Cypress: 10
-  Playwright: 10
-  JMeter: 10
-  Postman: 10
-  RestAssured: 10
-  TestNG: 10
-  JUnit: 10
-  Mockito: 10
-  
+  Java: 5
+  Python: 5
+  JavaScript: 5
+  Selenium: 5
+  Cypress: 3
+  Playwright: 2
+  TestNG: 5
+  JUnit: 5
+  PyTest: 3
+  Jenkins: 3
+  GitHub Actions: 2
+  Postman: 3
+  RestAssured: 2
+  MySQL: 3
+  MongoDB: 2
 achievements:
-- Enabled 500+ B2B customers, processing 60k orders/month
-- Empowered 5k franchise partners to handle 1.5 lakh daily orders
-- Improved performance and reduced release cycles from 3-4 weeks to 2 days
-- Cutting 80% costs through hybrid solution
-- Enabled 20x growth in hyperlocal
-- Reduced code duplication by 70%
-- Improved maintainability and standardization across services
+- Developed automation framework reducing manual testing effort by 50%
+- Improved regression testing coverage significantly
+- Enhanced test reliability and reduced flaky tests
 challenges_solved:
-- Migrated legacy PHP monolith to microservices
-- Implemented vehicle routing optimization with OpenStreetMap APIs & Google Maps
-- Designed scalable APIs and integrations with Shopify, Unicommerce, ONDC, Shiprocket,
-  and more
-- Implemented payment gateways Razorpay, EasyPay, etc.
-- Established Observability platform with OpenTelemetry, Grafana, Loki, Jaeger, Slack
-  alerts
+- Integrated test suites with CI/CD pipelines
+- Collaborated with developers for early bug detection
+- Developed Cross-browser Testing System using Selenium Grid
 interests:
-- System Design
-- Distributed systems
-- Node.js
-- NestJS
-- Microservices
-- APIs
-- Angular
-- React
+- Automation Testing
+- CI/CD Integration
+- Test Automation
 key_responsibilities:
-- Technical leadership and team management
-- Architecture and design
-- Performance optimization
-- API design and development
-- Microservices development
-- Cloud computing (AWS, GCP, Firebase)
-- Database management (MongoDB, PostgreSQL, MySQL)
-- Message queues (Kafka, RabbitMQ)
+- Designing and implementing automated testing frameworks
+- Improving product quality through robust testing strategies
+- Integrating test suites with CI/CD pipelines
+- Collaborating with developers for early bug detection
