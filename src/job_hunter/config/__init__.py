@@ -47,6 +47,7 @@ class ScoringLLMConfig(BaseModel):
     shortlist_threshold: int = 30
     consider_location: bool = False
     consider_work_mode: bool = False
+    custom_requirements: list[str] = Field(default_factory=list)
 
 
 class ScoringConfig(BaseModel):
