@@ -12,6 +12,9 @@ profile:
   company_size_preference:
   - mid-size
   industry_preference: []
+  pan_number: "123456789"
+  last_working_day: "2026-03-05"
+  altername_email: "xyz@gmail.com"
 search:
   platforms:
   - naukri
@@ -27,8 +30,6 @@ search:
   job_types: []
   excluded_companies: []
   excluded_keywords: []
-  title_exclude_keywords:
-  - Java
   delay_min_seconds: 3.0
   delay_max_seconds: 8.0
 naukri:
@@ -47,11 +48,14 @@ scoring:
   location_weight: 0.08
   work_mode_weight: 0.07
   llm_scoring:
-    enabled: false
+    enabled: true
     batch_size: 10
     shortlist_threshold: 30
     consider_location: false
     consider_work_mode: false
+    custom_requirements: 
+    - For AI/ML jobs, experience can be relaxed if the candidate has relevant skills.
+    - Skill matching should be atleast 100% to consider the candidate.
 auto_apply:
   enabled: true
   max_per_day: 10

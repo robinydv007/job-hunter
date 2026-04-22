@@ -70,9 +70,11 @@ def _build_prompt(
             "9. **Work Mode Match**: Does job's remote/hybrid/onsite align with candidate's preference?"
         )
 
+    custom_requirements = "\n".join(llm_config.custom_requirements)
+
     conditional_section = (
-        "\n".join(conditional_criteria)
-        if conditional_criteria
+        "\n".join(conditional_criteria) + custom_requirements
+        if conditional_criteria and custom_requirements
         else "None (only core factors considered)"
     )
 
@@ -84,7 +86,6 @@ def _build_prompt(
 - Skills: {skills}
 - Preferred Roles: {preferred_roles}
 - Past Roles: {past_roles}
-- Industry Domain: {profile.industry_domain}
 - Preferred Locations: {preferred_locations}
 - Remote Preference: {remote_preference}
 
@@ -94,13 +95,12 @@ def _build_prompt(
 ## Scoring Criteria
 
 ### ALWAYS CONSIDER:
-1. **Skills Match**: Does the job require technical skills that the candidate possesses?
+1. **Skills Match**: Does the job require technical skills that the candidate possesses? 
 2. **Role Alignment**: Does the job title align with the candidate's target or past roles?
 3. **Experience Fit**: Does the job's experience requirement match the candidate's experience?
 4. **Company Rating**: Company rating (if available) - higher is better
 5. **Company Reviews**: Number of reviews indicates company size/stability
-6. **Industry Match**: Does the job's industry align with candidate's industry domain?
-7. **Department Match**: Does the job's department/team align with candidate's background?
+6. **Department Match**: Does the job's department/team align with candidate's background?
 
 ### CONDITIONAL (based on user config):
 {conditional_section}
@@ -115,7 +115,7 @@ Return ONLY a valid JSON object (no markdown, no explanation), with the followin
       "title": "Job Title",
       "company": "Company Name",
       "score": 85,
-      "reasoning": "Brief explanation covering key factors"
+      "reasoning": "Brief explanation covering key factors with skills matched & not matched"
     }},
     ...
   ]
