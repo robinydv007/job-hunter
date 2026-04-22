@@ -16,6 +16,41 @@ from job_hunter.config import AppConfig, SearchConfig
 from job_hunter.config.job_boards.naukri import NAUKRI
 from job_hunter.resume.schema import ResumeProfile
 
+SCRAPE_TIMEOUT_MS = 120000  # 2 minutes timeout for page operations
+
+
+async def _wait_with_timeout(coro, timeout_ms: int = SCRAPE_TIMEOUT_MS, task_name: str = "operation"):
+    """Wrap a coroutine with a timeout and better error reporting.
+
+    Args:
+        coro: The coroutine to execute
+        timeout_ms: Timeout in milliseconds
+        task_name: Description of the task for logging
+
+    Returns:
+        Result of the coroutine
+
+    Raises:
+        asyncio.TimeoutError: If the operation times out
+        Exception: Re-raises the original exception with context
+    """
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout_ms / 1000)
+    except asyncio.TimeoutError:
+        print(f"    [WARN] Timeout after {timeout_ms // 1000}s waiting for: {task_name}")
+        raise
+    except Exception as e:
+        error_msg = str(e)
+        if "net::ERR" in error_msg:
+            print(f"    [WARN] Network error during {task_name}: {error_msg}")
+        elif "Access Denied" in error_msg or "403" in error_msg:
+            print(f"    [WARN] Access blocked during {task_name}: {error_msg}")
+        elif "captcha" in error_msg.lower():
+            print(f"    [WARN] CAPTCHA detected during {task_name}")
+        else:
+            print(f"    [WARN] Error during {task_name}: {error_msg}")
+        raise
+
 
 def _get_run_history_path() -> Path:
     return Path(__file__).resolve().parents[3] / "data" / "run_history.json"
@@ -486,8 +521,28 @@ async def scrape_jobs_from_page(
                 url = await _build_page_url(
                     page_num, keyword_encoded, loc_encoded, location, days_old
                 )
-                print(f"    Page {page_num}: {url}")
-                await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                print(f"    [INFO] Navigating to: {url}")
+
+                # Navigate with timeout
+                try:
+                    navigate_coro = page.goto(url, wait_until="domcontentloaded", timeout=SCRAPE_TIMEOUT_MS)
+                    await asyncio.wait_for(navigate_coro, timeout=SCRAPE_TIMEOUT_MS / 1000)
+                except asyncio.TimeoutError:
+                    print(f"    [WARN] Navigation timeout after {SCRAPE_TIMEOUT_MS // 1000}s - Naukri may be slow or blocked")
+                    break
+                except Exception as e:
+                    error_msg = str(e)
+                    if "net::ERR" in error_msg:
+                        print(f"    [WARN] Network error: {error_msg}")
+                        break
+                    elif "403" in error_msg or "Forbidden" in error_msg:
+                        print(f"    [WARN] Access forbidden: {error_msg}")
+                        break
+                    else:
+                        print(f"    [WARN] Navigation error: {error_msg}")
+                        break
+
+                print(f"    [INFO] Page loaded, waiting for content...")
                 await asyncio.sleep(random.uniform(2, 5))
             else:
                 # Page 2+: Try clicking Next button, fallback to direct URL
@@ -501,26 +556,53 @@ async def scrape_jobs_from_page(
                         page_num, keyword_encoded, loc_encoded, location, days_old
                     )
                     print(f"    Page {page_num}: {url}")
-                    await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                    await page.goto(url, wait_until="domcontentloaded", timeout=SCRAPE_TIMEOUT_MS)
                     await asyncio.sleep(random.uniform(2, 5))
 
-            # Check for access denied
-            page_text = await page.inner_text("body")
-            if "Access Denied" in page_text:
-                print("    BLOCKED: Naukri is blocking access")
+            # Check for access denied with timeout handling
+            print(f"    [INFO] Checking page content...")
+            try:
+                page_text = await _wait_with_timeout(
+                    page.inner_text("body"),
+                    timeout_ms=30000,
+                    task_name="page content"
+                )
+            except asyncio.TimeoutError:
+                print(f"    [WARN] Timeout reading page content")
+                break
+            except Exception as e:
+                print(f"    [WARN] Error reading page content: {e}")
                 break
 
-            # Find job cards
-            job_cards = await _find_job_cards(page)
+            if "Access Denied" in page_text or "blocked" in page_text.lower():
+                print("    [WARN] BLOCKED: Naukri is blocking access")
+                break
+
+            if "Too Many Requests" in page_text or "429" in page_text:
+                print("    [WARN] BLOCKED: Too many requests (429)")
+                break
+
+            # Find job cards with timeout
+            print(f"    [INFO] Waiting for job cards...")
+            try:
+                job_cards = await _wait_with_timeout(
+                    _find_job_cards(page),
+                    timeout_ms=60000,
+                    task_name="job cards"
+                )
+            except asyncio.TimeoutError:
+                print(f"    [WARN] Timeout waiting for job cards")
+                break
+
             if not job_cards or len(job_cards) == 0:
                 no_results = await page.query_selector(".noResults")
                 if no_results:
                     print(f"    No more results on page {page_num}")
                     break
-                print(f"    No job cards found on page {page_num}")
+                print(f"    [WARN] No job cards found on page {page_num}")
                 break
 
-            print(f"    Found {len(job_cards)} job cards on page {page_num}")
+            print(f"    [INFO] Found {len(job_cards)} job cards on page {page_num}")
 
             # Track new job IDs to detect duplicates
             new_job_ids = set()
