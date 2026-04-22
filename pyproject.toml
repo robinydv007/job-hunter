@@ -13,12 +13,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.12",
 ]
-
-[project.urls]
-Homepage = "https://github.com/yourusername/job-hunter"
-Repository = "https://github.com/yourusername/job-hunter"
-Issues = "https://github.com/yourusername/job-hunter/issues"
-
 dependencies = [
     "langgraph>=0.2.0",
     "langchain-openai>=0.3.0",
@@ -41,12 +35,16 @@ dependencies = [
 [project.scripts]
 job-hunter = "job_hunter.cli:main"
 
+[project.urls]
+homepage = "https://github.com/yourusername/job-hunter"
+repository = "https://github.com/yourusername/job-hunter"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "ruff>=0.8.0",
