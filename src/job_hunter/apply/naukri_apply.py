@@ -558,7 +558,7 @@ CRITICAL RULES:
 - For 'Radio Button' or 'single_select' type questions: answer with ONLY the exact option value,
   typically 'yes' or 'no'. Never write full sentences for radio buttons.
 - For 'Text Box' questions: give a brief, direct answer (1-2 sentences max).
-- If a question says 'don't apply if...' and you do NOT qualify, still answer honestly
+- If a question says 'don't apply if...' and you do NOT qualify, still answer honestly & if no context then only answer no or 0.
   (the system will handle eligibility separately).
 
 SCREENING ANSWERS:
