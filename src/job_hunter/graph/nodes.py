@@ -18,7 +18,6 @@ from job_hunter.graph.utils import (
     apply_title_keyword_filter,
 )
 from job_hunter.resume.parser import (
-    load_profile_cache,
     load_profile_from_cache,
     parse_resume_full,
 )

@@ -1,5 +1,6 @@
 # Backlog
-**Last Updated**: 2026-04-22  
+**Last Updated**: 2026-04-22
+**Updated**: 2026-04-22 — marked FEAT-001, FEAT-004, ENH-019, ENH-020 resolved; FEAT-002 deprecated  
 **Convention**: Simple items stay in this table. Complex items get a detail file: `[→](details/ID.md)`
 
 ## Priority Levels
@@ -20,10 +21,10 @@
 ## Features
 | ID | Title | Priority | Status | Phase | Detail |
 |----|-------|----------|--------|-------|--------|
-| FEAT-001 | Auto-apply pipeline (Naukri) | P0 | open | 2 | _(planned)_ |
-| FEAT-002 | Smart screening QA node | P1 | open | 2 | _(planned)_ |
+| FEAT-001 | Auto-apply pipeline (Naukri) | P0 | resolved | 2 | Phase 2b complete v0.2.1 |
+| FEAT-002 | Smart screening QA node | P1 | deprecated | 2 | LLM generates answers dynamically, pre-scripted not needed |
 | FEAT-003 | Multi-platform search (LinkedIn, Hirist, Instahyre, Foundit) | P1 | open | 2/3 | _(planned)_ |
-| FEAT-004 | Apply status CSV write-back | P1 | open | 2 | _(planned)_ |
+| FEAT-004 | Apply status CSV write-back | P1 | resolved | 2 | Phase 2b — apply_status/timestamp/error columns |
 | FEAT-005 | Company intelligence enrichment columns | P2 | open | 3 | _(planned)_ |
 | ENH-018 | Review answers before apply (edit/regenerate) | P1 | open | 2b | [→](details/ENH-018.md) |
 | ENH-019 | Export screening Q&A to CSV | P1 | resolved | 2b | [→](details/ENH-019.md) |
@@ -56,7 +57,7 @@
 | ENH-015 | LLM-Based Job Scoring | P1 | resolved | 1 | [→](details/ENH-015.md) |
 | ENH-016 | Fix Naukri pagination using UI navigation | P1 | resolved | 2 | [→](details/ENH-016.md) |
 | ENH-017 | Reorder pipeline: parse resume before login | P1 | open | 2 | [→](details/ENH-017.md) |
-| ENH-020 | Include detailed profile in LLM answer context | P1 | open | 2b | [→](details/ENH-020.md) |
+| ENH-020 | Include detailed profile in LLM answer context | P1 | resolved | 2b | Changelog 2026-04-19 — detailed profile in LLM context |
 | ENH-021 | Merge resume cache into single `profile_cache.json` (remove split profile.json + profile_detailed.yaml) | P1 | resolved | 3.0 | [→](details/ENH-021.md) |
 | ENH-022 | User-owned `config/profile.yaml` for overrides and enrichment (survives re-parse) | P1 | open | 3.0 | [→](details/ENH-022.md) |
 

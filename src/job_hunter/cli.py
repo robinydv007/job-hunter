@@ -154,9 +154,9 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
 @cli.command()
 def status():
     """Show current pipeline status and cached data."""
-    from job_hunter.resume.parser import load_profile
+    from job_hunter.resume.parser import load_profile_from_cache
 
-    profile = load_profile()
+    profile, _ = load_profile_from_cache()
     if profile:
         console.print(f"[green]Cached profile: {profile.name}[/]")
         console.print(f"  Skills: {len(profile.skills)}")

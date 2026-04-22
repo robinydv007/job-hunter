@@ -1,8 +1,24 @@
 [project]
 name = "job-hunter"
-version = "0.1.0"
-description = "Agentic AI job hunter for Indian job platforms"
+version = "0.2.1"
+description = "AI-powered job search automation for Indian job platforms"
 requires-python = ">=3.12"
+authors = [
+    { name = "Robin Yadav" }
+]
+readme = "README.md"
+keywords = ["job", "automation", "ai", "naukri", "career", "job-search"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/job-hunter"
+Repository = "https://github.com/yourusername/job-hunter"
+Issues = "https://github.com/yourusername/job-hunter/issues"
+
 dependencies = [
     "langgraph>=0.2.0",
     "langchain-openai>=0.3.0",
