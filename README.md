@@ -1,93 +1,126 @@
 # Job Hunter Agent
 
-**Agentic AI job hunter for Indian job platforms.**
+**AI-powered job search automation for Indian job platforms.**
 
-Job Hunter Automates the tedious task of searching for and shortlisting jobs. Utilizing Playwright for reliable browser automation and LangGraph to structure the AI decision-making process, this tool targets platforms like Naukri to identify the best job matches based on your resume.
+Job Hunter automates the tedious task of searching for and shortlisting jobs on platforms like Naukri. It uses Playwright for browser automation and LangGraph to structure the AI decision-making process, scoring jobs against your resume and exporting a ranked shortlist to CSV.
 
 ## Features
 
-- **Automated Job Search:** Drives browser interactions using Playwright to query job boards.
-- **Platform Specific:** Tailored primarily for Indian job platforms such as Naukri.
-- **Smart Resume Parsing:** Automatically extracts skills, targets roles, and experience from PDF, DOCX, or TXT formats using LLMs to form a strong search baseline.
-- **Job Scoring & Shortlisting:** Evaluates job descriptions intelligently against the active profile.
-- **CSV Export:** Outputs processed jobs smoothly to ready-to-view CSV format.
-- **Local SQLite Cache:** Caches outputs effectively keeping previous runs and states intact.
+- **Automated Job Search** — Browser automation queries job boards based on your profile
+- **Smart Resume Parsing** — Extracts skills, target roles, and experience from PDF, DOCX, or TXT using LLMs
+- **Intelligent Job Scoring** — Scores jobs against your profile using a weighted 6-factor rubric
+- **Auto-Apply** — Applies to jobs above your threshold directly through the platform's API
+- **CSV Export** — Outputs ranked jobs to a ready-to-view CSV file
+- **Caching** — Caches parsed profiles and search results for faster subsequent runs
+
+## Supported Platforms
+
+- Naukri.com
 
 ## Technology Stack
 
-- **Core:** Python >= 3.12
+- **Python:** >= 3.12
 - **Agent Workflow:** LangGraph, LangChain Core
 - **LLMs:** OpenAI, Groq
 - **Browser Automation:** Playwright
-- **Data & Structure:** Pydantic, aiosqlite, PyYAML
-- **CLI Utilities:** Click, Rich
+- **Data:** Pydantic, aiosqlite, PyYAML
+- **CLI:** Click, Rich
 
-## Installation & Setup
+## Installation
 
 We recommend using [uv](https://docs.astral.sh/uv/) for fast, reproducible dependency management.
 
-1. **Clone the repository and enter the directory:**
-   ```bash
-   git clone <repository-url>
-   cd job-hunter-repo
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/job-hunter.git
+cd job-hunter
 
-2. **Setup virtual environment and install dependencies:**
-   ```bash
-   uv venv
-   # Depending on your terminal, activate virtual environment:
-   # Windows: .venv\Scripts\activate
-   # macOS/Linux: source .venv/bin/activate
-   
-   uv pip install -e .
-   ```
+# Create virtual environment
+uv venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
 
-3. **Install Browser Dependencies for Playwright:**
-   ```bash
-   playwright install
-   ```
+# Install dependencies
+uv pip install -e .
 
-4. **Environment Variables:**
-   Copy the example environment file and fill in your details (e.g., API keys for OpenAI/Groq or Naukri credentials if defined):
+# Install Playwright browsers
+playwright install
+```
+
+## Configuration
+
+1. **Copy the environment template:**
    ```bash
    cp .env.example .env
    ```
 
-## Usage Structure
+2. **Edit `.env`** and add your API keys:
+   ```
+   GROQ_API_KEY=your_groq_api_key   # Get at https://console.groq.com
+   OPENAI_API_KEY=your_openai_api_key  # Optional fallback
+   NAUKRI_EMAIL=your_naukri_email
+   NAUKRI_PASSWORD=your_naukri_password
+   ```
 
-The project comes with a fully functioning command-line interface.
+3. **Initialize the project:**
+   ```bash
+   job-hunter init
+   ```
 
-### Initialization
+4. **Edit `config/user.yaml`** with your search preferences:
+   ```yaml
+   profile:
+     name: Your Name
+     total_experience: 5
+     preferred_roles:
+       - software engineer
+     resume_path: resume.pdf
+     expected_salary_lpa: 20
+     notice_period: immediate
 
-Initialize the required directories and basic configurations:
+   search:
+     platforms:
+       - naukri
+     salary_min_lpa: 15
+     salary_max_lpa: 30
+     max_jobs: 20
+
+   scoring:
+     shortlist_threshold: 30
+   ```
+
+## Usage
+
 ```bash
-job-hunter init
-```
-This generates the initial `config/user.yaml` config along with internal `data/` and `output/` folders. Proceed to edit `config/user.yaml` based on your search requirements.
+# Run with your resume
+job-hunter run --resume resume.pdf
 
-### Running the Pipeline
+# Run in headless mode (not recommended for first login)
+job-hunter run --resume resume.pdf --headless
 
-Ensure you have a resume stored in the active directory, or explicitly pass a path. 
-
-```bash
-# Example running with an explicit resume file
-job-hunter run --resume path/to/my_resume.pdf
-
-# Using a specific config or headless mode (Headless omitted is safer for Naukri logins)
-job-hunter run --resume my_resume.pdf --config config/user.yaml --headless
-```
-
-### Checking Status
-
-Verify output status, parsed cached profile structures, and recent CSV exports:
-```bash
+# Check status
 job-hunter status
 ```
 
-## Contributing / Development Architecture
+## Commands
 
-This project is integrated within an **Autonomous Spec-driven Development (SDD)** workflow.
+| Command | Description |
+|---------|-------------|
+| `job-hunter init` | Initialize config and directories |
+| `job-hunter run` | Run the full pipeline |
+| `job-hunter status` | Show cached data and outputs |
+| `job-hunter clean` | Clear cached files |
 
-- Check `specs/status.md` first before starting any active development work.
-- Agent constraints and workflow are managed in `CLAUDE.md`.
-- Changes must strictly adhere to the enforced `.opencode` protocols where tasks, specs, changelogs, and branch guidelines are constantly synced directly into the GitHub pre-commits. 
+## Disclaimer
+
+- This tool is for personal use only. Respect the terms of service of the job platforms you use.
+- Use responsibly and at your own risk. Excessive automation may lead to account restrictions.
+- The authors are not responsible for any account bans or restrictions.
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## License
+
+Licensed under the MIT License. See [LICENSE](LICENSE) for details.

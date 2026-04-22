@@ -73,6 +73,53 @@ async def verify_application_applied(page: Page) -> bool:
     return False
 
 
+def _format_list_items(items: list[Any] | None, limit: int = 5) -> str:
+    if not items:
+        return "Not available"
+
+    values = [str(item).strip() for item in items if str(item).strip()]
+    if not values:
+        return "Not available"
+    return "; ".join(values[:limit])
+
+
+def _format_tech_experience(tech_experience: dict[str, Any] | None, limit: int = 8) -> str:
+    if not tech_experience:
+        return "Not available"
+
+    entries: list[str] = []
+    for tech, years in tech_experience.items():
+        if years in (None, ""):
+            continue
+        entries.append(f"{tech}: {years} years")
+
+    if not entries:
+        return "Not available"
+
+    return "; ".join(entries[:limit])
+
+
+def _build_profile_context(profile: Any, detailed_profile: dict[str, Any] | None) -> str:
+    basic_context = f"""PROFILE:
+- Experience: {profile.total_experience_years} years
+- Skills: {", ".join(profile.skills[:10])}
+- Current Role: {profile.past_roles[0] if profile.past_roles else "N/A"}
+"""
+
+    if detailed_profile:
+        detailed_lines = [
+            "Use this as supplemental context only. Do not override the basic profile.",
+            f"- Tech experience: {_format_tech_experience(detailed_profile.get('tech_experience'))}",
+            f"- Achievements: {_format_list_items(detailed_profile.get('achievements'))}",
+            f"- Challenges solved: {_format_list_items(detailed_profile.get('challenges_solved'))}",
+            f"- Interests: {_format_list_items(detailed_profile.get('interests'))}",
+            f"- Key responsibilities: {_format_list_items(detailed_profile.get('key_responsibilities'))}",
+        ]
+        return f"{basic_context}\nDETAILED PROFILE:\n" + "\n".join(detailed_lines)
+
+    return basic_context
+
+
 async def navigate_to_job(page: Page, job_url: str) -> None:
     """Navigate to job detail page, handling post-apply redirects gracefully."""
     try:
@@ -440,6 +487,8 @@ async def get_llm_answers(
         for q in questions
     )
 
+    profile_context = _build_profile_context(profile, detailed_profile)
+
     prompt = f"""You are a job seeker filling out a job application form on Naukri.
 Answer ALL questions concisely. Return a JSON object mapping question ID to your answer.
 
@@ -450,16 +499,13 @@ CRITICAL RULES:
 - If a question says 'don't apply if...' and you do NOT qualify, still answer honestly
   (the system will handle eligibility separately).
 
-PROFILE:
-- Experience: {profile.total_experience_years} years
-- Skills: {", ".join(profile.skills[:10])}
-- Current Role: {profile.past_roles[0] if profile.past_roles else "N/A"}
-
 SCREENING ANSWERS:
 - Notice Period: {config.screening.screening_answers.notice_period}
 - Expected CTC: {config.screening.screening_answers.expected_ctc_lpa} LPA
 - Current CTC: {config.screening.screening_answers.current_ctc_lpa} LPA
 - Willing to Relocate: {config.screening.screening_answers.willing_to_relocate}
+
+{profile_context}
 
 QUESTIONS:
 {question_list}
@@ -637,7 +683,6 @@ async def apply_to_job(
                 break
 
             q_id = matched_q["id"]
-            q_type = matched_q.get("type", "Text Box")
             answer = answers.get(q_id, "")
             logger.info(f"[iter {iteration+1}] Chatbot asks: {repr(current_prompt[:80])}")
             logger.info(f"[loop] Matched Q: {repr(matched_q['name'])} -> {answer!r}")

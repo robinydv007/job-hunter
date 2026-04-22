@@ -1,7 +1,7 @@
 {
-  "name": "Robin Yadav",
-  "email": "robinydv007@gmail.com",
-  "phone": "9194167111552",
+  "name": "ABC Yadav",
+  "email": "abc@gmail.com",
+  "phone": "9411111111",
   "skills": [
     "Node.js",
     "NestJS",
@@ -78,9 +78,7 @@
   "preferred_locations": [],
   "salary_expectation": "",
   "target_roles": [
-    "Technical Lead",
-    "Software Engineer",
-    "Architect"
+    "QA Engineer"
   ],
   "education": [
     "Bachelor of Business Administration",

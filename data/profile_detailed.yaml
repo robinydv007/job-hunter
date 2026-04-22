@@ -1,18 +1,28 @@
 tech_experience:
-  Node.js: 5
-  NestJS: 3
-  TypeScript: 3
-  JavaScript: 5
-  Microservices: 4
-  MongoDB: 2
-  PostgreSQL: 2
-  MySQL: 2
-  Kafka: 1
-  Redis: 1
-  AWS: 2
-  GCP: 1
-  Firebase: 1
-  RabbitMQ: 1
+  Node.js: 20
+  NestJS: 10
+  TypeScript: 10
+  JavaScript: 10
+  Microservices: 10
+  MongoDB: 10
+  PostgreSQL: 10
+  MySQL: 10
+  Kafka: 10
+  Redis: 10
+  AWS: 10
+  GCP: 10
+  Firebase: 10
+  RabbitMQ: 10
+  Selenium: 10
+  Cypress: 10
+  Playwright: 10
+  JMeter: 10
+  Postman: 10
+  RestAssured: 10
+  TestNG: 10
+  JUnit: 10
+  Mockito: 10
+  
 achievements:
 - Enabled 500+ B2B customers, processing 60k orders/month
 - Empowered 5k franchise partners to handle 1.5 lakh daily orders
