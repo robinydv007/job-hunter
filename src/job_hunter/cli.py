@@ -135,7 +135,7 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
 
             # Run workflow
             workflow = build_workflow()
-            result = workflow.invoke(initial_state)
+            result = await workflow.ainvoke(initial_state)
 
             console.print(
                 Panel("[bold green]Pipeline complete![/]", border_style="green")
