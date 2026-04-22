@@ -12,6 +12,30 @@
 
 ## Task Checklist
 
+### 0. ENH-21: Merge Resume Cache (Profile Consolidation)
+- [ ] Refactor `src/job_hunter/resume/parser.py`:
+  - [ ] Replace dual file save (`profile.json` + `profile_detailed.yaml`) with single `profile_cache.json`
+  - [ ] Combine both basic and detailed fields into one JSON structure with `detailed` sub-key
+  - [ ] Replace load functions: `load_profile()` + `load_detailed_profile()` → `load_profile_cache()`
+  - [ ] Remove `save_detailed_profile()`, `load_detailed_profile()`, `load_profile_with_detailed()`
+  - [ ] Update `parse_resume_full()` to write merged cache
+- [ ] Refactor `src/job_hunter/resume/schema.py`:
+  - [ ] Add optional `detailed: dict` field to `ResumeProfile` schema
+- [ ] Refactor `src/job_hunter/graph/nodes.py`:
+  - [ ] Update `parse_resume_node` to use single loader (`load_profile_cache()`)
+  - [ ] Update return value: `profile` and `detailed_profile` from merged cache
+- [ ] Refactor `src/job_hunter/cli.py`:
+  - [ ] Update `clean` command: remove `profile_cache.json` instead of old filenames
+- [ ] Delete old files after migration test:
+  - [ ] Delete `data/profile.json` and `data/profile_detailed.yaml`
+- [ ] Verify acceptance criteria:
+  - [ ] Single `data/profile_cache.json` written after resume parse
+  - [ ] Both basic and detailed fields available from one load call
+  - [ ] No remaining references to `profile.json` or `profile_detailed.yaml`
+  - [ ] Resume change detection (hash) continues to work unchanged
+  - [ ] Subsequent runs use cache without LLM call
+- [ ] Related: ENH-022 (user-owned profile.yaml) builds on this
+
 ### 1. Convert search_naukri to Native Async
 - [ ] Refactor `src/job_hunter/search/naukri.py`:
   - Change `def search_naukri()` → `async def search_naukri()`

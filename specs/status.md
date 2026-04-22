@@ -56,6 +56,7 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **ENH-017 deferred to Phase 3.0**: login reorder blocked by async/sync conflict with `nest_asyncio`; CLI-based login sufficient for Phase 2b
 
 ## Recent Changes
+- 2026-04-22: enh(ENH-021) — merge resume cache to single profile_cache.json; consolidated profile.json + profile_detailed.yaml
 - 2026-04-09: docs(spec) — created Phase 3.0 spec: Async Architecture Foundation (resolves ENH-017)
 - 2026-04-09: docs(status) — comprehensive spec review; corrected phase statuses, added Phase 3.0 and 3.1
 - 2026-04-07: docs(phase-2) — create Phase 2a and Phase 2b plan documents with overview, plan, tasks for each

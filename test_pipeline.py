@@ -116,7 +116,7 @@ async def test_pipeline_with_mock():
                 )
             else:
                 console.print(
-                    f"[dim]Search roles: using profile.json past_roles -> {profile.past_roles}[/]"
+                    f"[dim]Search roles: using cached profile past_roles -> {profile.past_roles}[/]"
                 )
 
             all_jobs = []

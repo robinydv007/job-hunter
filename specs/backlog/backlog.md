@@ -57,7 +57,7 @@
 | ENH-016 | Fix Naukri pagination using UI navigation | P1 | resolved | 2 | [→](details/ENH-016.md) |
 | ENH-017 | Reorder pipeline: parse resume before login | P1 | open | 2 | [→](details/ENH-017.md) |
 | ENH-020 | Include detailed profile in LLM answer context | P1 | open | 2b | [→](details/ENH-020.md) |
-| ENH-021 | Merge resume cache into single `profile_cache.json` (remove split profile.json + profile_detailed.yaml) | P1 | open | 3.0 | [→](details/ENH-021.md) |
+| ENH-021 | Merge resume cache into single `profile_cache.json` (remove split profile.json + profile_detailed.yaml) | P1 | resolved | 3.0 | [→](details/ENH-021.md) |
 | ENH-022 | User-owned `config/profile.yaml` for overrides and enrichment (survives re-parse) | P1 | open | 3.0 | [→](details/ENH-022.md) |
 
 > **Note (2026-04-07)**: Current work-around is login in CLI before workflow. Implementation attempts inside LangGraph workflow have failed due to async/sync conflicts between login node and sync search_naukri function.

@@ -22,3 +22,4 @@ class ResumeProfile(BaseModel):
     target_roles: list[str] = Field(default_factory=list)
     education: list[str] = Field(default_factory=list)
     summary: str = ""
+    detailed: dict = Field(default_factory=dict)

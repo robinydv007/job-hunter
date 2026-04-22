@@ -74,7 +74,7 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
     app_config = load_config(config)
 
     # Find resume
-    cached_profile_path = Path(__file__).resolve().parents[3] / "data" / "profile.json"
+    cached_profile_path = Path(__file__).resolve().parents[3] / "data" / "profile_cache.json"
     explicit_resume = (
         resume is not None
     )  # True only when --resume was explicitly passed
@@ -178,7 +178,7 @@ def status():
 
 @cli.command()
 def clean():
-    """Clear all cached data (profile, detailed profile, resume hash)."""
+    """Clear all cached data (profile cache, resume hash)."""
     console.print(
         Panel("[bold yellow]Clearing cache files...[/]", border_style="yellow")
     )
@@ -186,10 +186,8 @@ def clean():
     data_dir = Path("data")
     files_removed = []
 
-    # Files to clean
     cache_files = [
-        data_dir / "profile.json",
-        data_dir / "profile_detailed.yaml",
+        data_dir / "profile_cache.json",
         data_dir / "resume_hash.txt",
     ]
 
