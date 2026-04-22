@@ -31,6 +31,10 @@ class ScoredJob(TypedDict, total=False):
     matched_skills: list[str]
     why_selected: str
     apply_status: str
+    apply_timestamp: str
+    apply_error: str
+    questionnaire: str
+    questionnaire_timestamp: str
 
 
 class JobHunterState(TypedDict, total=False):

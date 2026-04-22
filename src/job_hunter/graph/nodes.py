@@ -315,6 +315,20 @@ def apply_jobs_node(state: JobHunterState) -> dict:
         scored_job["apply_timestamp"] = result.timestamp
         scored_job["apply_error"] = result.error or ""
 
+        import json
+        from datetime import datetime
+
+        if result.status == "Applied" and result.questions:
+            qa_list = [
+                {
+                    "question": q.get("name", ""),
+                    "answer": result.answers.get(q.get("id"), ""),
+                }
+                for q in result.questions
+            ]
+            scored_job["questionnaire"] = json.dumps(qa_list)
+            scored_job["questionnaire_timestamp"] = datetime.now().isoformat()
+
         if result.status == "Applied":
             applied_count += 1
             console.print(f"  [green]Applied successfully: {result.message}[/]")
