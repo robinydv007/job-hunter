@@ -229,6 +229,35 @@ def init():
             )
         console.print(f"[green]Created config: {config_path}[/]")
 
+    profile_yaml_path = Path("config/profile.yaml")
+    if profile_yaml_path.exists():
+        console.print(f"[dim]Profile config already exists: {profile_yaml_path}[/]")
+    else:
+        profile_yaml_content = """# config/profile.yaml
+# User-owned. Never overwritten by the resume parser.
+# Use this to correct LLM extraction errors and add information not in your resume.
+
+overrides:
+  # Uncomment and set to correct LLM extraction mistakes
+  # total_experience_years: 9
+  # skills:
+  #   - Performance Testing
+  #   - JIRA
+  # tech_experience:
+  #   Selenium: 7
+
+enrichment:
+  # career_goal: ""
+  # strengths: ""
+  # what_can_you_bring: ""
+  # reason_for_change: ""
+  # preferred_company_types: []
+  # open_to_contract: false
+  # additional_skills: []
+"""
+        profile_yaml_path.write_text(profile_yaml_content)
+        console.print(f"[green]Created profile config: {profile_yaml_path}[/]")
+
     Path("data").mkdir(exist_ok=True)
     Path("output").mkdir(exist_ok=True)
     console.print("[green]Ready! Edit config/user.yaml and run:[/]")

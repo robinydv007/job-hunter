@@ -107,6 +107,22 @@ class ScreeningAnswersExtended(BaseModel):
     what_can_you_bring: str = ""
 
 
+class ProfileOverrides(BaseModel):
+    total_experience_years: int | None = None
+    skills: list[str] = Field(default_factory=list)
+    tech_experience: dict[str, int] = Field(default_factory=dict)
+
+
+class ProfileEnrichment(BaseModel):
+    career_goal: str = ""
+    strengths: str = ""
+    what_can_you_bring: str = ""
+    reason_for_change: str = ""
+    preferred_company_types: list[str] = Field(default_factory=list)
+    open_to_contract: bool | None = None
+    additional_skills: list[str] = Field(default_factory=list)
+
+
 class ScreeningConfig(BaseModel):
     screening_answers: ScreeningAnswers = Field(default_factory=ScreeningAnswers)
     screening_answers_extended: ScreeningAnswersExtended | None = None
@@ -119,6 +135,8 @@ class AppConfig(BaseModel):
     naukri: NaukriConfig = Field(default_factory=NaukriConfig)
     screening: ScreeningConfig = Field(default_factory=ScreeningConfig)
     auto_apply: AutoApplyConfig = Field(default_factory=AutoApplyConfig)
+    profile_overrides: ProfileOverrides | None = None
+    profile_enrichment: ProfileEnrichment | None = None
 
 
 REQUIRED_PROFILE_FIELDS = [
@@ -224,5 +242,18 @@ def load_config(
         with open(screening_config_path) as f:
             screening_raw: dict[str, Any] = yaml.safe_load(f) or {}
         raw["screening"] = screening_raw
+
+    profile_yaml_path = (
+        Path(__file__).resolve().parents[3] / "config" / "profile.yaml"
+    )
+    if profile_yaml_path.exists():
+        with open(profile_yaml_path) as f:
+            profile_raw: dict[str, Any] = yaml.safe_load(f) or {}
+        overrides_data = profile_raw.get("overrides", {})
+        enrichment_data = profile_raw.get("enrichment", {})
+        if overrides_data:
+            raw["profile_overrides"] = overrides_data
+        if enrichment_data:
+            raw["profile_enrichment"] = enrichment_data
 
     return AppConfig(**raw)

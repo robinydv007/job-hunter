@@ -214,3 +214,50 @@ async def parse_resume(
 
     profile, _ = await parse_resume_full(file_path)
     return profile
+
+
+def merge_profile_with_overrides(profile: ResumeProfile, detailed: dict, overrides: dict | None, enrichment: dict | None) -> tuple[ResumeProfile, dict]:
+    """Apply user overrides to LLM-extracted profile.
+
+    Args:
+        profile: LLM-extracted ResumeProfile
+        detailed: LLM-extracted detailed profile dict
+        overrides: ProfileOverrides dict from config/profile.yaml (or AppConfig.profile_overrides)
+        enrichment: ProfileEnrichment dict from config/profile.yaml (or AppConfig.profile_enrichment)
+
+    Returns:
+        Tuple of (merged ResumeProfile, merged detailed dict with enrichment appended)
+    """
+    if not overrides and not enrichment:
+        return profile, detailed
+
+    import copy
+    profile = copy.deepcopy(profile)
+    detailed = copy.deepcopy(detailed) if detailed else {}
+
+    if overrides:
+        if overrides.get("total_experience_years") is not None:
+            profile.total_experience_years = overrides["total_experience_years"]
+
+        override_skills = overrides.get("skills", [])
+        if override_skills:
+            existing_skills = list(profile.skills)
+            for skill in override_skills:
+                if skill not in existing_skills:
+                    profile.skills.append(skill)
+
+        tech_exp = overrides.get("tech_experience", {})
+        if tech_exp:
+            current_tech = detailed.get("tech_experience", {})
+            for tech, years in tech_exp.items():
+                current_tech[tech] = years
+            detailed["tech_experience"] = current_tech
+
+    if enrichment:
+        for key, value in enrichment.items():
+            if value and key not in detailed:
+                detailed[key] = value
+            elif value and key in detailed and isinstance(detailed[key], str) and not detailed[key]:
+                detailed[key] = value
+
+    return profile, detailed

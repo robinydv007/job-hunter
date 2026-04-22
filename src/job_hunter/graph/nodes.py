@@ -20,6 +20,7 @@ from job_hunter.graph.utils import (
 from job_hunter.resume.parser import (
     load_profile_from_cache,
     parse_resume_full,
+    merge_profile_with_overrides,
 )
 
 console = Console()
@@ -51,12 +52,18 @@ async def parse_resume_node(state: JobHunterState) -> dict:
     if resume_path and not Path(resume_path).is_absolute():
         resume_path = Path.cwd() / resume_path
 
+    overrides = getattr(config.profile_overrides, "model_dump", None)() if config.profile_overrides else None
+    enrichment = getattr(config.profile_enrichment, "model_dump", None)() if config.profile_enrichment else None
+
     if not resume_path or not Path(resume_path).exists():
         existing, detailed = load_profile_from_cache()
         if existing and existing.name:
             console.print(f"[green]Using cached profile: {existing.name}[/]")
             if detailed:
                 console.print(f"[dim]Detailed profile loaded[/]")
+            if overrides or enrichment:
+                console.print(f"[dim]Applying profile.yaml overrides[/]")
+                existing, detailed = merge_profile_with_overrides(existing, detailed, overrides, enrichment)
             return {"profile": existing, "detailed_profile": detailed}
         console.print("[red]No resume provided and no cached profile found.[/]")
         raise RuntimeError("No resume path and no cached profile available.")
@@ -68,6 +75,9 @@ async def parse_resume_node(state: JobHunterState) -> dict:
     )
     if detailed:
         console.print(f"[dim]Detailed profile generated[/]")
+    if overrides or enrichment:
+        console.print(f"[dim]Applying profile.yaml overrides[/]")
+        profile, detailed = merge_profile_with_overrides(profile, detailed, overrides, enrichment)
     return {"profile": profile, "detailed_profile": detailed}
 
 
