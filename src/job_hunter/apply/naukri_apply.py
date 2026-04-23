@@ -633,7 +633,7 @@ async def apply_to_job(
     optional_skills = job.get("optional_skills", [])
 
     logger.info(f"Applying to '{job_title}' at {company}")
-    logger.info(f"Job URL: {job_url}")
+
 
     if not job_url:
         return ApplyResult(

@@ -287,7 +287,8 @@ async def apply_jobs_node(state: JobHunterState) -> dict:
         if auto_apply_config.require_confirmation:
             from rich.prompt import Prompt
 
-            confirm = Prompt.ask(
+            confirm = await asyncio.to_thread(
+                Prompt.ask,
                 f"  Apply to '[bold]{title}[/]' at [bold]{company}[/]? [green]y[/]/[red]n[/]/[yellow]q[/]uit",
                 default="y",
             )
