@@ -14,11 +14,12 @@
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | 2026-04-07 | 2026-04-07 | ~1 day |
 | 2b | Auto-Apply & Batch Screening | ✅ Complete | 2026-04-07 | 2026-04-15 | ~8 days |
 | 3.0 | Async Architecture Foundation | 🔲 Not Started | TBD | TBD | ~3 days (est.) |
-| 3.1 | Multi-Platform Search | 🔲 Not Started | TBD | TBD | ~5 days (est.) | |
+| 3.1 | Multi-Platform Search | 🔲 Not Started | TBD | TBD | ~5 days (est.) |
+| 3.2 | Config Strategy Revamp | 🔲 Not Started | TBD | TBD | ~4 days (est.) |
 
 ## Phase Dependencies
 ```
-Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) → Phase 2b (Auto-Apply) → Phase 3.0 (Async Foundation) → Phase 3.1 (Multi-Platform)
+Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) → Phase 2b (Auto-Apply) → Phase 3.0 (Async Foundation) → Phase 3.1 (Multi-Platform) → Phase 3.2 (Config Revamp)
 ```
 
 **Note:** Phase 3.0 can proceed independently of Phase 2b completion. Async conversion and login node implementation can be done separately from auto-apply functionality.
@@ -57,3 +58,9 @@ Phase 0 (Foundation) → Phase 1 (MVP Pipeline) → Phase 2a (Detailed Profile) 
 - Multi-platform search: LinkedIn, Hirist, Instahyre, Foundit
 - Company intelligence columns: `company_size`, `glassdoor_rating`, `core_business`
 - Apply to LinkedIn / Indeed (if feasible)
+
+## Phase 3.2 Planned Scope (High-Level)
+- Config bootstrap on init/run
+- Config-first precedence over generated resume data
+- Safe seeding of missing config from resume data
+- No automatic overwrite of existing config files

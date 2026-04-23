@@ -27,6 +27,11 @@
       "name": "Async Architecture Foundation",
       "status": "planned",
       "keywords": ["async", "langgraph", "event-loop", "nest-asyncio", "login-node", "multi-platform", "pipeline-reorder", "pure-async", "event-loop-conflict", "profile-cache-consolidation", "user-owned-profile-config"]
+    },
+    "phase-3.2-config-strategy-revamp": {
+      "name": "Config Strategy Revamp",
+      "status": "planned",
+      "keywords": ["config-bootstrap", "config-precedence", "non-overwrite", "resume-seeding", "app-yaml", "platform-yaml", "user-yaml", "blank-defaults", "strategy-revamp"]
     }
   }
 }
