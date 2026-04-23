@@ -332,7 +332,7 @@ async def apply_jobs_node(state: JobHunterState) -> dict:
             console.print(f"  [red]Failed: {result.error}[/]")
 
         if i < len(shortlisted):
-            delay = auto_apply_config.delay_between_seconds
+            delay = auto_apply_config.delay_between_seconds or 5.0
             console.print(f"  [dim]Waiting {delay}s before next job...[/]")
             await asyncio.sleep(delay)
 

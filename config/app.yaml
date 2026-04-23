@@ -44,15 +44,15 @@ scoring:
     apply_threshold: null
     custom_requirements: []
 auto_apply:
-  enabled: false
-  max_per_day: null
-  max_per_run: null
-  delay_between_seconds: null
-  require_confirmation: null
-  skip_if_already_applied: null
+  enabled: true
+  max_per_day: 10
+  max_per_run: 3
+  delay_between_seconds: 5
+  require_confirmation: false
+  skip_if_already_applied: true
   custom_requirements: []
 screening:
-  enabled: false
+  enabled: true
   batch_size: null
   custom_requirements: []
 profile:

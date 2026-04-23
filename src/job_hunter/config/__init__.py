@@ -156,7 +156,7 @@ class AutoApplyConfig(BaseModel):
     enabled: bool = False
     max_per_day: int | None = None
     max_per_run: int | None = None
-    delay_between_seconds: float | None = None
+    delay_between_seconds: float = 5.0
     require_confirmation: bool | None = None
     skip_if_already_applied: bool | None = None
     custom_requirements: list[str] = Field(default_factory=list)
