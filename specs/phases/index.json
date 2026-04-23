@@ -26,7 +26,7 @@
     "phase-3.0-async-foundation": {
       "name": "Async Architecture Foundation",
       "status": "planned",
-      "keywords": ["async", "langgraph", "event-loop", "nest-asyncio", "login-node", "multi-platform", "pipeline-reorder", "pure-async", "event-loop-conflict"]
+      "keywords": ["async", "langgraph", "event-loop", "nest-asyncio", "login-node", "multi-platform", "pipeline-reorder", "pure-async", "event-loop-conflict", "profile-cache-consolidation", "user-owned-profile-config"]
     }
   }
 }

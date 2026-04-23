@@ -22,6 +22,8 @@
     "async-architecture": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"],
     "nest_asyncio-removal": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"],
     "login-node": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"],
-    "pipeline-reorder": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"]
+    "pipeline-reorder": ["specs/architecture/overview.md#execution-pipeline", "specs/roadmap/roadmap.md"],
+    "profile-cache-consolidation": ["specs/architecture/overview.md#resume-parser", "specs/roadmap/roadmap.md", "specs/status.md"],
+    "user-owned-profile-config": ["specs/architecture/overview.md#config-schema", "specs/vision/success-criteria.md", "specs/status.md"]
   }
 }

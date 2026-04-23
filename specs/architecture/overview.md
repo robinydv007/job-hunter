@@ -60,9 +60,11 @@ job-hunter/
 │       └── provider.py      # LLM abstraction (Groq primary + OpenAI fallback)
 ├── config/
 │   ├── user.yaml            # User profile, search config, scoring thresholds + weights
+│   ├── screening.yaml      # Screening Q&A answers for auto-apply
+│   ├── profile.yaml      # User-owned overrides (survives re-parse)
 │   └── constants.yaml       # Domain knowledge (skill aliases, metro cities, rating bands)
 ├── data/
-│   ├── profile.json         # Cached parsed profile (persisted between runs)
+│   ├── profile_cache.json  # Cached parsed profile (persisted between runs)
 │   └── run_history.json     # Tracks last run timestamps for freshness auto-calculation
 ├── output/
 │   └── shortlist_*.csv      # Timestamped CSV exports (one per run)
@@ -150,7 +152,7 @@ graph LR
 | Node | Input | Output | Key Logic |
 |------|-------|--------|-----------|
 | `load_config` | `config` | `profile_validated = True` | Validates required fields; prompts interactively for any missing ones; saves answers back to `user.yaml` |
-| `parse_resume` | `resume_path` | `profile` | Checks `data/profile.json` cache first; if stale/absent, calls LLM via `parser.py`; persists new profile to disk. Cache can be overridden with `--force-parse` flag. |
+| `parse_resume` | `resume_path` | `profile` | Checks `data/profile_cache.json` cache first; if stale/absent, calls LLM via `parser.py`; persists new profile; applies `profile.yaml` overrides. Cache can be overridden with `--force-parse` flag. |
 | `login` | `config`, `browser_page` | `logged_in_platforms` | Logs into each configured platform in parallel. Returns list of successfully logged-in platforms. |
 | `search_jobs` | `profile`, `browser_page` | `raw_jobs` | Builds search queries from profile (roles × skills × locations); scrapes Naukri; deduplicates within-run AND across past CSV exports. **Role priority:** `user.yaml` `preferred_roles` overrides parsed `target_roles` when set. |
 | `score_jobs` | `raw_jobs`, `profile` | `scored_jobs` | Applies 6-factor weighted rubric; generates human-readable `why_selected`; sets `apply_status` |
@@ -165,14 +167,15 @@ graph LR
 
 **Strategy:** LLM-first extraction with local caching.
 
-1. If `data/profile.json` exists → load and return immediately (no LLM call).
+1. If `data/profile_cache.json` exists → load and return immediately (no LLM call).
 2. Otherwise, extract text from the resume file (supports `.pdf`, `.docx`, `.txt`).
 3. Invoke the LLM with a strict structured prompt demanding a JSON response.
 4. Parse the JSON into a `ResumeProfile` Pydantic model.
-5. Persist to `data/profile.json` for future runs.
+5. Persist to `data/profile_cache.json` for future runs.
+6. Apply `config/profile.yaml` overrides if present.
 
 **Cache behavior (cli.py):**
-- If `--resume` is not explicitly passed and `data/profile.json` exists, the pipeline skips resume parsing entirely and uses the cached profile.
+- If `--resume` is not explicitly passed and `data/profile_cache.json` exists, the pipeline skips resume parsing entirely and uses the cached profile.
 - Pass `--force-parse` to override the cache and force re-parsing even when a cached profile exists.
 - Explicit `--resume <path>` always triggers parsing regardless of cache state.
 

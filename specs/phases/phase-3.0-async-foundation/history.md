@@ -15,3 +15,9 @@ Topics: profile-cache-consolidation
 Affects-phases: phase-3.0-async-foundation
 Affects-docs: specs/phases/phase-3.0-async-foundation/tasks.md
 Detail: Consolidated profile.json + profile_detailed.yaml into single profile_cache.json. Simplified loader functions, updated CLI clean command, and added detailed field to ResumeProfile schema. Enables ENH-022 user overrides.
+
+[FEATURE] 2026-04-22 — ENH-022 implemented: user-owned config/profile.yaml
+Topics: user-owned-profile-config
+Affects-phases: phase-3.0-async-foundation
+Affects-docs: specs/phases/phase-3.0-async-foundation/tasks.md, specs/backlog/backlog.md
+Detail: Added ProfileOverrides and ProfileEnrichment Pydantic models, load_profile_yaml() in load_config(), merge_profile_with_overrides() helper in parser.py, and init command creates profile.yaml template. User overrides survive re-parse.

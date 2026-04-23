@@ -51,11 +51,12 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **Groq primary / OpenAI fallback** for LLM calls
 - **Location weight = 0.0** in scoring engine (intentional — remote/hybrid listings unreliable)
 - **Phase 2 split**: 2a (Detailed Profile) prioritized first, then 2b (Auto-Apply)
-- **4-file config**: user.yaml, screening.yaml, profile.json, profile_detailed.yaml
+- **4-file config**: user.yaml, screening.yaml, profile_cache.json, profile.yaml
 - **Single LLM call** for both basic and detailed profile extraction
 - **ENH-017 deferred to Phase 3.0**: login reorder blocked by async/sync conflict with `nest_asyncio`; CLI-based login sufficient for Phase 2b
 
 ## Recent Changes
+- 2026-04-22: enh(ENH-022) — add user-owned config/profile.yaml for overrides and enrichment (survives re-parse)
 - 2026-04-22: enh(ENH-021) — merge resume cache to single profile_cache.json; consolidated profile.json + profile_detailed.yaml
 - 2026-04-09: docs(spec) — created Phase 3.0 spec: Async Architecture Foundation (resolves ENH-017)
 - 2026-04-09: docs(status) — comprehensive spec review; corrected phase statuses, added Phase 3.0 and 3.1
