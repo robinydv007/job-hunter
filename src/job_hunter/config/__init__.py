@@ -74,6 +74,32 @@ class SearchConfig(BaseModel):
         return self.freshness_days or 0
 
 
+class AppProfile(BaseModel):
+    """Backward-compatible profile section for AppConfig."""
+
+    name: str = ""
+    total_experience: int = 0
+    preferred_roles: list[str] = Field(default_factory=list)
+    expected_salary_lpa: float = 0
+    notice_period: str = ""
+    preferred_locations: list[str] = Field(default_factory=list)
+    remote_preference: str = "hybrid"
+    company_size_preference: list[str] = Field(default_factory=list)
+    industry_preference: list[str] = Field(default_factory=list)
+    resume_path: str = "resume.pdf"
+    title_exclude_keywords: list[str] = Field(default_factory=list)
+
+
+class NaukriConfig(BaseModel):
+    """Backward-compatible naukri section."""
+
+    login_required: bool = True
+    headless: bool = False
+    page_timeout: int = 30000
+    max_pages: int = 3
+    delay_between_pages: int = 3
+
+
 class ScoringWeights(BaseModel):
     skills: float = 0.35
     role: float = 0.20
@@ -89,6 +115,8 @@ class ScoringLLMConfig(BaseModel):
     shortlist_threshold: int | None = None
     apply_threshold: int | None = None
     custom_requirements: list[str] = Field(default_factory=list)
+    consider_location: bool = False
+    consider_work_mode: bool = False
 
 
 class ScoringConfig(BaseModel):
@@ -143,6 +171,8 @@ class AppConfig(BaseModel):
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
     auto_apply: AutoApplyConfig = Field(default_factory=AutoApplyConfig)
     screening: ScreeningPolicy | None = None
+    profile: AppProfile = Field(default_factory=AppProfile)
+    naukri: NaukriConfig = Field(default_factory=NaukriConfig)
 
 
 class UserProfile(BaseModel):
@@ -305,6 +335,47 @@ def load_app_config(config_path: Path | None = None) -> AppConfig:
     return AppConfig(**raw)
 
 
+def load_effective_app_config() -> AppConfig:
+    """Load app config merged with user config for backward compatibility."""
+    app = load_app_config()
+    user = load_user_config()
+
+    if user.profile.name:
+        app.profile.name = user.profile.name
+    if user.experience.total_experience_years:
+        app.profile.total_experience = user.experience.total_experience_years
+    if user.profile.current_location:
+        app.profile.preferred_locations = [user.profile.current_location]
+    if user.profile.current_ctc_lpa:
+        app.profile.expected_salary_lpa = user.profile.current_ctc_lpa
+    if user.profile.notice_period_days:
+        app.profile.notice_period = f"{user.profile.notice_period_days} days"
+
+    if user.experience.primary_stack:
+        app.search.platforms = user.experience.primary_stack or app.search.platforms
+
+    app.profile.preferred_roles = (
+        user.experience.secondary_stack or app.search.preferred_roles or []
+    )
+
+    if user.narrative.preferred_work_style:
+        app.profile.remote_preference = user.narrative.preferred_work_style
+
+    app.profile.remote_preference = app.profile.remote_preference or "hybrid"
+
+    naukri_cfg = load_platform_config().naukri
+    app.naukri.login_required = naukri_cfg.login_required
+    app.naukri.headless = naukri_cfg.headless
+    if naukri_cfg.page_timeout:
+        app.naukri.page_timeout = naukri_cfg.page_timeout
+    if naukri_cfg.max_pages:
+        app.naukri.max_pages = naukri_cfg.max_pages
+    if naukri_cfg.delay_between_pages:
+        app.naukri.delay_between_pages = naukri_cfg.delay_between_pages
+
+    return app
+
+
 def load_user_config(config_path: Path | None = None) -> UserConfig:
     if config_path is None:
         config_path = CONFIG_DIR / "user.yaml"
@@ -338,7 +409,7 @@ def load_resume_profile(profile_path: Path | None = None) -> ResumeProfile | Non
 
 def build_effective_config():
     """Build effective config with proper precedence: platform > app > user > cache > defaults."""
-    app = load_app_config()
+    app = load_effective_app_config()
     user = load_user_config()
     platform = load_platform_config()
     cache = load_resume_profile()
@@ -348,6 +419,13 @@ def build_effective_config():
         "platform": platform,
         "cache": cache,
     }
+
+
+def get_screening_answers(user_cfg: UserConfig | None = None) -> ScreeningAnswersDefaults:
+    """Get screening answers from user config."""
+    if user_cfg is None:
+        user_cfg = load_user_config()
+    return user_cfg.screening_answers.defaults
 
 
 def create_app_template() -> dict[str, Any]:
@@ -391,6 +469,8 @@ def create_app_template() -> dict[str, Any]:
                 "shortlist_threshold": None,
                 "apply_threshold": None,
                 "custom_requirements": [],
+                "consider_location": False,
+                "consider_work_mode": False,
             },
         },
         "auto_apply": {
@@ -406,6 +486,26 @@ def create_app_template() -> dict[str, Any]:
             "enabled": False,
             "batch_size": None,
             "custom_requirements": [],
+        },
+        "profile": {
+            "name": "",
+            "total_experience": 0,
+            "preferred_roles": [],
+            "expected_salary_lpa": 0,
+            "notice_period": "",
+            "preferred_locations": [],
+            "remote_preference": "hybrid",
+            "company_size_preference": [],
+            "industry_preference": [],
+            "resume_path": "resume.pdf",
+            "title_exclude_keywords": [],
+        },
+        "naukri": {
+            "login_required": True,
+            "headless": False,
+            "page_timeout": 30000,
+            "max_pages": 3,
+            "delay_between_pages": 3,
         },
     }
 
@@ -499,10 +599,10 @@ def create_platform_template() -> dict[str, Any]:
 
 def ensure_config_files_exist(resume_profile: ResumeProfile | None = None) -> dict[str, Path]:
     """Ensure all config files exist, creating missing ones from templates.
-    
+
     If resume_profile is provided and user.yaml is missing, seed with resume data.
     Never overwrites existing files.
-    
+
     Returns dict of file_path -> created (bool).
     """
     import json
@@ -551,7 +651,7 @@ def ensure_config_files_exist(resume_profile: ResumeProfile | None = None) -> di
 
 def bootstrap_config(resume_path: str | Path | None = None) -> dict[str, Any]:
     """Bootstrap config: ensure files exist, load effective config.
-    
+
     If resume_path provided and cache exists, also load for seeding.
     """
     resume_profile = None

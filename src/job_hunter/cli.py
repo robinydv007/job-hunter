@@ -62,8 +62,10 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
     effective_config = bootstrap_result["config"]
 
     app_config = effective_config["app"]
+    user_config = effective_config["user"]
+    platform_config = effective_config["platform"]
 
-    cached_profile_path = Path("data" / "profile_cache.json")
+    cached_profile_path = Path("data") / "profile_cache.json"
     explicit_resume = (
         resume is not None
     )  # True only when --resume was explicitly passed
@@ -105,6 +107,8 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
 
             initial_state = {
                 "config": app_config,
+                "user_config": user_config,
+                "platform_config": platform_config,
                 "resume_path": resume,
                 "force_parse": force_parse,
                 "profile": None,
