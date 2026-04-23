@@ -10,11 +10,8 @@ from rich.console import Console
 from rich.panel import Panel
 
 from job_hunter.config import (
-    load_config,
-    load_config_dict,
-    validate_profile,
-    prompt_missing_fields,
-    save_config,
+    bootstrap_config,
+    build_effective_config,
 )
 from job_hunter.graph.workflow import build_workflow
 from job_hunter.browser import BrowserManager
@@ -61,20 +58,12 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
         Panel("[bold green]Job Hunter Agent[/] Starting...", border_style="green")
     )
 
-    # Validate raw config and prompt for missing fields BEFORE Pydantic validation
-    raw = load_config_dict(config)
-    missing = validate_profile(raw)
-    if missing:
-        console.print(f"[yellow]Missing config fields: {', '.join(missing)}[/]")
-        answers = prompt_missing_fields(missing)
-        save_config(answers)
-        console.print("[green]Config updated and saved.[/]")
+    bootstrap_result = bootstrap_config(resume_path=resume if resume else None)
+    effective_config = bootstrap_result["config"]
 
-    # Load config (now with validated data)
-    app_config = load_config(config)
+    app_config = effective_config["app"]
 
-    # Find resume
-    cached_profile_path = Path(__file__).resolve().parents[3] / "data" / "profile_cache.json"
+    cached_profile_path = Path("data" / "profile_cache.json")
     explicit_resume = (
         resume is not None
     )  # True only when --resume was explicitly passed
@@ -91,16 +80,12 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
             )
             raise SystemExit(1)
 
-    # Use cached profile only when resume was NOT explicitly provided and --force-parse not set
-    # Explicit --resume always means "parse this resume"
-    # --force-parse also forces re-parse but still needs resume path from config
     if not explicit_resume and not force_parse and cached_profile_path.exists():
         console.print(
             "[dim]Cached profile found — skipping resume parse. Use --force-parse to re-parse.[/]"
         )
         resume = None  # signals parse_resume_node to use cache
     elif force_parse and not explicit_resume:
-        # --force-parse without explicit --resume: use config's resume_path
         if not resume and Path("resume.pdf").exists():
             resume = "resume.pdf"
         console.print("[dim]Forcing resume re-parse (--force-parse)[/]")
@@ -112,14 +97,12 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
         page = await browser.start()
 
         try:
-            # Login to Naukri
             logged_in = await browser.login_naukri()
             if not logged_in:
                 console.print("[red]Failed to login to Naukri. Check credentials.[/]")
                 await browser.close()
                 raise SystemExit(1)
 
-            # Build initial state
             initial_state = {
                 "config": app_config,
                 "resume_path": resume,
@@ -133,7 +116,6 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
                 "browser_page": page,
             }
 
-            # Run workflow
             workflow = build_workflow()
             result = await workflow.ainvoke(initial_state)
 
@@ -215,52 +197,15 @@ def init():
         Panel("[bold green]Initializing Job Hunter Agent[/]", border_style="green")
     )
 
-    config_path = Path("config/user.yaml")
-    if config_path.exists():
-        console.print(f"[dim]Config already exists: {config_path}[/]")
-    else:
-        config_path.parent.mkdir(parents=True, exist_ok=True)
-        from job_hunter.config import AppConfig
-        import yaml
+    bootstrap_result = bootstrap_config()
 
-        with open(config_path, "w") as f:
-            yaml.dump(
-                AppConfig().model_dump(), f, default_flow_style=False, sort_keys=False
-            )
-        console.print(f"[green]Created config: {config_path}[/]")
+    for path, created in bootstrap_result["created"].items():
+        if created:
+            console.print(f"[green]Created: {path}[/]")
+        else:
+            console.print(f"[dim]Exists: {path}[/]")
 
-    profile_yaml_path = Path("config/profile.yaml")
-    if profile_yaml_path.exists():
-        console.print(f"[dim]Profile config already exists: {profile_yaml_path}[/]")
-    else:
-        profile_yaml_content = """# config/profile.yaml
-# User-owned. Never overwritten by the resume parser.
-# Use this to correct LLM extraction errors and add information not in your resume.
-
-overrides:
-  # Uncomment and set to correct LLM extraction mistakes
-  # total_experience_years: 9
-  # skills:
-  #   - Performance Testing
-  #   - JIRA
-  # tech_experience:
-  #   Selenium: 7
-
-enrichment:
-  # career_goal: ""
-  # strengths: ""
-  # what_can_you_bring: ""
-  # reason_for_change: ""
-  # preferred_company_types: []
-  # open_to_contract: false
-  # additional_skills: []
-"""
-        profile_yaml_path.write_text(profile_yaml_content)
-        console.print(f"[green]Created profile config: {profile_yaml_path}[/]")
-
-    Path("data").mkdir(exist_ok=True)
-    Path("output").mkdir(exist_ok=True)
-    console.print("[green]Ready! Edit config/user.yaml and run:[/]")
+    console.print("[green]Ready! Edit config files and run:[/]")
     console.print("  [bold]job-hunter run --resume your_resume.pdf[/]")
 
 

@@ -1,66 +1,53 @@
 profile:
-  name: Jhon Doe
-  total_experience: 9
-  preferred_roles:
-  - QA Engineer
-  resume_path: resume.pdf
-  expected_salary_lpa: 30
-  notice_period: immediate joiner
-  preferred_locations: []
-  remote_preference: hybrid
-  title_exclude_keywords:
-  - PHP
-  company_size_preference:
-  - mid-size
-  industry_preference: []
-  pan_number: "123456789"
-  last_working_day: "2026-03-05"
-  altername_email: "xyz@gmail.com"
-search:
-  platforms:
-  - naukri
-  salary_min_lpa: 20
-  salary_max_lpa: 45
-  experience_years: 9
-  max_jobs: 0
-  max_jobs_per_query: 20
-  freshness: 0
-  max_roles: 5
-  max_locations: 3
-  work_mode_filter: []
-  job_types: []
-  excluded_companies: []
-  excluded_keywords: []
-  delay_min_seconds: 3.0
-  delay_max_seconds: 8.0
-naukri:
-  login_required: true
-  headless: false
-  page_timeout: 30000
-  max_pages: 3
-  delay_between_pages: 3
-scoring:
-  shortlist_threshold: 30
-  apply_threshold: 30
-  skill_weight: 0.35
-  role_weight: 0.2
-  experience_weight: 0.2
-  company_weight: 0.1
-  location_weight: 0.08
-  work_mode_weight: 0.07
-  llm_scoring:
-    enabled: true
-    batch_size: 10
-    shortlist_threshold: 30
-    consider_location: false
-    consider_work_mode: false
-    custom_requirements: 
-    - For AI/ML jobs, experience can be relaxed if the candidate has relevant skills.
-    - Skill matching should be atleast 100% to consider the candidate.
-auto_apply:
-  enabled: true
-  max_per_day: 10
-  max_per_run: 5
-  delay_between_seconds: 5
-  require_confirmation: false
-  skip_if_already_applied: true
+  name: null
+  email: null
+  phone: null
+  current_location: null
+  notice_period_days: null
+  serving_notice_period: null
+  currently_working: null
+  current_company: null
+  current_designation: null
+  current_ctc_lpa: null
+  previous_company: null
+  previous_designation: null
+  previous_ctc_lpa: null
+  last_working_day: null
+  pan_number: null
+  alternate_email: null
+  additional_info: {}
+  custom_requirements: []
+experience:
+  total_experience_years: null
+  skills_with_experience: {}
+  aliases: {}
+  primary_stack: []
+  secondary_stack: []
+  domain_experience: {}
+  achievements: []
+narrative:
+  career_goal: null
+  strengths: null
+  what_i_bring: null
+  reason_for_change: null
+  preferred_company_type: []
+  preferred_work_style: null
+  custom: {}
+screening_answers:
+  enabled: false
+  defaults:
+    current_ctc_lpa: null
+    expected_ctc_lpa: null
+    notice_period: null
+    reason_for_change: null
+    visa_status: null
+    remote_work_preference: null
+    willing_to_relocate: null
+    comfortable_with_shifts: null
+    work_authorization: null
+    background_check_consent: null
+    references_available: null
+  answers: {}
+  role_specific: {}
+  custom_requirements: []
+  custom_answers: {}

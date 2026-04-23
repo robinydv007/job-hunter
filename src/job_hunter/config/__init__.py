@@ -1,4 +1,13 @@
-"""Configuration loading, validation, and interactive prompting."""
+"""Configuration loading, validation, and bootstrap.
+
+New config model (Phase 3.2):
+- config/app.yaml: search, scoring, apply, screening policy (platform-agnostic strategy)
+- config/user.yaml: candidate truth, screening answers, corrections
+- config/platform.yaml: platform-specific behavior and overrides
+- data/profile_cache.json: resume-extracted facts (generated-only)
+
+Precedence: platform > app > user > cache > code defaults
+"""
 
 from __future__ import annotations
 
@@ -9,251 +18,551 @@ import yaml
 from pydantic import BaseModel, Field
 
 
-class Profile(BaseModel):
-    name: str = ""
-    total_experience: int = 0
-    preferred_roles: list[str] = Field(default_factory=list)
-    expected_salary_lpa: float = 0
-    notice_period: str = ""
-    preferred_locations: list[str] = Field(default_factory=list)
-    remote_preference: str = "hybrid"
-    company_size_preference: list[str] = Field(default_factory=list)
-    industry_preference: list[str] = Field(default_factory=list)
-    resume_path: str = "resume.pdf"
+class SearchExperienceRange(BaseModel):
+    min: int | None = None
+    max: int | None = None
+
+
+class SearchSalaryRange(BaseModel):
+    min_lpa: float | None = None
+    max_lpa: float | None = None
 
 
 class SearchConfig(BaseModel):
     platforms: list[str] = Field(default_factory=lambda: ["naukri"])
-    salary_min_lpa: float = 0
-    salary_max_lpa: float = 0
-    experience_years: int = 0
-    max_jobs: int = 0  # 0 = no limit for final shortlist
-    max_jobs_per_query: int = 50  # max jobs to scrape per query
-    freshness: int = 0  # 0=auto, 1/3/7/15/30=days
-    max_roles: int = 5
-    max_locations: int = 3
+    preferred_roles: list[str] = Field(default_factory=list)
+    role_families: list[str] = Field(default_factory=list)
+    preferred_locations: list[str] = Field(default_factory=list)
+    experience_range: SearchExperienceRange | None = None
+    salary_range: SearchSalaryRange | None = None
+    company_size_preference: list[str] = Field(default_factory=list)
+    company_type_preference: list[str] = Field(default_factory=list)
+    industry_preference: list[str] = Field(default_factory=list)
     work_mode_filter: list[str] = Field(default_factory=list)
     job_types: list[str] = Field(default_factory=list)
     excluded_companies: list[str] = Field(default_factory=list)
     excluded_keywords: list[str] = Field(default_factory=list)
+    included_keywords: list[str] = Field(default_factory=list)
     title_exclude_keywords: list[str] = Field(default_factory=list)
-    delay_min_seconds: float = 3.0
-    delay_max_seconds: float = 8.0
+    freshness_days: int | None = None
+    max_jobs: int | None = None
+    max_jobs_per_query: int | None = None
+    custom_requirements: list[str] = Field(default_factory=list)
+
+    @property
+    def max_locations(self) -> int:
+        return 3
+
+    @property
+    def max_roles(self) -> int:
+        return 5
+
+    @property
+    def salary_min_lpa(self) -> float:
+        return self.salary_range.min_lpa if self.salary_range else 0.0
+
+    @property
+    def salary_max_lpa(self) -> float:
+        return self.salary_range.max_lpa if self.salary_range else 0.0
+
+    @property
+    def experience_years(self) -> int:
+        return self.experience_range.min if self.experience_range else 0
+
+    @property
+    def freshness(self) -> int:
+        return self.freshness_days or 0
+
+
+class ScoringWeights(BaseModel):
+    skills: float = 0.35
+    role: float = 0.20
+    experience: float = 0.20
+    company: float = 0.10
+    location: float = 0.08
+    work_mode: float = 0.07
 
 
 class ScoringLLMConfig(BaseModel):
     enabled: bool = False
-    batch_size: int = 10
-    shortlist_threshold: int = 30
-    consider_location: bool = False
-    consider_work_mode: bool = False
+    batch_size: int | None = None
+    shortlist_threshold: int | None = None
+    apply_threshold: int | None = None
     custom_requirements: list[str] = Field(default_factory=list)
 
 
 class ScoringConfig(BaseModel):
     shortlist_threshold: int = 60
     apply_threshold: int = 75
-    skill_weight: float = 0.35
-    role_weight: float = 0.20
-    experience_weight: float = 0.20
-    company_weight: float = 0.10
-    location_weight: float = 0.08
-    work_mode_weight: float = 0.07
+    weights: ScoringWeights = Field(default_factory=ScoringWeights)
     llm_scoring: ScoringLLMConfig | None = None
 
+    @property
+    def skill_weight(self) -> float:
+        return self.weights.skills
 
-class NaukriConfig(BaseModel):
-    login_required: bool = True
-    headless: bool = False
-    page_timeout: int = 30000
-    max_pages: int = 3
-    delay_between_pages: int = 3
+    @property
+    def role_weight(self) -> float:
+        return self.weights.role
+
+    @property
+    def experience_weight(self) -> float:
+        return self.weights.experience
+
+    @property
+    def company_weight(self) -> float:
+        return self.weights.company
+
+    @property
+    def location_weight(self) -> float:
+        return self.weights.location
+
+    @property
+    def work_mode_weight(self) -> float:
+        return self.weights.work_mode
 
 
 class AutoApplyConfig(BaseModel):
     enabled: bool = False
-    max_per_day: int = 10
-    max_per_run: int = 5
-    delay_between_seconds: int = 30
-    require_confirmation: bool = True
-    skip_if_already_applied: bool = True
+    max_per_day: int | None = None
+    max_per_run: int | None = None
+    delay_between_seconds: float | None = None
+    require_confirmation: bool | None = None
+    skip_if_already_applied: bool | None = None
+    custom_requirements: list[str] = Field(default_factory=list)
 
 
-class ScreeningAnswers(BaseModel):
-    willing_to_relocate: bool = False
-    comfortable_with_shifts: bool = False
-    current_ctc_lpa: float = 0
-    expected_ctc_lpa: float = 0
-    notice_period: str = ""
-    reason_for_change: str = ""
-    visa_status: str = "not applicable"
-    remote_work_preference: str = "flexible"
-    current_employer: str = ""
-    current_designation: str = ""
-    years_in_current_role: float = 0
-    highest_qualification: str = ""
-    university_name: str = ""
-    passing_year: int = 0
-    gaps_in_employment: str = ""
-    work_authorization: str = ""
-    background_check_consent: bool = True
-    references_available: bool = True
-
-
-class ScreeningAnswersExtended(BaseModel):
-    reason_for_change: str = ""
-    strengths: str = ""
-    weaknesses: str = ""
-    what_can_you_bring: str = ""
-
-
-class ProfileOverrides(BaseModel):
-    total_experience_years: int | None = None
-    skills: list[str] = Field(default_factory=list)
-    tech_experience: dict[str, int] = Field(default_factory=dict)
-
-
-class ProfileEnrichment(BaseModel):
-    career_goal: str = ""
-    strengths: str = ""
-    what_can_you_bring: str = ""
-    reason_for_change: str = ""
-    preferred_company_types: list[str] = Field(default_factory=list)
-    open_to_contract: bool | None = None
-    additional_skills: list[str] = Field(default_factory=list)
-
-
-class ScreeningConfig(BaseModel):
-    screening_answers: ScreeningAnswers = Field(default_factory=ScreeningAnswers)
-    screening_answers_extended: ScreeningAnswersExtended | None = None
+class ScreeningPolicy(BaseModel):
+    enabled: bool = False
+    batch_size: int | None = None
+    custom_requirements: list[str] = Field(default_factory=list)
 
 
 class AppConfig(BaseModel):
-    profile: Profile = Field(default_factory=Profile)
     search: SearchConfig = Field(default_factory=SearchConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
-    naukri: NaukriConfig = Field(default_factory=NaukriConfig)
-    screening: ScreeningConfig = Field(default_factory=ScreeningConfig)
     auto_apply: AutoApplyConfig = Field(default_factory=AutoApplyConfig)
-    profile_overrides: ProfileOverrides | None = None
-    profile_enrichment: ProfileEnrichment | None = None
+    screening: ScreeningPolicy | None = None
 
 
-REQUIRED_PROFILE_FIELDS = [
-    "name",
-    "total_experience",
-    "preferred_roles",
-    "expected_salary_lpa",
-    "notice_period",
-]
+class UserProfile(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    current_location: str | None = None
+    notice_period_days: int | None = None
+    serving_notice_period: bool | None = None
+    currently_working: bool | None = None
+    current_company: str | None = None
+    current_designation: str | None = None
+    current_ctc_lpa: float | None = None
+    previous_company: str | None = None
+    previous_designation: str | None = None
+    previous_ctc_lpa: float | None = None
+    last_working_day: str | None = None
+    pan_number: str | None = None
+    alternate_email: str | None = None
+    additional_info: dict[str, Any] = Field(default_factory=dict)
+    custom_requirements: list[str] = Field(default_factory=list)
 
 
-def load_config_dict(config_path: str | Path | None = None) -> dict[str, Any]:
-    """Load raw YAML dict without Pydantic validation (for pre-validation prompting)."""
+class UserExperience(BaseModel):
+    total_experience_years: int | None = None
+    skills_with_experience: dict[str, int] = Field(default_factory=dict)
+    aliases: dict[str, list[str]] = Field(default_factory=dict)
+    primary_stack: list[str] = Field(default_factory=list)
+    secondary_stack: list[str] = Field(default_factory=list)
+    domain_experience: dict[str, int] = Field(default_factory=dict)
+    achievements: list[str] = Field(default_factory=list)
+
+
+class UserNarrative(BaseModel):
+    career_goal: str | None = None
+    strengths: str | None = None
+    what_i_bring: str | None = None
+    reason_for_change: str | None = None
+    preferred_company_type: list[str] = Field(default_factory=list)
+    preferred_work_style: str | None = None
+    custom: dict[str, Any] = Field(default_factory=dict)
+
+
+class ScreeningAnswersDefaults(BaseModel):
+    current_ctc_lpa: float | None = None
+    expected_ctc_lpa: float | None = None
+    notice_period: str | None = None
+    reason_for_change: str | None = None
+    visa_status: str | None = None
+    remote_work_preference: str | None = None
+    willing_to_relocate: bool | None = None
+    comfortable_with_shifts: bool | None = None
+    work_authorization: str | None = None
+    background_check_consent: bool | None = None
+    references_available: bool | None = None
+
+
+class ScreeningAnswersConfig(BaseModel):
+    enabled: bool = False
+    defaults: ScreeningAnswersDefaults = Field(default_factory=ScreeningAnswersDefaults)
+    answers: dict[str, Any] = Field(default_factory=dict)
+    role_specific: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    custom_requirements: list[str] = Field(default_factory=list)
+    custom_answers: dict[str, Any] = Field(default_factory=dict)
+
+
+class UserConfig(BaseModel):
+    profile: UserProfile = Field(default_factory=UserProfile)
+    experience: UserExperience = Field(default_factory=UserExperience)
+    narrative: UserNarrative = Field(default_factory=UserNarrative)
+    screening_answers: ScreeningAnswersConfig = Field(default_factory=ScreeningAnswersConfig)
+
+
+class PlatformNaukriConfig(BaseModel):
+    enabled: bool = True
+    login_required: bool = True
+    headless: bool = False
+    page_timeout: int | None = None
+    max_pages: int | None = None
+    delay_between_pages: float | None = None
+    search: dict[str, Any] = Field(default_factory=dict)
+    apply: dict[str, Any] = Field(default_factory=dict)
+    custom_requirements: list[str] = Field(default_factory=list)
+
+
+class PlatformLinkedinConfig(BaseModel):
+    enabled: bool | None = None
+    search: dict[str, Any] = Field(default_factory=dict)
+    apply: dict[str, Any] = Field(default_factory=dict)
+    custom_requirements: list[str] = Field(default_factory=list)
+
+
+class PlatformConfig(BaseModel):
+    naukri: PlatformNaukriConfig = Field(default_factory=PlatformNaukriConfig)
+    linkedin: PlatformLinkedinConfig = Field(default_factory=PlatformLinkedinConfig)
+
+
+class ResumeProfile(BaseModel):
+    name: str = ""
+    email: str = ""
+    phone: str = ""
+    skills: list[str] = Field(default_factory=list)
+    tech_stack: list[str] = Field(default_factory=list)
+    total_experience_years: int = 0
+    past_roles: list[str] = Field(default_factory=list)
+    industry_domain: str = ""
+    location_preference: str = ""
+    salary_expectation: str | None = None
+    target_roles: list[str] = Field(default_factory=list)
+    education: list[str] = Field(default_factory=list)
+    summary: str = ""
+    detailed: dict[str, Any] = Field(default_factory=dict)
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+CONFIG_DIR = PROJECT_ROOT / "config"
+DATA_DIR = PROJECT_ROOT / "data"
+
+
+def load_app_config(config_path: Path | None = None) -> AppConfig:
     if config_path is None:
-        config_path = Path(__file__).resolve().parents[3] / "config" / "user.yaml"
-    config_path = Path(config_path)
-
+        config_path = CONFIG_DIR / "app.yaml"
     if not config_path.exists():
-        raise FileNotFoundError(f"Config file not found: {config_path}")
-
+        return AppConfig()
     with open(config_path) as f:
-        raw: dict[str, Any] = yaml.safe_load(f) or {}
+        raw = yaml.safe_load(f) or {}
 
-    return raw
-
-
-def validate_profile(raw: dict[str, Any]) -> list[str]:
-    """Check for missing required fields in raw YAML dict."""
-    profile = raw.get("profile") or {}
-    missing = []
-    for field in REQUIRED_PROFILE_FIELDS:
-        value = profile.get(field)
-        if not value or (isinstance(value, list) and len(value) == 0):
-            missing.append(field)
-    return missing
-
-
-def prompt_missing_fields(missing: list[str]) -> dict[str, Any]:
-    """Interactively prompt for missing config fields."""
-    from rich.prompt import Prompt
-
-    answers: dict[str, Any] = {}
-    field_labels = {
-        "name": "Full name",
-        "total_experience": "Years of total experience",
-        "preferred_roles": "Preferred job roles (comma-separated)",
-        "expected_salary_lpa": "Expected salary (LPA)",
-        "notice_period": "Notice period (e.g. 30 days, immediate)",
-        "preferred_locations": "Preferred locations (comma-separated)",
-    }
-
-    for field in missing:
-        label = field_labels.get(field, field)
-        value = Prompt.ask(f"  [bold]{label}[/]")
-        if field in ("preferred_roles", "preferred_locations"):
-            answers[field] = [v.strip() for v in value.split(",") if v.strip()]
-        elif field == "total_experience":
-            answers[field] = int(value)
-        elif field == "expected_salary_lpa":
-            answers[field] = float(value)
+    if "scoring" in raw:
+        scoring = raw["scoring"]
+        if "weights" in scoring:
+            weights = scoring["weights"]
         else:
-            answers[field] = value
+            weights = {}
+            scoring["weights"] = weights
+        for old_key, new_key in [
+            ("skill_weight", "skills"),
+            ("role_weight", "role"),
+            ("experience_weight", "experience"),
+            ("company_weight", "company"),
+            ("location_weight", "location"),
+            ("work_mode_weight", "work_mode"),
+        ]:
+            if old_key in scoring:
+                weights[new_key] = scoring.pop(old_key)
 
-    return answers
-
-
-def save_config(updates: dict[str, Any], config_path: str | Path | None = None) -> None:
-    """Merge updates into the profile section of the YAML config."""
-    if config_path is None:
-        config_path = Path(__file__).resolve().parents[3] / "config" / "user.yaml"
-    config_path = Path(config_path)
-
-    with open(config_path) as f:
-        raw: dict[str, Any] = yaml.safe_load(f) or {}
-
-    raw.setdefault("profile", {}).update(updates)
-
-    with open(config_path, "w") as f:
-        yaml.dump(raw, f, default_flow_style=False, sort_keys=False)
-
-
-def load_config(
-    config_path: str | Path | None = None,
-    screening_config_path: str | Path | None = None,
-) -> AppConfig:
-    if config_path is None:
-        config_path = Path(__file__).resolve().parents[3] / "config" / "user.yaml"
-    config_path = Path(config_path)
-
-    if not config_path.exists():
-        raise FileNotFoundError(f"Config file not found: {config_path}")
-
-    with open(config_path) as f:
-        raw: dict[str, Any] = yaml.safe_load(f) or {}
-
-    if screening_config_path is None:
-        screening_config_path = (
-            Path(__file__).resolve().parents[3] / "config" / "screening.yaml"
-        )
-    screening_config_path = Path(screening_config_path)
-
-    if screening_config_path.exists():
-        with open(screening_config_path) as f:
-            screening_raw: dict[str, Any] = yaml.safe_load(f) or {}
-        raw["screening"] = screening_raw
-
-    profile_yaml_path = (
-        Path(__file__).resolve().parents[3] / "config" / "profile.yaml"
-    )
-    if profile_yaml_path.exists():
-        with open(profile_yaml_path) as f:
-            profile_raw: dict[str, Any] = yaml.safe_load(f) or {}
-        overrides_data = profile_raw.get("overrides", {})
-        enrichment_data = profile_raw.get("enrichment", {})
-        if overrides_data:
-            raw["profile_overrides"] = overrides_data
-        if enrichment_data:
-            raw["profile_enrichment"] = enrichment_data
+    if "search" in raw:
+        search = raw["search"]
+        for old_key in ["salary_min_lpa", "salary_max_lpa", "experience_years", "freshness"]:
+            if old_key in search:
+                value = search.pop(old_key)
+                if old_key == "salary_min_lpa":
+                    search.setdefault("salary_range", {})["min_lpa"] = value
+                elif old_key == "salary_max_lpa":
+                    search.setdefault("salary_range", {})["max_lpa"] = value
+                elif old_key == "experience_years":
+                    search.setdefault("experience_range", {})["min"] = value
+                elif old_key == "freshness":
+                    search["freshness_days"] = value
 
     return AppConfig(**raw)
+
+
+def load_user_config(config_path: Path | None = None) -> UserConfig:
+    if config_path is None:
+        config_path = CONFIG_DIR / "user.yaml"
+    if not config_path.exists():
+        return UserConfig()
+    with open(config_path) as f:
+        raw = yaml.safe_load(f) or {}
+    return UserConfig(**raw)
+
+
+def load_platform_config(config_path: Path | None = None) -> PlatformConfig:
+    if config_path is None:
+        config_path = CONFIG_DIR / "platform.yaml"
+    if not config_path.exists():
+        return PlatformConfig()
+    with open(config_path) as f:
+        raw = yaml.safe_load(f) or {}
+    return PlatformConfig(**raw)
+
+
+def load_resume_profile(profile_path: Path | None = None) -> ResumeProfile | None:
+    if profile_path is None:
+        profile_path = DATA_DIR / "profile_cache.json"
+    if not profile_path.exists():
+        return None
+    import json
+    with open(profile_path) as f:
+        raw = json.load(f)
+    return ResumeProfile(**raw)
+
+
+def build_effective_config():
+    """Build effective config with proper precedence: platform > app > user > cache > defaults."""
+    app = load_app_config()
+    user = load_user_config()
+    platform = load_platform_config()
+    cache = load_resume_profile()
+    return {
+        "app": app,
+        "user": user,
+        "platform": platform,
+        "cache": cache,
+    }
+
+
+def create_app_template() -> dict[str, Any]:
+    """Create default app.yaml template."""
+    return {
+        "search": {
+            "platforms": ["naukri"],
+            "preferred_roles": [],
+            "role_families": [],
+            "preferred_locations": [],
+            "experience_range": None,
+            "salary_range": None,
+            "company_size_preference": [],
+            "company_type_preference": [],
+            "industry_preference": [],
+            "work_mode_filter": [],
+            "job_types": [],
+            "excluded_companies": [],
+            "excluded_keywords": [],
+            "included_keywords": [],
+            "title_exclude_keywords": [],
+            "freshness_days": None,
+            "max_jobs": None,
+            "max_jobs_per_query": 20,
+            "custom_requirements": [],
+        },
+        "scoring": {
+            "shortlist_threshold": 30,
+            "apply_threshold": 75,
+            "weights": {
+                "skills": 0.35,
+                "role": 0.20,
+                "experience": 0.20,
+                "company": 0.10,
+                "location": 0.08,
+                "work_mode": 0.07,
+            },
+            "llm_scoring": {
+                "enabled": False,
+                "batch_size": None,
+                "shortlist_threshold": None,
+                "apply_threshold": None,
+                "custom_requirements": [],
+            },
+        },
+        "auto_apply": {
+            "enabled": False,
+            "max_per_day": None,
+            "max_per_run": None,
+            "delay_between_seconds": None,
+            "require_confirmation": None,
+            "skip_if_already_applied": None,
+            "custom_requirements": [],
+        },
+        "screening": {
+            "enabled": False,
+            "batch_size": None,
+            "custom_requirements": [],
+        },
+    }
+
+
+def create_user_template() -> dict[str, Any]:
+    """Create default user.yaml template."""
+    return {
+        "profile": {
+            "name": None,
+            "email": None,
+            "phone": None,
+            "current_location": None,
+            "notice_period_days": None,
+            "serving_notice_period": None,
+            "currently_working": None,
+            "current_company": None,
+            "current_designation": None,
+            "current_ctc_lpa": None,
+            "previous_company": None,
+            "previous_designation": None,
+            "previous_ctc_lpa": None,
+            "last_working_day": None,
+            "pan_number": None,
+            "alternate_email": None,
+            "additional_info": {},
+            "custom_requirements": [],
+        },
+        "experience": {
+            "total_experience_years": None,
+            "skills_with_experience": {},
+            "aliases": {},
+            "primary_stack": [],
+            "secondary_stack": [],
+            "domain_experience": {},
+            "achievements": [],
+        },
+        "narrative": {
+            "career_goal": None,
+            "strengths": None,
+            "what_i_bring": None,
+            "reason_for_change": None,
+            "preferred_company_type": [],
+            "preferred_work_style": None,
+            "custom": {},
+        },
+        "screening_answers": {
+            "enabled": False,
+            "defaults": {
+                "current_ctc_lpa": None,
+                "expected_ctc_lpa": None,
+                "notice_period": None,
+                "reason_for_change": None,
+                "visa_status": None,
+                "remote_work_preference": None,
+                "willing_to_relocate": None,
+                "comfortable_with_shifts": None,
+                "work_authorization": None,
+                "background_check_consent": None,
+                "references_available": None,
+            },
+            "answers": {},
+            "role_specific": {},
+            "custom_requirements": [],
+            "custom_answers": {},
+        },
+    }
+
+
+def create_platform_template() -> dict[str, Any]:
+    """Create default platform.yaml template."""
+    return {
+        "naukri": {
+            "enabled": True,
+            "login_required": True,
+            "headless": False,
+            "page_timeout": None,
+            "max_pages": None,
+            "delay_between_pages": None,
+            "search": {},
+            "apply": {},
+            "custom_requirements": [],
+        },
+        "linkedin": {
+            "enabled": None,
+            "search": {},
+            "apply": {},
+            "custom_requirements": [],
+        },
+    }
+
+
+def ensure_config_files_exist(resume_profile: ResumeProfile | None = None) -> dict[str, Path]:
+    """Ensure all config files exist, creating missing ones from templates.
+    
+    If resume_profile is provided and user.yaml is missing, seed with resume data.
+    Never overwrites existing files.
+    
+    Returns dict of file_path -> created (bool).
+    """
+    import json
+
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    created = {}
+
+    app_path = CONFIG_DIR / "app.yaml"
+    if not app_path.exists():
+        with open(app_path, "w") as f:
+            yaml.dump(create_app_template(), f, default_flow_style=False, sort_keys=False)
+        created[app_path] = True
+
+    user_path = CONFIG_DIR / "user.yaml"
+    if not user_path.exists():
+        user_data = create_user_template()
+        if resume_profile:
+            pf = resume_profile
+            if pf.name:
+                user_data["profile"]["name"] = pf.name
+            if pf.email:
+                user_data["profile"]["email"] = pf.email
+            if pf.phone:
+                user_data["profile"]["phone"] = pf.phone
+            if pf.total_experience_years:
+                user_data["experience"]["total_experience_years"] = pf.total_experience_years
+            if pf.past_roles:
+                user_data["experience"]["primary_stack"] = pf.tech_stack or []
+                user_data["experience"]["achievements"] = pf.detailed.get("achievements", [])
+            if pf.target_roles:
+                user_data["experience"]["secondary_stack"] = pf.target_roles
+        with open(user_path, "w") as f:
+            yaml.dump(user_data, f, default_flow_style=False, sort_keys=False)
+        created[user_path] = True
+
+    platform_path = CONFIG_DIR / "platform.yaml"
+    if not platform_path.exists():
+        with open(platform_path, "w") as f:
+            yaml.dump(create_platform_template(), f, default_flow_style=False, sort_keys=False)
+        created[platform_path] = True
+
+    return created
+
+
+def bootstrap_config(resume_path: str | Path | None = None) -> dict[str, Any]:
+    """Bootstrap config: ensure files exist, load effective config.
+    
+    If resume_path provided and cache exists, also load for seeding.
+    """
+    resume_profile = None
+    if resume_path:
+        resume_profile = load_resume_profile(
+            DATA_DIR / "profile_cache.json" if resume_path else None
+        )
+
+    created = ensure_config_files_exist(resume_profile)
+    effective = build_effective_config()
+    return {
+        "created": created,
+        "config": effective,
+    }
