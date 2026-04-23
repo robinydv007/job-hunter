@@ -456,29 +456,51 @@ async def click_and_get_questions(page: Page) -> tuple[bool, list, str, dict, in
     # page.on("response", async_handler) is broken — Playwright never awaits the coroutine,
     # so response.json() never resolves and questions_data stays empty.
     data = {}
-    try:
-        async with page.expect_response(
-            lambda r: "/apply-workflow/v1/apply" in r.url, timeout=15000
-        ) as response_info:
-            await apply_button.click()
-            logger.info(f"Clicked apply button with selector: {matched_selector}")
+    captured_responses: dict[str, object] = {}  # url -> response object
 
-        response = await response_info.value
+    def _capture_response(response):
+        if "naukri.com" in response.url and response.request.resource_type in ("xhr", "fetch"):
+            captured_responses[response.url] = response
+
+    page.on("response", _capture_response)
+
+    try:
+        await apply_button.click()
+        logger.info(f"Clicked apply button with selector: {matched_selector}")
+
+        # Wait for network activity to settle
+        await asyncio.sleep(5)
+
+        # Find the apply API response from captured URLs
+        apply_keywords = ["apply-workflow", "jobapply", "applyJob", "apply/v"]
+        apply_url = None
+        for url in captured_responses:
+            if any(kw in url for kw in apply_keywords):
+                apply_url = url
+                console.print(f"[green]  Apply API found: {url[:120]}[/]")
+                break
+
+        if not apply_url:
+            raise TimeoutError("No apply API URL found in network responses")
+
+        response = captured_responses[apply_url]
         data = await response.json()
-        logger.info(
-            f"Intercepted /apply API response with {len(data.get('jobs', []))} jobs"
-        )
+        logger.info(f"Intercepted apply API ({apply_url}) with {len(data.get('jobs', []))} jobs")
+
     except Exception as e:
-        logger.warning(f"No /apply API response intercepted: {e}")
+        logger.warning(f"No apply API response intercepted: {e}")
+        console.print(f"[yellow]  API intercept failed: {e}[/]")
         sidebar = await page.query_selector(".chatbot_DrawerContentWrapper")
         if sidebar:
             text = await sidebar.inner_text()
-            logger.warning(f"Sidebar opened but no API response. Content: {text[:500]}")
+            console.print(f"[dim]  Sidebar open. Content: {text[:200]}[/]")
+            logger.warning(f"Sidebar opened but no API matched. Content: {text[:500]}")
         else:
+            console.print("[yellow]  Sidebar did NOT open after clicking apply[/]")
             logger.warning("Sidebar did NOT open after clicking apply")
-        # success=True means the button was found and clicked; empty questions means
-        # either no-question flow or we couldn't intercept the response.
         return True, [], "", {}, -1
+    finally:
+        page.remove_listener("response", _capture_response)
 
     if not data:
         logger.warning("No /apply API response intercepted")
