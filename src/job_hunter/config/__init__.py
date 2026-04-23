@@ -173,6 +173,8 @@ class AppConfig(BaseModel):
     screening: ScreeningPolicy | None = None
     profile: AppProfile = Field(default_factory=AppProfile)
     naukri: NaukriConfig = Field(default_factory=NaukriConfig)
+    profile_overrides: ProfileOverrides | None = None
+    profile_enrichment: ProfileEnrichment | None = None
 
 
 class UserProfile(BaseModel):
@@ -237,6 +239,26 @@ class ScreeningAnswersConfig(BaseModel):
     role_specific: dict[str, dict[str, Any]] = Field(default_factory=dict)
     custom_requirements: list[str] = Field(default_factory=list)
     custom_answers: dict[str, Any] = Field(default_factory=dict)
+
+
+class ProfileOverrides(BaseModel):
+    """Backward-compatible profile overrides."""
+
+    total_experience_years: int | None = None
+    skills: list[str] = Field(default_factory=list)
+    tech_experience: dict[str, int] = Field(default_factory=dict)
+
+
+class ProfileEnrichment(BaseModel):
+    """Backward-compatible profile enrichment."""
+
+    career_goal: str = ""
+    strengths: str = ""
+    what_can_you_bring: str = ""
+    reason_for_change: str = ""
+    preferred_company_types: list[str] = Field(default_factory=list)
+    open_to_contract: bool | None = None
+    additional_skills: list[str] = Field(default_factory=list)
 
 
 class UserConfig(BaseModel):
@@ -362,6 +384,19 @@ def load_effective_app_config() -> AppConfig:
         app.profile.remote_preference = user.narrative.preferred_work_style
 
     app.profile.remote_preference = app.profile.remote_preference or "hybrid"
+
+    # Profile overrides/enrichment backward compat
+    if user.experience.skills_with_experience:
+        app.profile_overrides = ProfileOverrides(
+            skills=list(user.experience.skills_with_experience.keys()),
+            tech_experience=user.experience.skills_with_experience,
+        )
+    if user.narrative.strengths or user.narrative.what_i_bring:
+        app.profile_enrichment = ProfileEnrichment(
+            strengths=user.narrative.strengths or "",
+            what_can_you_bring=user.narrative.what_i_bring or "",
+            reason_for_change=user.narrative.reason_for_change or "",
+        )
 
     naukri_cfg = load_platform_config().naukri
     app.naukri.login_required = naukri_cfg.login_required
