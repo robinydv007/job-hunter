@@ -48,6 +48,8 @@ class SearchConfig(BaseModel):
     max_jobs: int | None = None
     max_jobs_per_query: int | None = None
     custom_requirements: list[str] = Field(default_factory=list)
+    delay_min_seconds: float = 3.0
+    delay_max_seconds: float = 8.0
 
     @property
     def max_locations(self) -> int:
