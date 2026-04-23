@@ -13,12 +13,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.12",
 ]
-
-[project.urls]
-Homepage = "https://github.com/yourusername/job-hunter"
-Repository = "https://github.com/yourusername/job-hunter"
-Issues = "https://github.com/yourusername/job-hunter/issues"
-
 dependencies = [
     "langgraph>=0.2.0",
     "langchain-openai>=0.3.0",
@@ -37,6 +31,11 @@ dependencies = [
     "nest-asyncio>=1.6.0",
     "langchain-groq>=1.1.2",
 ]
+
+[project.urls]
+Homepage = "https://github.com/robinydv007/job-hunter"
+Repository = "https://github.com/robinydv007/job-hunter"
+Issues = "https://github.com/robinydv007/job-hunter/issues"
 
 [project.scripts]
 job-hunter = "job_hunter.cli:main"

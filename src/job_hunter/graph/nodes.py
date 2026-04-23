@@ -71,7 +71,7 @@ async def parse_resume_node(state: JobHunterState) -> dict:
     return {"profile": profile, "detailed_profile": detailed}
 
 
-def search_jobs_node(state: JobHunterState) -> dict:
+async def search_jobs_node(state: JobHunterState) -> dict:
     """Search for jobs on configured platforms using persistent browser session."""
     console.print(Panel("[bold blue]Searching for jobs...[/]", border_style="blue"))
 
@@ -104,7 +104,7 @@ def search_jobs_node(state: JobHunterState) -> dict:
             freshness = resolve_freshness(config.search.freshness, platform)
             console.print(f"[dim]Freshness filter: dd={freshness}[/]")
             max_jobs_per_query = getattr(config.search, "max_jobs_per_query", 50) or 50
-            jobs = search_naukri(
+            jobs = await search_naukri(
                 profile,
                 config.search,
                 config.naukri,
@@ -216,14 +216,11 @@ def filter_shortlist_node(state: JobHunterState) -> dict:
     return {"shortlisted_jobs": shortlisted}
 
 
-def apply_jobs_node(state: JobHunterState) -> dict:
+async def apply_jobs_node(state: JobHunterState) -> dict:
     """Apply to shortlisted jobs above apply threshold using Naukri APIs.
 
     Prompts user for each job, then uses API-based auto-apply.
     """
-    import asyncio
-    import nest_asyncio
-
     from job_hunter.apply.naukri_apply import apply_to_job
 
     config = state["config"]
@@ -261,9 +258,6 @@ def apply_jobs_node(state: JobHunterState) -> dict:
         console.print("[red]No browser page available for apply[/]")
         return {"shortlisted_jobs": state.get("shortlisted_jobs", [])}
 
-    # nest_asyncio allows asyncio.run() inside an already-running loop context
-    # (needed because the Playwright page was created in the outer event loop).
-    nest_asyncio.apply()
 
     applied_count = 0
     failed_count = 0
@@ -278,6 +272,7 @@ def apply_jobs_node(state: JobHunterState) -> dict:
         console.print(
             f"\n[bold cyan]{i}/{len(shortlisted)}[/] Applying to '{title}' at {company} (score: {score})"
         )
+        console.print(f"job url : {job.get("job_url")}")
 
         if auto_apply_config.require_confirmation:
             from rich.prompt import Prompt
@@ -296,7 +291,7 @@ def apply_jobs_node(state: JobHunterState) -> dict:
                 console.print("  [yellow]Quit. Remaining jobs stay pending.[/]")
                 break
 
-        result = asyncio.run(apply_to_job(page, job, profile, config, detailed_profile))
+        result = await apply_to_job(page, job, profile, config, detailed_profile)
 
         scored_job["apply_status"] = result.status
         scored_job["apply_timestamp"] = result.timestamp
@@ -328,7 +323,7 @@ def apply_jobs_node(state: JobHunterState) -> dict:
         if i < len(shortlisted):
             delay = auto_apply_config.delay_between_seconds
             console.print(f"  [dim]Waiting {delay}s before next job...[/]")
-            time.sleep(delay)
+            await asyncio.sleep(delay)
 
     console.print(
         Panel(

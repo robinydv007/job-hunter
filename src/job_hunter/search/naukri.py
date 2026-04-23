@@ -525,7 +525,8 @@ async def scrape_jobs_from_page(
             # Track new job IDs to detect duplicates
             new_job_ids = set()
             current_page_jobs = []
-
+            
+            print('start extracting job details')
             for card in job_cards:
                 if len(all_jobs) >= max_jobs:
                     break
@@ -585,7 +586,7 @@ async def scrape_jobs_from_page(
     return all_jobs
 
 
-def search_naukri(
+async def search_naukri(
     profile: ResumeProfile,
     search_config: SearchConfig,
     naukri_config,
@@ -595,11 +596,6 @@ def search_naukri(
     config: AppConfig | None = None,
 ) -> list[dict[str, Any]]:
     """Search Naukri for jobs using a persistent browser page."""
-    import asyncio
-    import nest_asyncio
-
-    nest_asyncio.apply()
-
     if max_jobs_per_query <= 0:
         max_jobs_per_query = 100
 
@@ -609,7 +605,6 @@ def search_naukri(
     all_jobs = []
     seen_keys = set()
 
-    loop = asyncio.get_event_loop()
     delay_min = search_config.delay_min_seconds
     delay_max = search_config.delay_max_seconds
 
@@ -625,16 +620,14 @@ def search_naukri(
 
     for qi, query in enumerate(queries):
         try:
-            jobs = loop.run_until_complete(
-                scrape_jobs_from_page(
-                    page,
-                    query["keyword"],
-                    query["location"],
-                    days_old=days_old,
-                    max_jobs=max_jobs_per_query,
-                    max_pages=max_pages_needed,
-                    user_skills=user_skills,
-                )
+            jobs = await scrape_jobs_from_page(
+                page,
+                query["keyword"],
+                query["location"],
+                days_old=days_old,
+                max_jobs=max_jobs_per_query,
+                max_pages=max_pages_needed,
+                user_skills=user_skills,
             )
 
             for job in jobs:
@@ -648,7 +641,7 @@ def search_naukri(
             if qi < len(queries) - 1:
                 delay = random.uniform(delay_min, delay_max)
                 print(f"  [INFO] Waiting {delay:.1f}s before next query...")
-                loop.run_until_complete(asyncio.sleep(delay))
+                await asyncio.sleep(delay)
 
         except Exception as e:
             print(f"  [WARN] Query failed: {e}")
