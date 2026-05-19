@@ -1,6 +1,6 @@
 # Phase 3.2 — History: Config Strategy Revamp
 
-> Phase started: TBD
+> Phase started: 2026-04-23 | Phase completed: 2026-04-23
 
 ---
 
@@ -27,3 +27,17 @@ Topics: implementation-order, exit-criteria, schema-bootstrap, runtime-migration
 Affects-phases: phase-3.2-config-strategy-revamp
 Affects-docs: specs/phases/phase-3.2-config-strategy-revamp/plan.md, specs/phases/phase-3.2-config-strategy-revamp/tasks.md
 Detail: Expanded the phase plan with file-by-file execution order, concrete deliverables, and exit criteria so implementation can begin without further ambiguity.
+
+---
+
+[NOTE] 2026-04-23 — Phase 3.2 implemented and e2e test passed
+Topics: config-revamp, bootstrap-on-init, bootstrap-on-run, backward-compat, config-precedence
+Affects-phases: none
+Affects-docs: specs/status.md, specs/phases/phase-3.2-config-strategy-revamp/tasks.md
+Detail: 3-file config model (app.yaml, user.yaml, platform.yaml) fully implemented with bootstrap helpers, backward compat layer for old field names, non-overwrite policy, and config precedence (platform > app > user > cache > defaults). End-to-end pipeline test passed with auto-apply. 3.2c unit tests deferred by user decision.
+
+[NOTE] 2026-05-19 — Tracking files updated to reflect completion
+Topics: phase-completion, tracking-sync
+Affects-phases: none
+Affects-docs: specs/status.md, specs/phases/phase-3.2-config-strategy-revamp/tasks.md
+Detail: tasks.md and status.md were out of sync with actual implementation state. Updated tasks.md to mark 3.2a and 3.2b complete, 3.2c tests as deferred. Status.md updated to list Phase 3.2 as complete.
