@@ -24,7 +24,7 @@ search:
   excluded_companies: []
   excluded_keywords: []
   included_keywords: []
-  title_exclude_keywords: []
+  title_exclude_keywords: ['devops']
   freshness_days: 7
   max_jobs: 10
   max_jobs_per_query: 10
