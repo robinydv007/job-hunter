@@ -50,13 +50,13 @@
 
 ### 3.2c — Validation + Cleanup
 - [x] Add migration support for existing installs (backward compat layer in `load_app_config()`)
-- [ ] Add tests *(deferred — skipped by user decision)*
-  - [ ] Missing-file bootstrap
-  - [ ] Non-overwrite behavior
-  - [ ] Precedence and defaults
-  - [ ] Resume seeding behavior
-  - [ ] Role-family and platform overrides
-  - [ ] CSV export stability
+- [x] Add tests (`tests/test_config.py` — 33 tests, all passing)
+  - [x] Missing-file bootstrap
+  - [x] Non-overwrite behavior
+  - [x] Precedence and defaults
+  - [x] Resume seeding behavior
+  - [x] Role-family and platform overrides
+  - [x] CSV export stability
 - [x] Add migration/docs updates
   - [x] New config file responsibilities (documented in changelog 2026-04)
   - [x] Bootstrap behavior on init/run

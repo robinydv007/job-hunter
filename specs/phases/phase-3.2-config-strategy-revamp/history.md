@@ -41,3 +41,9 @@ Topics: phase-completion, tracking-sync
 Affects-phases: none
 Affects-docs: specs/status.md, specs/phases/phase-3.2-config-strategy-revamp/tasks.md
 Detail: tasks.md and status.md were out of sync with actual implementation state. Updated tasks.md to mark 3.2a and 3.2b complete, 3.2c tests as deferred. Status.md updated to list Phase 3.2 as complete.
+
+[NOTE] 2026-05-19 — 3.2c tests implemented — 33 passing
+Topics: config-tests, csv-export-stability, backward-compat, bootstrap, non-overwrite, resume-seeding
+Affects-phases: none
+Affects-docs: specs/phases/phase-3.2-config-strategy-revamp/tasks.md
+Detail: Created tests/test_config.py with 33 unit tests covering all 3.2c categories: missing-file bootstrap, non-overwrite behavior, backward compat old field migration, config precedence and defaults, resume seeding, platform/role-family overrides, and CSV export column schema stability. All 33 tests pass.
