@@ -39,7 +39,7 @@ def _build_prompt(
 ) -> str:
     """Build the LLM prompt for scoring jobs."""
 
-    skills = ", ".join(profile.skills + profile.tech_stack)
+    all_skills = ", ".join(profile.skills + profile.tech_stack)
     preferred_roles = (
         ", ".join(config.search.preferred_roles)
         if config.search.preferred_roles
@@ -60,6 +60,24 @@ def _build_prompt(
         else "Not specified"
     )
 
+    # Tech experience with years — prefer user-corrected overrides over resume
+    tech_exp: dict[str, Any] = {}
+    if config.profile_overrides and config.profile_overrides.tech_experience:
+        tech_exp = config.profile_overrides.tech_experience
+    tech_exp_str = (
+        "; ".join(f"{t}: {y} yrs" for t, y in tech_exp.items())
+        if tech_exp
+        else "Not specified"
+    )
+
+    # Career narrative from profile enrichment
+    enrichment_lines = ""
+    if config.profile_enrichment:
+        if config.profile_enrichment.strengths:
+            enrichment_lines += f"\n- Strengths: {config.profile_enrichment.strengths}"
+        if config.profile_enrichment.what_can_you_bring:
+            enrichment_lines += f"\n- What they bring: {config.profile_enrichment.what_can_you_bring}"
+
     conditional_criteria = []
     if llm_config.consider_location:
         conditional_criteria.append(
@@ -74,7 +92,7 @@ def _build_prompt(
 
     conditional_section = (
         "\n".join(conditional_criteria) + custom_requirements
-        if conditional_criteria and custom_requirements
+        if conditional_criteria or custom_requirements
         else "None (only core factors considered)"
     )
 
@@ -83,11 +101,12 @@ def _build_prompt(
 ## Candidate Profile
 - Name: {profile.name}
 - Total Experience: {profile.total_experience_years} years
-- Skills: {skills}
+- Tech Skills with Years: {tech_exp_str}
+- All Skills: {all_skills}
 - Preferred Roles: {preferred_roles}
 - Past Roles: {past_roles}
 - Preferred Locations: {preferred_locations}
-- Remote Preference: {remote_preference}
+- Work Mode Preference: {remote_preference}{enrichment_lines}
 
 ## Jobs to Score
 {json.dumps(jobs, indent=2)}
@@ -95,7 +114,7 @@ def _build_prompt(
 ## Scoring Criteria
 
 ### ALWAYS CONSIDER:
-1. **Skills Match**: Does the job require technical skills that the candidate possesses? 
+1. **Skills Match**: Does the job require technical skills that the candidate possesses? Weight by years of experience.
 2. **Role Alignment**: Does the job title align with the candidate's target or past roles?
 3. **Experience Fit**: Does the job's experience requirement match the candidate's experience?
 4. **Company Rating**: Company rating (if available) - higher is better
@@ -104,6 +123,18 @@ def _build_prompt(
 
 ### CONDITIONAL (based on user config):
 {conditional_section}
+
+## Scoring Rubric
+- 90-100: Role title matches exactly + 80%+ skills overlap + experience fits perfectly
+- 70-89:  Role closely related + 60%+ skills match + experience within range
+- 50-69:  Adjacent role or 40-60% skills match
+- 30-49:  Some relevant skills but title/role mismatch
+- Below 30: Minimal overlap — role or skills don't align
+
+**Priority order: Skills match > Role alignment > Experience fit > everything else.**
+
+If the job title is clearly outside the candidate's target/past roles (e.g. "Data Scientist",
+"Data Engineer", "Manager", "Lead" when candidate is not targeting those), cap the score at 45.
 
 ## Output Format
 
