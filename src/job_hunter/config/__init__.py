@@ -649,26 +649,31 @@ def create_platform_template() -> dict[str, Any]:
     }
 
 
-def ensure_config_files_exist(resume_profile: ResumeProfile | None = None) -> dict[str, Path]:
+def ensure_config_files_exist(resume_profile: ResumeProfile | None = None) -> dict[str, bool]:
     """Ensure all config files exist, creating missing ones from templates.
 
-    If resume_profile is provided and user.yaml is missing, seed with resume data.
+    If resume_profile is provided, seeds app.yaml and user.yaml with resume data.
     Never overwrites existing files.
 
-    Returns dict of file_path -> created (bool).
+    Returns dict of str(file_path) -> created (bool).
     """
-    import json
-
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    created = {}
+    created: dict[str, bool] = {}
 
     app_path = CONFIG_DIR / "app.yaml"
     if not app_path.exists():
+        app_data = create_app_template()
+        if resume_profile:
+            roles = resume_profile.target_roles or resume_profile.past_roles[:3]
+            if roles:
+                app_data["search"]["preferred_roles"] = roles
+            if resume_profile.location_preference:
+                app_data["search"]["preferred_locations"] = [resume_profile.location_preference]
         with open(app_path, "w") as f:
-            yaml.dump(create_app_template(), f, default_flow_style=False, sort_keys=False)
-        created[app_path] = True
+            yaml.dump(app_data, f, default_flow_style=False, sort_keys=False)
+        created[str(app_path)] = True
 
     user_path = CONFIG_DIR / "user.yaml"
     if not user_path.exists():
@@ -683,22 +688,69 @@ def ensure_config_files_exist(resume_profile: ResumeProfile | None = None) -> di
                 user_data["profile"]["phone"] = pf.phone
             if pf.total_experience_years:
                 user_data["experience"]["total_experience_years"] = pf.total_experience_years
-            if pf.past_roles:
-                user_data["experience"]["primary_stack"] = pf.tech_stack or []
-                user_data["experience"]["achievements"] = pf.detailed.get("achievements", [])
+            if pf.tech_stack:
+                user_data["experience"]["primary_stack"] = pf.tech_stack
+            if pf.detailed.get("achievements"):
+                user_data["experience"]["achievements"] = pf.detailed["achievements"]
             if pf.target_roles:
                 user_data["experience"]["secondary_stack"] = pf.target_roles
+            if pf.detailed.get("tech_experience"):
+                user_data["experience"]["skills_with_experience"] = pf.detailed["tech_experience"]
         with open(user_path, "w") as f:
             yaml.dump(user_data, f, default_flow_style=False, sort_keys=False)
-        created[user_path] = True
+        created[str(user_path)] = True
 
     platform_path = CONFIG_DIR / "platform.yaml"
     if not platform_path.exists():
         with open(platform_path, "w") as f:
             yaml.dump(create_platform_template(), f, default_flow_style=False, sort_keys=False)
-        created[platform_path] = True
+        created[str(platform_path)] = True
 
     return created
+
+
+def seed_config_from_profile(
+    profile: ResumeProfile,
+    detailed_profile: dict[str, Any] | None,
+    created: dict[str, bool],
+) -> None:
+    """Re-seed freshly-created config files with data from a just-parsed resume profile.
+
+    Only updates files in `created` (output of ensure_config_files_exist), and only fills
+    fields still at empty/None defaults — never clobbers values the user has set.
+    """
+    app_path = str(CONFIG_DIR / "app.yaml")
+    user_path = str(CONFIG_DIR / "user.yaml")
+
+    if created.get(app_path):
+        with open(app_path) as f:
+            app_data = yaml.safe_load(f) or {}
+        search = app_data.setdefault("search", {})
+        roles = profile.target_roles or profile.past_roles[:3]
+        if roles and not search.get("preferred_roles"):
+            search["preferred_roles"] = roles
+        if profile.location_preference and not search.get("preferred_locations"):
+            search["preferred_locations"] = [profile.location_preference]
+        with open(app_path, "w") as f:
+            yaml.dump(app_data, f, default_flow_style=False, sort_keys=False)
+
+    if created.get(user_path):
+        with open(user_path) as f:
+            user_data = yaml.safe_load(f) or {}
+        pf_section = user_data.setdefault("profile", {})
+        if profile.name and not pf_section.get("name"):
+            pf_section["name"] = profile.name
+        if profile.email and not pf_section.get("email"):
+            pf_section["email"] = profile.email
+        exp_section = user_data.setdefault("experience", {})
+        if profile.total_experience_years and not exp_section.get("total_experience_years"):
+            exp_section["total_experience_years"] = profile.total_experience_years
+        if detailed_profile:
+            tech_exp = detailed_profile.get("tech_experience", {})
+            if tech_exp and not exp_section.get("skills_with_experience"):
+                exp_section["skills_with_experience"] = tech_exp
+        with open(user_path, "w") as f:
+            yaml.dump(user_data, f, default_flow_style=False, sort_keys=False)
 
 
 def bootstrap_config(resume_path: str | Path | None = None) -> dict[str, Any]:
