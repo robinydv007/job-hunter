@@ -41,8 +41,8 @@ def _build_prompt(
 
     skills = ", ".join(profile.skills + profile.tech_stack)
     preferred_roles = (
-        ", ".join(config.profile.preferred_roles)
-        if config.profile.preferred_roles
+        ", ".join(config.search.preferred_roles)
+        if config.search.preferred_roles
         else "Not specified"
     )
     past_roles = (
@@ -55,8 +55,8 @@ def _build_prompt(
         else "Not specified"
     )
     remote_preference = (
-        config.profile.remote_preference
-        if config.profile.remote_preference
+        config.search.work_mode_preference
+        if config.search.work_mode_preference
         else "Not specified"
     )
 

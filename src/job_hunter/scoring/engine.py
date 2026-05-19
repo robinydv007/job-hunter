@@ -120,8 +120,8 @@ def _score_role(
 ) -> int:
     job_title = job.get("title", "").lower()
     preferred_roles = (
-        [r.lower() for r in config.profile.preferred_roles]
-        if config.profile.preferred_roles
+        [r.lower() for r in config.search.preferred_roles]
+        if config.search.preferred_roles
         else []
     )
     past_roles = [r.lower() for r in profile.past_roles]
@@ -226,8 +226,8 @@ def _score_location(job: dict, profile: ResumeProfile, constants: Constants) -> 
 def _score_work_mode(job: dict, config: AppConfig, constants: Constants) -> int:
     work_mode = job.get("work_mode", "").lower()
     preference = (
-        config.profile.remote_preference.lower()
-        if config.profile.remote_preference
+        config.search.work_mode_preference.lower()
+        if config.search.work_mode_preference
         else ""
     )
     location = job.get("location", "").lower()

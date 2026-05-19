@@ -97,9 +97,9 @@ async def search_jobs_node(state: JobHunterState) -> dict:
     if page is None:
         raise RuntimeError("Browser page is None, cannot search jobs")
 
-    if config.profile.preferred_roles:
+    if config.search.preferred_roles:
         console.print(
-            f"[dim]Search roles: using user.yaml preferred_roles -> {config.profile.preferred_roles}[/]"
+            f"[dim]Search roles: using app.yaml preferred_roles -> {config.search.preferred_roles}[/]"
         )
     else:
         console.print(

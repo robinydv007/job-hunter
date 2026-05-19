@@ -2,14 +2,14 @@ search:
   platforms:
   - naukri
   preferred_roles:
-  - QA Automation Engineer
+  - QA Engineer
   role_families: []
-  seniority_level: []
+  seniority_level: ['mid', 'high']
   preferred_locations:
   - Bangalore
   - Hyderabad
   experience_range:
-    min: 3
+    min: 6
     max: 10
   salary_range:
     min_lpa: 10
@@ -18,6 +18,7 @@ search:
   company_size_preference: []
   company_type_preference: []
   industry_preference: []
+  work_mode_preference: hybrid
   work_mode_filter: []
   job_types: []
   excluded_companies: []
@@ -41,10 +42,10 @@ scoring:
     location: 0.08
     work_mode: 0.07
   llm_scoring:
-    enabled: false
-    batch_size: null
-    shortlist_threshold: null
-    apply_threshold: null
+    enabled: true
+    batch_size: 10
+    shortlist_threshold: 50
+    apply_threshold: 70
     custom_requirements: []
 auto_apply:
   enabled: true
@@ -61,18 +62,9 @@ screening:
 profile:
   name: Jordan Lee
   total_experience: 5
-  preferred_roles:
-  - QA Automation Engineer
   expected_salary_lpa: 20
   notice_period: 30 days
-  preferred_locations:
-  - Bangalore
-  - Hyderabad
-  remote_preference: hybrid
-  company_size_preference: []
-  industry_preference: []
   resume_path: resume.pdf
-  title_exclude_keywords: []
 naukri:
   login_required: true
   headless: false

@@ -40,6 +40,7 @@ class SearchConfig(BaseModel):
     company_size_preference: list[str] = Field(default_factory=list)
     company_type_preference: list[str] = Field(default_factory=list)
     industry_preference: list[str] = Field(default_factory=list)
+    work_mode_preference: str = "hybrid"
     work_mode_filter: list[str] = Field(default_factory=list)
     job_types: list[str] = Field(default_factory=list)
     excluded_companies: list[str] = Field(default_factory=list)
@@ -79,19 +80,13 @@ class SearchConfig(BaseModel):
 
 
 class AppProfile(BaseModel):
-    """Backward-compatible profile section for AppConfig."""
+    """Identity and path settings that have no home in search/scoring/user config."""
 
     name: str = ""
     total_experience: int = 0
-    preferred_roles: list[str] = Field(default_factory=list)
     expected_salary_lpa: float = 0
     notice_period: str = ""
-    preferred_locations: list[str] = Field(default_factory=list)
-    remote_preference: str = "hybrid"
-    company_size_preference: list[str] = Field(default_factory=list)
-    industry_preference: list[str] = Field(default_factory=list)
     resume_path: str = "resume.pdf"
-    title_exclude_keywords: list[str] = Field(default_factory=list)
 
 
 class NaukriConfig(BaseModel):
@@ -233,7 +228,7 @@ class UserNarrative(BaseModel):
 class ScreeningAnswersDefaults(BaseModel):
     current_ctc_lpa: float | None = None
     expected_ctc_lpa: float | None = None
-    notice_period: str | None = None
+    notice_period: str | int | None = None
     reason_for_change: str | None = None
     visa_status: str | None = None
     remote_work_preference: str | None = None
@@ -387,24 +382,22 @@ def load_effective_app_config() -> AppConfig:
         app.profile.name = user.profile.name
     if user.experience.total_experience_years:
         app.profile.total_experience = user.experience.total_experience_years
-    if user.profile.current_location:
-        app.profile.preferred_locations = [user.profile.current_location]
     if user.profile.current_ctc_lpa:
         app.profile.expected_salary_lpa = user.profile.current_ctc_lpa
     if user.profile.notice_period_days:
         app.profile.notice_period = f"{user.profile.notice_period_days} days"
 
-    if user.experience.primary_stack:
-        app.search.platforms = user.experience.primary_stack or app.search.platforms
+    # Seed search.preferred_roles from resume if not explicitly set in app.yaml
+    if user.experience.secondary_stack and not app.search.preferred_roles:
+        app.search.preferred_roles = user.experience.secondary_stack
 
-    app.profile.preferred_roles = (
-        user.experience.secondary_stack or app.search.preferred_roles or []
-    )
+    # Seed search.preferred_locations from user location if not set in app.yaml
+    if user.profile.current_location and not app.search.preferred_locations:
+        app.search.preferred_locations = [user.profile.current_location]
 
-    if user.narrative.preferred_work_style:
-        app.profile.remote_preference = user.narrative.preferred_work_style
-
-    app.profile.remote_preference = app.profile.remote_preference or "hybrid"
+    # User narrative overrides work_mode_preference if not explicitly set in app.yaml
+    if user.narrative.preferred_work_style and app.search.work_mode_preference == "hybrid":
+        app.search.work_mode_preference = user.narrative.preferred_work_style.lower()
 
     # Profile overrides/enrichment backward compat
     if user.experience.skills_with_experience:
@@ -499,6 +492,7 @@ def create_app_template() -> dict[str, Any]:
             "company_size_preference": [],
             "company_type_preference": [],
             "industry_preference": [],
+            "work_mode_preference": "hybrid",
             "work_mode_filter": [],
             "job_types": [],
             "excluded_companies": [],
@@ -548,15 +542,9 @@ def create_app_template() -> dict[str, Any]:
         "profile": {
             "name": "",
             "total_experience": 0,
-            "preferred_roles": [],
             "expected_salary_lpa": 0,
             "notice_period": "",
-            "preferred_locations": [],
-            "remote_preference": "hybrid",
-            "company_size_preference": [],
-            "industry_preference": [],
             "resume_path": "resume.pdf",
-            "title_exclude_keywords": [],
         },
         "naukri": {
             "login_required": True,

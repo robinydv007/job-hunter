@@ -99,8 +99,8 @@ def _build_search_queries(
         else []
     )
     roles = (
-        config.profile.preferred_roles[: search_config.max_roles]
-        if config.profile.preferred_roles
+        config.search.preferred_roles[: search_config.max_roles]
+        if config.search.preferred_roles
         else profile.past_roles[: search_config.max_roles]
         if profile.past_roles
         else ["Technical Lead"]

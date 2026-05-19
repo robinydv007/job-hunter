@@ -42,6 +42,12 @@ Affects-phases: none
 Affects-docs: specs/status.md, specs/phases/phase-3.2-config-strategy-revamp/tasks.md
 Detail: tasks.md and status.md were out of sync with actual implementation state. Updated tasks.md to mark 3.2a and 3.2b complete, 3.2c tests as deferred. Status.md updated to list Phase 3.2 as complete.
 
+[NOTE] 2026-05-19 — Deduplicate app.yaml search/profile overlap; migrate code callsites
+Topics: config-schema, deduplication, search-config, work-mode
+Affects-phases: none
+Affects-docs: specs/changelog/2026-05.md
+Detail: Removed preferred_roles, preferred_locations, company_size_preference, industry_preference, title_exclude_keywords, remote_preference from AppProfile — all now live exclusively in SearchConfig. Added work_mode_preference scalar to SearchConfig replacing remote_preference. Updated 6 code callsites across naukri.py, engine.py, llm_scorer.py, nodes.py. Fixed bug where primary_stack (tech skills) was incorrectly overriding search.platforms. Widened notice_period to accept int or str.
+
 [NOTE] 2026-05-19 — Config schema extended with 5 new fields for better search + apply
 Topics: config-schema, education, certifications, profile-urls, seniority, company-rating
 Affects-phases: none
