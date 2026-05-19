@@ -32,9 +32,11 @@ class SearchConfig(BaseModel):
     platforms: list[str] = Field(default_factory=lambda: ["naukri"])
     preferred_roles: list[str] = Field(default_factory=list)
     role_families: list[str] = Field(default_factory=list)
+    seniority_level: list[str] = Field(default_factory=list)
     preferred_locations: list[str] = Field(default_factory=list)
     experience_range: SearchExperienceRange | None = None
     salary_range: SearchSalaryRange | None = None
+    min_company_rating: float | None = None
     company_size_preference: list[str] = Field(default_factory=list)
     company_type_preference: list[str] = Field(default_factory=list)
     industry_preference: list[str] = Field(default_factory=list)
@@ -179,6 +181,12 @@ class AppConfig(BaseModel):
     profile_enrichment: ProfileEnrichment | None = None
 
 
+class UserProfileUrls(BaseModel):
+    github: str | None = None
+    linkedin: str | None = None
+    portfolio: str | None = None
+
+
 class UserProfile(BaseModel):
     name: str | None = None
     email: str | None = None
@@ -196,6 +204,7 @@ class UserProfile(BaseModel):
     last_working_day: str | None = None
     pan_number: str | None = None
     alternate_email: str | None = None
+    urls: UserProfileUrls = Field(default_factory=UserProfileUrls)
     additional_info: dict[str, Any] = Field(default_factory=dict)
     custom_requirements: list[str] = Field(default_factory=list)
 
@@ -207,6 +216,7 @@ class UserExperience(BaseModel):
     primary_stack: list[str] = Field(default_factory=list)
     secondary_stack: list[str] = Field(default_factory=list)
     domain_experience: dict[str, int] = Field(default_factory=dict)
+    certifications: list[str] = Field(default_factory=list)
     achievements: list[str] = Field(default_factory=list)
 
 
@@ -263,8 +273,17 @@ class ProfileEnrichment(BaseModel):
     additional_skills: list[str] = Field(default_factory=list)
 
 
+class UserEducation(BaseModel):
+    degree: str | None = None
+    specialization: str | None = None
+    institution: str | None = None
+    graduation_year: int | None = None
+    grade: str | None = None  # CGPA or percentage, e.g. "8.5 CGPA" or "78%"
+
+
 class UserConfig(BaseModel):
     profile: UserProfile = Field(default_factory=UserProfile)
+    education: list[UserEducation] = Field(default_factory=list)
     experience: UserExperience = Field(default_factory=UserExperience)
     narrative: UserNarrative = Field(default_factory=UserNarrative)
     screening_answers: ScreeningAnswersConfig = Field(default_factory=ScreeningAnswersConfig)
@@ -472,9 +491,11 @@ def create_app_template() -> dict[str, Any]:
             "platforms": ["naukri"],
             "preferred_roles": [],
             "role_families": [],
+            "seniority_level": [],
             "preferred_locations": [],
             "experience_range": None,
             "salary_range": None,
+            "min_company_rating": None,
             "company_size_preference": [],
             "company_type_preference": [],
             "industry_preference": [],
@@ -567,9 +588,15 @@ def create_user_template() -> dict[str, Any]:
             "last_working_day": None,
             "pan_number": None,
             "alternate_email": None,
+            "urls": {
+                "github": None,
+                "linkedin": None,
+                "portfolio": None,
+            },
             "additional_info": {},
             "custom_requirements": [],
         },
+        "education": [],
         "experience": {
             "total_experience_years": None,
             "skills_with_experience": {},
@@ -577,6 +604,7 @@ def create_user_template() -> dict[str, Any]:
             "primary_stack": [],
             "secondary_stack": [],
             "domain_experience": {},
+            "certifications": [],
             "achievements": [],
         },
         "narrative": {

@@ -3,6 +3,8 @@ search:
   - naukri
   preferred_roles:
   - QA Automation Engineer
+  role_families: []
+  seniority_level: []
   preferred_locations:
   - Bangalore
   - Hyderabad
@@ -12,6 +14,7 @@ search:
   salary_range:
     min_lpa: 10
     max_lpa: 30
+  min_company_rating: null
   company_size_preference: []
   company_type_preference: []
   industry_preference: []

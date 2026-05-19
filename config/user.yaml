@@ -15,8 +15,18 @@ profile:
   last_working_day: null
   pan_number: null
   alternate_email: null
+  urls:
+    github: null
+    linkedin: null
+    portfolio: null
   additional_info: {}
   custom_requirements: []
+education:
+- degree: null
+  specialization: null
+  institution: null
+  graduation_year: null
+  grade: null
 experience:
   total_experience_years: null
   skills_with_experience: {}
@@ -24,6 +34,7 @@ experience:
   primary_stack: []
   secondary_stack: []
   domain_experience: {}
+  certifications: []
   achievements: []
 narrative:
   career_goal: null

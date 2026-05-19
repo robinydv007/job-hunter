@@ -42,6 +42,12 @@ Affects-phases: none
 Affects-docs: specs/status.md, specs/phases/phase-3.2-config-strategy-revamp/tasks.md
 Detail: tasks.md and status.md were out of sync with actual implementation state. Updated tasks.md to mark 3.2a and 3.2b complete, 3.2c tests as deferred. Status.md updated to list Phase 3.2 as complete.
 
+[NOTE] 2026-05-19 — Config schema extended with 5 new fields for better search + apply
+Topics: config-schema, education, certifications, profile-urls, seniority, company-rating
+Affects-phases: none
+Affects-docs: specs/changelog/2026-05.md
+Detail: Added UserEducation model (degree/specialization/institution/year/grade) and UserProfileUrls (github/linkedin/portfolio) to user.yaml; added certifications list to UserExperience; added seniority_level list and min_company_rating float to SearchConfig in app.yaml. All templates and live configs updated. 33 tests still passing.
+
 [NOTE] 2026-05-19 — 3.2c tests implemented — 33 passing
 Topics: config-tests, csv-export-stability, backward-compat, bootstrap, non-overwrite, resume-seeding
 Affects-phases: none
