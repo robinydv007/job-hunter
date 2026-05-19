@@ -1,0 +1,15 @@
+naukri:
+  enabled: true
+  login_required: true
+  headless: false
+  page_timeout: null
+  max_pages: null
+  delay_between_pages: null
+  search: {}
+  apply: {}
+  custom_requirements: []
+linkedin:
+  enabled: null
+  search: {}
+  apply: {}
+  custom_requirements: []

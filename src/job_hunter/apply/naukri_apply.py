@@ -565,16 +565,40 @@ async def get_llm_answers(
 ) -> dict[str, str]:
     """Get LLM-generated answers for all questions."""
     from job_hunter.llm.provider import get_llm
+    from job_hunter.config import get_screening_answers, load_user_config
     import json
 
     llm = get_llm()
 
-    # Include type so LLM knows when to give a short option value vs free text
     question_list = "\n".join(
         f"- {q['id']}: {q['name']} [type: {q['type']}]" for q in questions
     )
 
     profile_context = _build_profile_context(profile, detailed_profile)
+
+    # Build screening context from user config (backward compat)
+    screening = get_screening_answers()
+    user_cfg = load_user_config()
+    if user_cfg.screening_answers.answers:
+        screening_override = user_cfg.screening_answers.answers
+    else:
+        screening_override = {}
+
+    screening_context_parts = []
+    defaults = user_cfg.screening_answers.defaults
+    if defaults.notice_period:
+        screening_context_parts.append(f"- Notice Period: {defaults.notice_period}")
+    if defaults.expected_ctc_lpa:
+        screening_context_parts.append(f"- Expected CTC: {defaults.expected_ctc_lpa} LPA")
+    if defaults.current_ctc_lpa:
+        screening_context_parts.append(f"- Current CTC: {defaults.current_ctc_lpa} LPA")
+    if defaults.willing_to_relocate is not None:
+        screening_context_parts.append(f"- Willing to Relocate: {'yes' if defaults.willing_to_relocate else 'no'}")
+    for key, value in screening_override.items():
+        if value:
+            screening_context_parts.append(f"- {key}: {value}")
+
+    screening_context = "\n".join(screening_context_parts) if screening_context_parts else "No screening answers configured."
 
     prompt = f"""You are a job seeker filling out a job application form on Naukri.
 Answer ALL questions concisely. Return a JSON object mapping question ID to your answer.
@@ -587,10 +611,7 @@ CRITICAL RULES:
   (the system will handle eligibility separately).
 
 SCREENING ANSWERS:
-- Notice Period: {config.screening.screening_answers.notice_period}
-- Expected CTC: {config.screening.screening_answers.expected_ctc_lpa} LPA
-- Current CTC: {config.screening.screening_answers.current_ctc_lpa} LPA
-- Willing to Relocate: {config.screening.screening_answers.willing_to_relocate}
+{screening_context}
 
 {profile_context}
 

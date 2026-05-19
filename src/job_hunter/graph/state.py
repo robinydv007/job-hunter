@@ -6,7 +6,7 @@ from typing import Any
 
 from typing_extensions import TypedDict
 
-from job_hunter.config import AppConfig
+from job_hunter.config import AppConfig, UserConfig, PlatformConfig
 from job_hunter.resume.schema import ResumeProfile
 
 
@@ -39,6 +39,8 @@ class ScoredJob(TypedDict, total=False):
 
 class JobHunterState(TypedDict, total=False):
     config: AppConfig
+    user_config: UserConfig | None
+    platform_config: PlatformConfig | None
     resume_path: str
     force_parse: bool  # Force re-parse resume even if cache exists
     profile: ResumeProfile | None

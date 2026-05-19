@@ -1,5 +1,5 @@
 # Project Status
-**Last Updated**: 2026-04-15  
+**Last Updated**: 2026-05-19  
 **Current Phase**: Phase 3.0 — Async Architecture Foundation (`planned`)  
 **Latest Release**: v0.2.1  
 **Health**: On Track ✅
@@ -15,6 +15,7 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 | 1 | MVP Core Pipeline | ✅ Complete | v0.1.0 |
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | v0.2.0 |
 | 2b | Auto-Apply & Batch Screening | ✅ Complete | v0.2.1 |
+| 3.2 | Config Strategy Revamp | ✅ Complete | — |
 
 ## Active Phase
 *(Phase 3.0 NOT STARTED - Planned)*
@@ -41,8 +42,9 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 | ENH-017 | Enhancement | Reorder pipeline: parse resume before login — **planned for Phase 3.0** (2 failed attempts, async/sync conflict) |
 
 ## Next Actions
-1. Start Phase 3.0 (async architecture foundation — resolves ENH-017)
-2. After Phase 3.0: Phase 3.1 (multi-platform search, enabled by async architecture)
+1. Merge `feat/phase-3.2-config-strategy-revamp` to `main`
+2. Start Phase 3.0 (async architecture foundation — resolves ENH-017)
+3. After Phase 3.0: Phase 3.1 (multi-platform search, enabled by async architecture)
 
 ## Key Decisions Made
 - **UV** chosen as Python package manager (speed + native lockfile)
@@ -56,6 +58,11 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 - **ENH-017 deferred to Phase 3.0**: login reorder blocked by async/sync conflict with `nest_asyncio`; CLI-based login sufficient for Phase 2b
 
 ## Recent Changes
+- 2026-05-19: docs(status) — mark Phase 3.2 complete; update tracking files to reflect e2e test pass
+- 2026-04-23: docs(phase-3.2) — added execution order and exit criteria for implementation start
+- 2026-04-23: docs(phase-3.2) — structured config revamp into 3 subphases
+- 2026-04-23: docs(phase-3.2) — expanded final field contract and code impact map for config strategy revamp
+- 2026-04-23: docs(phase-3.2) — created Config Strategy Revamp phase spec and synced roadmap/index/status
 - 2026-04-22: enh(ENH-022) — add user-owned config/profile.yaml for overrides and enrichment (survives re-parse)
 - 2026-04-22: enh(ENH-021) — merge resume cache to single profile_cache.json; consolidated profile.json + profile_detailed.yaml
 - 2026-04-09: docs(spec) — created Phase 3.0 spec: Async Architecture Foundation (resolves ENH-017)
