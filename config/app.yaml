@@ -1,19 +1,12 @@
 search:
   platforms:
   - naukri
-  preferred_roles:
-  - QA Engineer
+  preferred_roles: []
   role_families: []
-  seniority_level: ['mid', 'high']
-  preferred_locations:
-  - Bangalore
-  - Hyderabad
-  experience_range:
-    min: 6
-    max: 10
-  salary_range:
-    min_lpa: 10
-    max_lpa: 30
+  seniority_level: []
+  preferred_locations: []
+  experience_range: null
+  salary_range: null
   min_company_rating: null
   company_size_preference: []
   company_type_preference: []
@@ -24,13 +17,11 @@ search:
   excluded_companies: []
   excluded_keywords: []
   included_keywords: []
-  title_exclude_keywords: ['devops']
-  freshness_days: 7
-  max_jobs: 10
-  max_jobs_per_query: 10
+  title_exclude_keywords: []
+  freshness_days: null
+  max_jobs: null
+  max_jobs_per_query: 20
   custom_requirements: []
-  delay_min_seconds: 3.0
-  delay_max_seconds: 5.0
 scoring:
   shortlist_threshold: 30
   apply_threshold: 75
@@ -42,27 +33,30 @@ scoring:
     location: 0.08
     work_mode: 0.07
   llm_scoring:
-    enabled: true
-    batch_size: 10
-    shortlist_threshold: 50
+    enabled: false
+    batch_size: null
+    shortlist_threshold: null
+    apply_threshold: null
     custom_requirements: []
+    consider_location: false
+    consider_work_mode: false
 auto_apply:
-  enabled: true
-  max_per_day: 10
-  max_per_run: 3
-  delay_between_seconds: 5
-  require_confirmation: false
-  skip_if_already_applied: true
+  enabled: false
+  max_per_day: null
+  max_per_run: null
+  delay_between_seconds: null
+  require_confirmation: null
+  skip_if_already_applied: null
   custom_requirements: []
 screening:
-  enabled: true
+  enabled: false
   batch_size: null
   custom_requirements: []
 profile:
-  name: Jordan Lee
-  total_experience: 5
-  expected_salary_lpa: 20
-  notice_period: 30 days
+  name: ''
+  total_experience: 0
+  expected_salary_lpa: 0
+  notice_period: ''
   resume_path: resume.pdf
 naukri:
   login_required: true

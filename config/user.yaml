@@ -1,96 +1,58 @@
 profile:
-  name: "Jordan Lee"
-  email: "jordan.lee.qa@example.com"
-  phone: "+91-9XXXXXXXXX"
-  current_location: "Bangalore, India"
-  notice_period_days: 30
-  serving_notice_period: false
-  currently_working: true
-  current_company: "TechCorp QA Inc."
-  current_designation: "Senior QA Automation Engineer"
-  current_ctc_lpa: 12.0
-  previous_company: "Previous QA Solutions"
-  previous_designation: "QA Automation Engineer"
-  previous_ctc_lpa: 8.0
+  name: null
+  email: null
+  phone: null
+  current_location: null
+  notice_period_days: null
+  serving_notice_period: null
+  currently_working: null
+  current_company: null
+  current_designation: null
+  current_ctc_lpa: null
+  previous_company: null
+  previous_designation: null
+  previous_ctc_lpa: null
   last_working_day: null
-  pan_number: "ABCDE1234F"
-  alternate_email: "jordan.lee.alt@example.com"
+  pan_number: null
+  alternate_email: null
   urls:
-    github: "https://github.com/jordanlee-qa"
-    linkedin: "https://linkedin.com/in/jordanlee-qa"
-    portfolio: "https://jordanlee-qa.dev"
+    github: null
+    linkedin: null
+    portfolio: null
   additional_info: {}
   custom_requirements: []
-education:
-- degree: "B.Tech"
-  specialization: "Computer Science"
-  institution: "National Institute of Technology"
-  graduation_year: 2021
-  grade: "8.5 CGPA"
+education: []
 experience:
-  total_experience_years: 5
-  skills_with_experience:
-    Java: 5
-    Python: 5
-    JavaScript: 5
-    Selenium: 5
-    Cypress: 3
-    Playwright: 2
-    TestNG: 5
-    JUnit: 5
-    PyTest: 3
-    Jenkins: 3
-    GitHub Actions: 2
-    Postman: 3
-    RestAssured: 2
-    MySQL: 3
-    MongoDB: 2
+  total_experience_years: null
+  skills_with_experience: {}
   aliases: {}
-  primary_stack:
-  - Java
-  - Python
-  - Selenium
-  - TestNG
-  - JUnit
-  secondary_stack:
-  - Cypress
-  - Playwright
-  - Jenkins
-  - GitHub Actions
-  - Postman
-  domain_experience:
-    Software: 5
-  certifications:
-  - "ISTQB Foundation Level"
-  - "AWS Certified Cloud Practitioner"
-  achievements:
-  - "Developed automation framework reducing manual testing effort by 50%"
-  - "Improved regression testing coverage significantly"
-  - "Enhanced test reliability and reduced flaky tests"
+  primary_stack: []
+  secondary_stack: []
+  domain_experience: {}
+  certifications: []
+  achievements: []
 narrative:
-  career_goal: "To leverage my 5 years of QA automation experience to build robust, scalable testing frameworks in a senior engineering role."
-  strengths: "Test Automation, CI/CD Integration, API Testing, Regression Testing"
-  what_i_bring: "QA Automation Engineer with 5 years of experience in designing and implementing automated testing frameworks. Skilled in improving product quality through robust testing strategies, CI/CD integration, and test automation. Experienced in reducing manual testing effort and improving regression testing coverage."
-  reason_for_change: "Looking for better career growth opportunities and challenging projects."
-  preferred_company_type:
-  - "Product based"
-  - "MNC"
-  preferred_work_style: "Hybrid"
+  career_goal: null
+  strengths: null
+  what_i_bring: null
+  reason_for_change: null
+  preferred_company_type: []
+  preferred_work_style: null
   custom: {}
 screening_answers:
-  enabled: true
+  enabled: false
   defaults:
-    current_ctc_lpa: 12.0
-    expected_ctc_lpa: 18.0
-    notice_period: 30
-    reason_for_change: "Looking for better career growth opportunities and challenging projects."
-    visa_status: "Citizen"
-    remote_work_preference: "Hybrid"
-    willing_to_relocate: true
-    comfortable_with_shifts: false
-    work_authorization: "Authorized to work in India"
-    background_check_consent: true
-    references_available: true
+    current_ctc_lpa: null
+    expected_ctc_lpa: null
+    notice_period: null
+    reason_for_change: null
+    visa_status: null
+    remote_work_preference: null
+    willing_to_relocate: null
+    comfortable_with_shifts: null
+    work_authorization: null
+    background_check_consent: null
+    references_available: null
   answers: {}
   role_specific: {}
   custom_requirements: []
