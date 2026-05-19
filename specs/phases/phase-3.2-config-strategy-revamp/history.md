@@ -59,3 +59,9 @@ Topics: config-tests, csv-export-stability, backward-compat, bootstrap, non-over
 Affects-phases: none
 Affects-docs: specs/phases/phase-3.2-config-strategy-revamp/tasks.md
 Detail: Created tests/test_config.py with 33 unit tests covering all 3.2c categories: missing-file bootstrap, non-overwrite behavior, backward compat old field migration, config precedence and defaults, resume seeding, platform/role-family overrides, and CSV export column schema stability. All 33 tests pass.
+
+[FEATURE] 2026-05-19 — Auto-seed app.yaml + user.yaml from resume on first create
+Topics: config-seeding, ensure-config-files-exist, seed-config-from-profile, bootstrap
+Affects-phases: none
+Affects-docs: specs/changelog/2026-05.md
+Detail: Extended ensure_config_files_exist to seed app.yaml (preferred_roles, preferred_locations) and user.yaml (skills_with_experience) from resume profile. Added seed_config_from_profile() for post-pipeline reseeding on fresh starts (no cache + force-parse). CLI run command calls seed_config_from_profile after pipeline when files were freshly created. Return type of ensure_config_files_exist changed to dict[str, bool].

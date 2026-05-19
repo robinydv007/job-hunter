@@ -114,9 +114,9 @@ def test_ensure_config_files_exist_partial_missing_creates_only_absent(isolated_
 
     created = ensure_config_files_exist()
 
-    assert config_dir / "app.yaml" not in created
-    assert config_dir / "user.yaml" in created
-    assert config_dir / "platform.yaml" in created
+    assert str(config_dir / "app.yaml") not in created
+    assert str(config_dir / "user.yaml") in created
+    assert str(config_dir / "platform.yaml") in created
 
 
 def test_ensure_config_files_exist_no_files_created_when_all_exist(isolated_config):

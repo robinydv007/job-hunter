@@ -12,6 +12,7 @@ from rich.panel import Panel
 from job_hunter.config import (
     bootstrap_config,
     build_effective_config,
+    seed_config_from_profile,
 )
 from job_hunter.graph.workflow import build_workflow
 from job_hunter.browser import BrowserManager
@@ -123,6 +124,15 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
             workflow = build_workflow()
             result = await workflow.ainvoke(initial_state)
 
+            if bootstrap_result.get("created"):
+                parsed_profile = result.get("profile")
+                detailed = result.get("detailed_profile")
+                if parsed_profile:
+                    seed_config_from_profile(parsed_profile, detailed, bootstrap_result["created"])
+                    console.print(
+                        "[dim]Config files seeded from resume. Edit them to customise.[/]"
+                    )
+
             console.print(
                 Panel("[bold green]Pipeline complete![/]", border_style="green")
             )
@@ -203,11 +213,11 @@ def init():
 
     bootstrap_result = bootstrap_config()
 
-    for path, created in bootstrap_result["created"].items():
-        if created:
+    if bootstrap_result["created"]:
+        for path in bootstrap_result["created"]:
             console.print(f"[green]Created: {path}[/]")
-        else:
-            console.print(f"[dim]Exists: {path}[/]")
+    else:
+        console.print("[dim]All config files already exist.[/]")
 
     console.print("[green]Ready! Edit config files and run:[/]")
     console.print("  [bold]job-hunter run --resume your_resume.pdf[/]")
