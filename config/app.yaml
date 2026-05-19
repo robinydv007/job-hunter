@@ -45,7 +45,6 @@ scoring:
     enabled: true
     batch_size: 10
     shortlist_threshold: 50
-    apply_threshold: 70
     custom_requirements: []
 auto_apply:
   enabled: true

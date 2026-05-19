@@ -115,14 +115,14 @@ def _format_tech_experience(tech_experience: dict[str, Any] | None, limit: int =
 def _build_profile_context(profile: Any, detailed_profile: dict[str, Any] | None) -> str:
     basic_context = f"""PROFILE:
 - Experience: {profile.total_experience_years} years
-- Skills: {", ".join(profile.skills[:10])}
+- Skills: {", ".join(profile.skills)}
 - Current Role: {profile.past_roles[0] if profile.past_roles else "N/A"}
 """
 
     if detailed_profile:
         detailed_lines = [
             "Use this as supplemental context only. Do not override the basic profile.",
-            f"- Tech experience: {_format_tech_experience(detailed_profile.get('tech_experience'))}",
+            f"- Tech experience: {_format_tech_experience(detailed_profile.get('tech_experience'), limit=30)}",
             f"- Achievements: {_format_list_items(detailed_profile.get('achievements'))}",
             f"- Challenges solved: {_format_list_items(detailed_profile.get('challenges_solved'))}",
             f"- Interests: {_format_list_items(detailed_profile.get('interests'))}",
@@ -607,8 +607,13 @@ CRITICAL RULES:
 - For 'Radio Button' or 'single_select' type questions: answer with ONLY the exact option value,
   typically 'yes' or 'no'. Never write full sentences for radio buttons.
 - For 'Text Box' questions: give a brief, direct answer (1-2 sentences max).
-- If a question says 'don't apply if...' and you do NOT qualify, still answer honestly & if no context then only answer no or 0.
+- If a question says 'don't apply if...' and you do NOT qualify, still answer honestly.
   (the system will handle eligibility separately).
+- For "years of experience with X" questions: check Tech Experience first. If X is listed,
+  use that value exactly. If X appears in Skills but not in Tech Experience, use the total
+  experience years as a reasonable answer. NEVER answer 0 for a technology the candidate
+  clearly knows.
+- For yes/no eligibility questions with no relevant context: default to "no".
 
 SCREENING ANSWERS:
 {screening_context}

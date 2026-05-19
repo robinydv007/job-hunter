@@ -112,7 +112,6 @@ class ScoringLLMConfig(BaseModel):
     enabled: bool = False
     batch_size: int | None = None
     shortlist_threshold: int | None = None
-    apply_threshold: int | None = None
     custom_requirements: list[str] = Field(default_factory=list)
     consider_location: bool = False
     consider_work_mode: bool = False
