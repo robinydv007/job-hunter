@@ -756,14 +756,10 @@ def seed_config_from_profile(
 def bootstrap_config(resume_path: str | Path | None = None) -> dict[str, Any]:
     """Bootstrap config: ensure files exist, load effective config.
 
-    If resume_path provided and cache exists, also load for seeding.
+    Always tries to seed from profile cache so deleted config files are
+    re-created with real values on the very first run after deletion.
     """
-    resume_profile = None
-    if resume_path:
-        resume_profile = load_resume_profile(
-            DATA_DIR / "profile_cache.json" if resume_path else None
-        )
-
+    resume_profile = load_resume_profile()  # None if cache missing — that's fine
     created = ensure_config_files_exist(resume_profile)
     effective = build_effective_config()
     return {
