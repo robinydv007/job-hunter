@@ -83,6 +83,8 @@ class BrowserManager:
                 return False
 
             _email_selectors = [
+                '#usernameField',
+                'input[id="usernameField"]',
                 'input[placeholder*="Email ID"]',
                 'input[placeholder*="email"]',
                 'input[type="email"]',
@@ -95,10 +97,14 @@ class BrowserManager:
             ]
             email_input = None
             for sel in _email_selectors:
-                loc = self._page.locator(sel).first
-                if await loc.count() > 0:
-                    email_input = loc
-                    break
+                try:
+                    loc = self._page.locator(sel).first
+                    await loc.wait_for(state="attached", timeout=3000)
+                    if await loc.count() > 0:
+                        email_input = loc
+                        break
+                except Exception:
+                    continue
 
             if email_input is None:
                 print("[ERROR] Could not find email input")
@@ -125,21 +131,38 @@ class BrowserManager:
 
             await asyncio.sleep(1)
 
+            clicked = False
             _btn_selectors = [
-                'button:has-text("Login")',
-                'button:has-text("Sign in")',
                 'button[type="submit"]',
                 'input[type="submit"]',
+                'button:has-text("Login")',
+                'button:has-text("Sign in")',
             ]
             for sel in _btn_selectors:
                 btn = self._page.locator(sel).first
                 if await btn.count() > 0:
+                    print(f"[INFO] Clicking login button: {sel}")
                     await btn.click()
+                    clicked = True
                     break
 
-            await asyncio.sleep(5)
+            if not clicked:
+                # Last resort: submit via Enter key on password field
+                print("[INFO] No button found, submitting via Enter key")
+                if pass_input:
+                    await pass_input.press("Enter")
+
+            # Wait for navigation away from login page (up to 10s)
+            try:
+                await self._page.wait_for_url(
+                    lambda url: "login" not in url.lower() and "nlogin" not in url.lower(),
+                    timeout=10000,
+                )
+            except Exception:
+                pass  # check URL manually below
 
             current_url = self._page.url
+            print(f"[INFO] Post-login URL: {current_url}")
             if "login" in current_url.lower() or "nlogin" in current_url.lower():
                 print("[ERROR] Still on login page. Check credentials or CAPTCHA.")
                 return False
