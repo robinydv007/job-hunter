@@ -1,14 +1,14 @@
 # Phase 3.0 — Tasks: Async Architecture Foundation
 
-> **Status: NOT STARTED** — Awaiting Phase 2b completion
+> **Status: IN PROGRESS** — Prerequisites met; core async work + login node remaining
 
-## Prerequisites (Must complete Phase 2b first)
+## Prerequisites
 
-- [ ] Phase 2b Auto-Apply pipeline is stable and tested
-- [ ] All existing nodes working end-to-end
-- [ ] `apply_jobs_node` functional with CLI-based login
-- [ ] CSV export with apply status columns working
-- [ ] Git branch created for Phase 3.0 work (isolated from main)
+- [x] Phase 2b Auto-Apply pipeline is stable and tested (v0.2.1)
+- [x] All existing nodes working end-to-end
+- [x] `apply_jobs_node` functional with CLI-based login
+- [x] CSV export with apply status columns working
+- [x] Git branch created for Phase 3.0 work (isolated from main)
 
 ## Task Checklist
 
@@ -36,26 +36,17 @@
   - [x] Subsequent runs use cache without LLM call
 - [x] Related: ENH-022 (user-owned profile.yaml) builds on this
 
-### 1. Convert search_naukri to Native Async
-- [ ] Refactor `src/job_hunter/search/naukri.py`:
-  - Change `def search_naukri()` → `async def search_naukri()`
-  - Remove `import asyncio` and `import nest_asyncio` from inside function
-  - Remove `nest_asyncio.apply()` call
-  - Remove `loop = asyncio.get_event_loop()` and all `loop.run_until_complete()` calls
-  - Replace `loop.run_until_complete(scrape_jobs_from_page(...))` → `await scrape_jobs_from_page(...)`
-  - Replace `loop.run_until_complete(asyncio.sleep(delay))` → `await asyncio.sleep(delay)`
-- [ ] Verify: `search_naukri()` no longer uses `nest_asyncio` or `loop.run_until_complete`
-- [ ] Test: Call `await search_naukri()` directly from an async context — produces same results
+### 1. Convert search_naukri to Native Async ✅ Done (Phase 3.2)
+- [x] Refactor `src/job_hunter/search/naukri.py`:
+  - `search_naukri()` is already `async def` — no nest_asyncio or loop.run_until_complete
+- [x] Verify: `search_naukri()` no longer uses `nest_asyncio` or `loop.run_until_complete`
+- [x] Test: Confirmed working in Phase 3.2 e2e test
 
-### 2. Convert parse_resume_node to Native Async
-- [ ] Refactor `src/job_hunter/graph/nodes.py`:
-  - Change `def parse_resume_node()` → `async def parse_resume_node()`
-  - Remove `import asyncio` and `import nest_asyncio` from inside function
-  - Remove `nest_asyncio.apply()` call
-  - Remove `loop = asyncio.get_event_loop()` and `loop.run_until_complete()`
-  - Replace `loop.run_until_complete(parse_resume_full(...))` → `await parse_resume_full(...)`
-- [ ] Verify: `parse_resume_node()` no longer uses `nest_asyncio`
-- [ ] Test: Resume parsing works with `await` in async context
+### 2. Convert parse_resume_node to Native Async ✅ Done (Phase 3.2)
+- [x] Refactor `src/job_hunter/graph/nodes.py`:
+  - `parse_resume_node()` is already `async def` — native await used
+- [x] Verify: `parse_resume_node()` no longer uses `nest_asyncio`
+- [x] Test: Confirmed working in Phase 3.2 e2e test
 
 ### 3. Convert All Remaining Nodes to Async
 - [ ] Change all node signatures to `async def`:
@@ -101,13 +92,14 @@
 
 ### 7. Update CLI
 - [ ] Remove `browser.login_naukri()` call and its error handling from `cli.py`
-- [ ] Change `workflow.invoke(initial_state)` → `await workflow.ainvoke(initial_state)`
+- [x] `workflow.ainvoke(initial_state)` already in use — no change needed
 - [ ] Keep browser start/close lifecycle unchanged
 - [ ] Keep all other CLI logic unchanged (resume path resolution, config validation, etc.)
 - [ ] Test: `job-hunter run --resume resume.pdf` works end-to-end
 
 ### 8. Remove nest_asyncio Dependency
-- [ ] Search entire codebase for `nest_asyncio` — verify no remaining imports
+- [ ] In `src/job_hunter/scoring/llm_scorer.py`: replace `nest_asyncio.apply()` in `score_jobs_with_llm_sync()` with `asyncio.run()` — no behavioral change, no dependency
+- [ ] Search entire codebase for remaining `nest_asyncio` imports — verify none left
 - [ ] Search entire codebase for `loop.run_until_complete` — verify no remaining calls
 - [ ] Remove `nest-asyncio` from `pyproject.toml` dependencies
 - [ ] Run `uv sync` to verify dependency removal
