@@ -75,36 +75,67 @@ class BrowserManager:
                 wait_until="domcontentloaded",
                 timeout=30000,
             )
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
 
             html = await self._page.content()
             if "Access Denied" in html or len(html) < 1000:
                 print("[ERROR] Login page blocked by bot protection")
                 return False
 
-            email_input = self._page.locator('input[placeholder*="Email ID"]').first
-            if await email_input.count() == 0:
-                email_input = self._page.locator('input[type="email"]').first
-            if await email_input.count() == 0:
+            _email_selectors = [
+                'input[placeholder*="Email ID"]',
+                'input[placeholder*="email"]',
+                'input[type="email"]',
+                'input[id*="email" i]',
+                'input[id*="username" i]',
+                'input[name*="email" i]',
+                'input[name*="username" i]',
+                'input[autocomplete="username"]',
+                'input[autocomplete="email"]',
+            ]
+            email_input = None
+            for sel in _email_selectors:
+                loc = self._page.locator(sel).first
+                if await loc.count() > 0:
+                    email_input = loc
+                    break
+
+            if email_input is None:
                 print("[ERROR] Could not find email input")
                 return False
 
-            await email_input.wait_for(state="visible", timeout=5000)
+            await email_input.wait_for(state="visible", timeout=8000)
             await email_input.fill(email)
 
-            pass_input = self._page.locator('input[type="password"]').first
-            if await pass_input.count() > 0:
+            _pass_selectors = [
+                'input[type="password"]',
+                'input[placeholder*="password" i]',
+                'input[id*="password" i]',
+                'input[name*="password" i]',
+            ]
+            pass_input = None
+            for sel in _pass_selectors:
+                loc = self._page.locator(sel).first
+                if await loc.count() > 0:
+                    pass_input = loc
+                    break
+
+            if pass_input:
                 await pass_input.fill(password)
 
             await asyncio.sleep(1)
 
-            login_btn = self._page.locator('button:has-text("Login")').first
-            if await login_btn.count() > 0:
-                await login_btn.click()
-            else:
-                submit = self._page.locator('button[type="submit"]').first
-                if await submit.count() > 0:
-                    await submit.click()
+            _btn_selectors = [
+                'button:has-text("Login")',
+                'button:has-text("Sign in")',
+                'button[type="submit"]',
+                'input[type="submit"]',
+            ]
+            for sel in _btn_selectors:
+                btn = self._page.locator(sel).first
+                if await btn.count() > 0:
+                    await btn.click()
+                    break
 
             await asyncio.sleep(5)
 

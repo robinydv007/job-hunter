@@ -15,7 +15,8 @@
       "Bash(find . -name \"profile.yaml\" -o -name \"profile_cache.json\")",
       "Bash(Select-String -Path \"tests\\\\test_config.py\" -Pattern \"in created\")",
       "Bash(Select-Object LineNumber, Line)",
-      "Bash(uv add *)"
+      "Bash(uv add *)",
+      "Bash(xargs grep -l \"email.*input\\\\|emailInput\\\\|nlogin\")"
     ]
   }
 }
