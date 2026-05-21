@@ -12,11 +12,12 @@ from pydantic import SecretStr
 
 load_dotenv()
 
-_SUPPORTED_PROVIDERS = ("groq", "openai")
+_SUPPORTED_PROVIDERS = ("groq", "openai", "claude")
 
 _DEFAULT_MODELS = {
     "groq": "llama-3.3-70b-versatile",
     "openai": "gpt-4o",
+    "claude": "claude-sonnet-4-6",
 }
 
 
@@ -36,6 +37,14 @@ def _build_llm(provider: str, model: str) -> BaseChatModel:
         if not api_key:
             raise ValueError("OPENAI_API_KEY not set")
         return ChatOpenAI(model=model, api_key=SecretStr(api_key), temperature=0)
+
+    if provider == "claude":
+        from langchain_anthropic import ChatAnthropic
+
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not set")
+        return ChatAnthropic(model=model, api_key=SecretStr(api_key), temperature=0)  # type: ignore[call-arg]
 
     raise ValueError(
         f"Unsupported provider '{provider}'. Supported: {_SUPPORTED_PROVIDERS}"
@@ -76,13 +85,16 @@ class LLMProvider:
 
         fallback_cfg = _resolve_provider_config("fallback")
         if fallback_cfg is None:
-            # Backwards-compatible default: openai fallback (only if key exists)
-            openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-            groq_key = os.getenv("GROQ_API_KEY", "").strip()
-            if self._primary_provider == "groq" and openai_key:
-                fallback_cfg = ("openai", _DEFAULT_MODELS["openai"])
-            elif self._primary_provider == "openai" and groq_key:
-                fallback_cfg = ("groq", _DEFAULT_MODELS["groq"])
+            # Backwards-compatible default: pick the first available key that isn't primary
+            _key_map = {
+                "groq": os.getenv("GROQ_API_KEY", "").strip(),
+                "openai": os.getenv("OPENAI_API_KEY", "").strip(),
+                "claude": os.getenv("ANTHROPIC_API_KEY", "").strip(),
+            }
+            for candidate in ("openai", "groq", "claude"):
+                if candidate != self._primary_provider and _key_map[candidate]:
+                    fallback_cfg = (candidate, _DEFAULT_MODELS[candidate])
+                    break
         self._fallback_provider = fallback_cfg[0] if fallback_cfg else None
         self._fallback_model = fallback_cfg[1] if fallback_cfg else None
 

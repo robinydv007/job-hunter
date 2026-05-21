@@ -14,7 +14,8 @@
       "Bash(cd /d \"D:\\\\Development\\\\Projects\\\\ai\\\\job-hunter\\\\job-hunter-repo\")",
       "Bash(find . -name \"profile.yaml\" -o -name \"profile_cache.json\")",
       "Bash(Select-String -Path \"tests\\\\test_config.py\" -Pattern \"in created\")",
-      "Bash(Select-Object LineNumber, Line)"
+      "Bash(Select-Object LineNumber, Line)",
+      "Bash(uv add *)"
     ]
   }
 }
