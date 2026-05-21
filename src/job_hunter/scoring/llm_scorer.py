@@ -134,7 +134,7 @@ def _build_prompt(
 **Priority order: Skills match > Role alignment > Experience fit > everything else.**
 
 If the job title is clearly outside the candidate's target/past roles (e.g. "Data Scientist",
-"Data Engineer", "Manager", "Lead" when candidate is not targeting those), cap the score at 45.
+"Data Engineer", "Manager", "Lead" when candidate is not targeting those), cap the score at 40.
 
 ## Output Format
 
