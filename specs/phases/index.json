@@ -25,13 +25,13 @@
     },
     "phase-3.0-async-foundation": {
       "name": "Async Architecture Foundation",
-      "status": "planned",
-      "keywords": ["async", "langgraph", "event-loop", "nest-asyncio", "login-node", "multi-platform", "pipeline-reorder", "pure-async", "event-loop-conflict", "profile-cache-consolidation", "user-owned-profile-config"]
+      "status": "in-progress",
+      "keywords": ["async", "langgraph", "event-loop", "nest-asyncio", "login-node", "login-platforms-node", "pipeline-reorder", "pure-async", "asyncio-run", "workflow-reorder", "browser-page", "logged-in-platforms"]
     },
     "phase-3.2-config-strategy-revamp": {
       "name": "Config Strategy Revamp",
-      "status": "planned",
-      "keywords": ["config-bootstrap", "config-precedence", "non-overwrite", "resume-seeding", "app-yaml", "platform-yaml", "user-yaml", "blank-defaults", "strategy-revamp"]
+      "status": "complete",
+      "keywords": ["config-bootstrap", "config-precedence", "non-overwrite", "resume-seeding", "app-yaml", "platform-yaml", "user-yaml", "blank-defaults", "strategy-revamp", "3-file-config"]
     }
   }
 }
