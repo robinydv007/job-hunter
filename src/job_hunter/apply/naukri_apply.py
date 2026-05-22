@@ -586,6 +586,8 @@ async def get_llm_answers(
 
     screening_context_parts = []
     defaults = user_cfg.screening_answers.defaults
+    if user_cfg.profile.current_location:
+        screening_context_parts.append(f"- Current Location: {user_cfg.profile.current_location}")
     if defaults.notice_period:
         screening_context_parts.append(f"- Notice Period: {defaults.notice_period}")
     if defaults.expected_ctc_lpa:
@@ -597,6 +599,13 @@ async def get_llm_answers(
     for key, value in screening_override.items():
         if value:
             screening_context_parts.append(f"- {key}: {value}")
+
+    # Surface per-skill years-of-experience from user.yaml so the LLM can answer
+    # "years of experience with X" questions accurately.
+    tech_exp = user_cfg.experience.skills_with_experience
+    if tech_exp:
+        tech_lines = [f"{skill}: {yrs} years" for skill, yrs in tech_exp.items()]
+        screening_context_parts.append(f"- Tech Experience: {'; '.join(tech_lines[:30])}")
 
     screening_context = "\n".join(screening_context_parts) if screening_context_parts else "No screening answers configured."
 
