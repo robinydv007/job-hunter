@@ -269,9 +269,7 @@ def score_jobs_with_llm_sync(
     profile: ResumeProfile,
     config: AppConfig,
 ) -> list[ScoredJob]:
-    """Synchronous wrapper for score_jobs_with_llm."""
+    """Synchronous wrapper for score_jobs_with_llm (standalone/testing use)."""
     import asyncio
-    import nest_asyncio
 
-    nest_asyncio.apply()
     return asyncio.run(score_jobs_with_llm(jobs, profile, config))

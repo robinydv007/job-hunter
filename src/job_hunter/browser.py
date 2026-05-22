@@ -53,9 +53,16 @@ class BrowserManager:
         return self._page
 
     async def login_naukri(
-        self, email: str | None = None, password: str | None = None
+        self,
+        email: str | None = None,
+        password: str | None = None,
+        page: Page | None = None,
     ) -> bool:
-        """Login to Naukri and return success status."""
+        """Login to Naukri and return success status.
+
+        Pass `page` to use an external page instead of the internally managed one.
+        This allows the graph node to call login without owning the BrowserManager.
+        """
         if not email:
             email = os.getenv("NAUKRI_EMAIL", "")
         if not password:
@@ -65,19 +72,20 @@ class BrowserManager:
             print("[ERROR] Naukri credentials not provided")
             return False
 
-        if not self._page:
-            raise RuntimeError("Browser not started. Call start() first.")
+        target_page = page or self._page
+        if not target_page:
+            raise RuntimeError("No page available. Call start() first or pass a page.")
 
         try:
             print("[INFO] Logging into Naukri...")
-            await self._page.goto(
+            await target_page.goto(
                 NAUKRI.login_url,
                 wait_until="domcontentloaded",
                 timeout=30000,
             )
             await asyncio.sleep(3)
 
-            html = await self._page.content()
+            html = await target_page.content()
             if "Access Denied" in html or len(html) < 1000:
                 print("[ERROR] Login page blocked by bot protection")
                 return False
@@ -98,7 +106,7 @@ class BrowserManager:
             email_input = None
             for sel in _email_selectors:
                 try:
-                    loc = self._page.locator(sel).first
+                    loc = target_page.locator(sel).first
                     await loc.wait_for(state="attached", timeout=3000)
                     if await loc.count() > 0:
                         email_input = loc
@@ -121,7 +129,7 @@ class BrowserManager:
             ]
             pass_input = None
             for sel in _pass_selectors:
-                loc = self._page.locator(sel).first
+                loc = target_page.locator(sel).first
                 if await loc.count() > 0:
                     pass_input = loc
                     break
@@ -139,7 +147,7 @@ class BrowserManager:
                 'button:has-text("Sign in")',
             ]
             for sel in _btn_selectors:
-                btn = self._page.locator(sel).first
+                btn = target_page.locator(sel).first
                 if await btn.count() > 0:
                     print(f"[INFO] Clicking login button: {sel}")
                     await btn.click()
@@ -154,14 +162,14 @@ class BrowserManager:
 
             # Wait for navigation away from login page (up to 10s)
             try:
-                await self._page.wait_for_url(
+                await target_page.wait_for_url(
                     lambda url: "login" not in url.lower() and "nlogin" not in url.lower(),
                     timeout=10000,
                 )
             except Exception:
                 pass  # check URL manually below
 
-            current_url = self._page.url
+            current_url = target_page.url
             print(f"[INFO] Post-login URL: {current_url}")
             if "login" in current_url.lower() or "nlogin" in current_url.lower():
                 print("[ERROR] Still on login page. Check credentials or CAPTCHA.")
@@ -189,3 +197,16 @@ class BrowserManager:
         self._browser = None
         self._context = None
         self._page = None
+
+
+async def login_platform(page: Page, platform: str) -> bool:
+    """Dispatcher: login to a named platform using an existing browser page.
+
+    Called by login_platforms_node in the graph. Credentials come from env vars.
+    Returns True on success, False on failure (does not raise).
+    """
+    if platform == "naukri":
+        mgr = BrowserManager()
+        return await mgr.login_naukri(page=page)
+    print(f"[WARN] Unknown platform for login: {platform}")
+    return False
