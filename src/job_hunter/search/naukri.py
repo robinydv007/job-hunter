@@ -132,7 +132,7 @@ def _build_search_queries(
 
 
 def _resolve_filter_value(min_val: int | None, max_val: int | None) -> int | None:
-    """Return a single filter value from an optional range.
+    """Return a single filter value — used for experience (&experience=X).
 
     Both set → median (midpoint). One set → that value. Neither → None.
     """
@@ -143,6 +143,18 @@ def _resolve_filter_value(min_val: int | None, max_val: int | None) -> int | Non
     if max_val is not None:
         return max_val
     return None
+
+
+def _resolve_ctc_filter(min_lpa: int | None, max_lpa: int | None) -> str | None:
+    """Return Naukri ctcFilter range string (e.g. '25to50').
+
+    Both set → exact range. Only min → '{min}to999'. Only max → '0to{max}'. Neither → None.
+    """
+    if min_lpa is None and max_lpa is None:
+        return None
+    lo = min_lpa if min_lpa is not None else 0
+    hi = max_lpa if max_lpa is not None else 999
+    return f"{lo}to{hi}"
 
 
 def _clean_company(name: str) -> str:
@@ -469,14 +481,14 @@ async def _build_page_url(
     location: str,
     days_old: int,
     experience_years: int | None = None,
-    salary_lpa: int | None = None,
+    ctc_filter: str | None = None,
 ) -> str:
     """Build URL for a specific page number."""
     filters = f"&jobAge={days_old}"
     if experience_years is not None:
         filters += f"&experience={experience_years}"
-    if salary_lpa is not None:
-        filters += f"&salary={salary_lpa}"
+    if ctc_filter is not None:
+        filters += f"&ctcFilter={ctc_filter}"
 
     if location:
         if page_num == 1:
@@ -499,7 +511,7 @@ async def scrape_jobs_from_page(
     max_pages: int = 1,
     user_skills: list[str] | None = None,
     experience_years: int | None = None,
-    salary_lpa: int | None = None,
+    ctc_filter: str | None = None,
 ) -> list[dict[str, Any]]:
     """Scrape jobs from Naukri search pages with pagination."""
     print(f"  Searching: {keyword}" + (f" in {location}" if location else ""))
@@ -520,7 +532,7 @@ async def scrape_jobs_from_page(
                 # Page 1: Use direct URL
                 url = await _build_page_url(
                     page_num, keyword_encoded, loc_encoded, location, days_old,
-                    experience_years=experience_years, salary_lpa=salary_lpa,
+                    experience_years=experience_years, ctc_filter=ctc_filter,
                 )
                 print(f"    Page {page_num}: {url}")
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -651,14 +663,14 @@ async def search_naukri(
         search_config.experience_range.min if search_config.experience_range else None,
         search_config.experience_range.max if search_config.experience_range else None,
     )
-    salary_filter = _resolve_filter_value(
+    ctc_filter = _resolve_ctc_filter(
         int(search_config.salary_range.min_lpa) if search_config.salary_range and search_config.salary_range.min_lpa else None,
         int(search_config.salary_range.max_lpa) if search_config.salary_range and search_config.salary_range.max_lpa else None,
     )
     if exp_filter is not None:
         print(f"  [INFO] Experience filter: {exp_filter} years")
-    if salary_filter is not None:
-        print(f"  [INFO] Salary filter: {salary_filter} LPA")
+    if ctc_filter is not None:
+        print(f"  [INFO] CTC filter: {ctc_filter} LPA")
 
     jobs_per_page_estimate = 20
     max_pages_needed = min(
@@ -678,7 +690,7 @@ async def search_naukri(
                 max_pages=max_pages_needed,
                 user_skills=user_skills,
                 experience_years=exp_filter,
-                salary_lpa=salary_filter,
+                ctc_filter=ctc_filter,
             )
 
             for job in jobs:
