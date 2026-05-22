@@ -145,16 +145,43 @@ def _resolve_filter_value(min_val: int | None, max_val: int | None) -> int | Non
     return None
 
 
-def _resolve_ctc_filter(min_lpa: int | None, max_lpa: int | None) -> str | None:
-    """Return Naukri ctcFilter range string (e.g. '25to50').
+# Naukri's fixed CTC filter buckets (LPA). Must match exactly.
+_CTC_BUCKETS: list[tuple[int, int]] = [
+    (0, 3), (3, 6), (6, 10), (10, 15), (15, 25),
+    (25, 50), (50, 75), (75, 100), (100, 500), (500, 9999),
+]
 
-    Both set → exact range. Only min → '{min}to999'. Only max → '0to{max}'. Neither → None.
+
+def _resolve_ctc_filter(min_lpa: int | None, max_lpa: int | None) -> str | None:
+    """Map salary range onto up to 2 best-matching Naukri CTC bucket strings.
+
+    Selects buckets by overlap area with the user's range, falls back to the
+    nearest bucket by midpoint. Returns comma-separated strings e.g. '15to25,25to50'.
     """
     if min_lpa is None and max_lpa is None:
         return None
+
     lo = min_lpa if min_lpa is not None else 0
-    hi = max_lpa if max_lpa is not None else 999
-    return f"{lo}to{hi}"
+    hi = max_lpa if max_lpa is not None else lo  # treat single value as a point
+
+    scored: list[tuple[int, int, int]] = []
+    for b_lo, b_hi in _CTC_BUCKETS:
+        if lo == hi:
+            if b_lo <= lo < b_hi:
+                scored.append((1, b_lo, b_hi))
+        else:
+            overlap = max(0, min(b_hi, hi) - max(b_lo, lo))
+            if overlap > 0:
+                scored.append((overlap, b_lo, b_hi))
+
+    if not scored:
+        mid = (lo + hi) / 2
+        b = min(_CTC_BUCKETS, key=lambda b: abs((b[0] + b[1]) / 2 - mid))
+        return f"{b[0]}to{b[1]}"
+
+    scored.sort(reverse=True)
+    top = sorted(scored[:2], key=lambda x: x[1])
+    return ",".join(f"{b_lo}to{b_hi}" for _, b_lo, b_hi in top)
 
 
 def _clean_company(name: str) -> str:
