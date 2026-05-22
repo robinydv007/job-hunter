@@ -86,51 +86,27 @@ async def verify_application_applied(page: Page) -> bool:
     return False
 
 
-def _format_list_items(items: list[Any] | None, limit: int = 5) -> str:
-    if not items:
+def _build_job_context(job: dict[str, Any] | None) -> str:
+    if not job:
         return "Not available"
-
-    values = [str(item).strip() for item in items if str(item).strip()]
-    if not values:
-        return "Not available"
-    return "; ".join(values[:limit])
-
-
-def _format_tech_experience(tech_experience: dict[str, Any] | None, limit: int = 8) -> str:
-    if not tech_experience:
-        return "Not available"
-
-    entries: list[str] = []
-    for tech, years in tech_experience.items():
-        if years in (None, ""):
-            continue
-        entries.append(f"{tech}: {years} years")
-
-    if not entries:
-        return "Not available"
-
-    return "; ".join(entries[:limit])
-
-
-def _build_profile_context(profile: Any, detailed_profile: dict[str, Any] | None) -> str:
-    basic_context = f"""PROFILE:
-- Experience: {profile.total_experience_years} years
-- Skills: {", ".join(profile.skills)}
-- Current Role: {profile.past_roles[0] if profile.past_roles else "N/A"}
-"""
-
-    if detailed_profile:
-        detailed_lines = [
-            "Use this as supplemental context only. Do not override the basic profile.",
-            f"- Tech experience: {_format_tech_experience(detailed_profile.get('tech_experience'), limit=30)}",
-            f"- Achievements: {_format_list_items(detailed_profile.get('achievements'))}",
-            f"- Challenges solved: {_format_list_items(detailed_profile.get('challenges_solved'))}",
-            f"- Interests: {_format_list_items(detailed_profile.get('interests'))}",
-            f"- Key responsibilities: {_format_list_items(detailed_profile.get('key_responsibilities'))}",
-        ]
-        return f"{basic_context}\nDETAILED PROFILE:\n" + "\n".join(detailed_lines)
-
-    return basic_context
+    parts = []
+    if job.get("title"):
+        parts.append(f"Job Title: {job['title']}")
+    if job.get("company"):
+        parts.append(f"Company: {job['company']}")
+    if job.get("experience_required"):
+        parts.append(f"Experience Required: {job['experience_required']}")
+    if job.get("location"):
+        parts.append(f"Location: {job['location']}")
+    if job.get("work_mode"):
+        parts.append(f"Work Mode: {job['work_mode']}")
+    if job.get("salary_lpa"):
+        parts.append(f"Salary: {job['salary_lpa']}")
+    if job.get("required_skills"):
+        parts.append(f"Required Skills: {', '.join(job['required_skills'])}")
+    if job.get("description"):
+        parts.append(f"Job Description:\n{job['description']}")
+    return "\n".join(parts)
 
 
 async def navigate_to_job(page: Page, job_url: str) -> None:
@@ -562,11 +538,13 @@ async def get_llm_answers(
     profile: Any,
     config: Any,
     detailed_profile: dict[str, Any] | None = None,
+    job: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     """Get LLM-generated answers for all questions."""
     from job_hunter.llm.provider import get_llm
-    from job_hunter.config import get_screening_answers, load_user_config
+    from job_hunter.config import load_user_config
     import json
+    import yaml
 
     llm = get_llm()
 
@@ -574,65 +552,56 @@ async def get_llm_answers(
         f"- {q['id']}: {q['name']} [type: {q['type']}]" for q in questions
     )
 
-    profile_context = _build_profile_context(profile, detailed_profile)
-
-    # Build screening context from user config (backward compat)
-    screening = get_screening_answers()
     user_cfg = load_user_config()
-    if user_cfg.screening_answers.answers:
-        screening_override = user_cfg.screening_answers.answers
-    else:
-        screening_override = {}
 
-    screening_context_parts = []
-    defaults = user_cfg.screening_answers.defaults
-    if user_cfg.profile.current_location:
-        screening_context_parts.append(f"- Current Location: {user_cfg.profile.current_location}")
-    if defaults.notice_period:
-        screening_context_parts.append(f"- Notice Period: {defaults.notice_period}")
-    if defaults.expected_ctc_lpa:
-        screening_context_parts.append(f"- Expected CTC: {defaults.expected_ctc_lpa} LPA")
-    if defaults.current_ctc_lpa:
-        screening_context_parts.append(f"- Current CTC: {defaults.current_ctc_lpa} LPA")
-    if defaults.willing_to_relocate is not None:
-        screening_context_parts.append(f"- Willing to Relocate: {'yes' if defaults.willing_to_relocate else 'no'}")
-    for key, value in screening_override.items():
-        if value:
-            screening_context_parts.append(f"- {key}: {value}")
+    # Serialize the full user.yaml as YAML — all fields, primary source of truth
+    user_yaml_str = yaml.dump(
+        user_cfg.model_dump(exclude_none=False),
+        default_flow_style=False,
+        allow_unicode=True,
+        sort_keys=False,
+    )
 
-    # Surface per-skill years-of-experience from user.yaml so the LLM can answer
-    # "years of experience with X" questions accurately.
-    tech_exp = user_cfg.experience.skills_with_experience
-    if tech_exp:
-        tech_lines = [f"{skill}: {yrs} years" for skill, yrs in tech_exp.items()]
-        screening_context_parts.append(f"- Tech Experience: {'; '.join(tech_lines[:30])}")
+    # Resume-extracted supplementary data
+    detailed_yaml_str = yaml.dump(
+        detailed_profile or {},
+        default_flow_style=False,
+        allow_unicode=True,
+        sort_keys=False,
+    )
 
-    screening_context = "\n".join(screening_context_parts) if screening_context_parts else "No screening answers configured."
+    job_context_str = _build_job_context(job)
 
-    prompt = f"""You are a job seeker filling out a job application form on Naukri.
-Answer ALL questions concisely. Return a JSON object mapping question ID to your answer.
+    prompt = f"""You are answering job application screening questions on behalf of this candidate.
 
-CRITICAL RULES:
-- For 'Radio Button' or 'single_select' type questions: answer with ONLY the exact option value,
-  typically 'yes' or 'no'. Never write full sentences for radio buttons.
-- For 'Text Box' questions: give a brief, direct answer (1-2 sentences max).
-- If a question says 'don't apply if...' and you do NOT qualify, still answer honestly.
-  (the system will handle eligibility separately).
-- For "years of experience with X" questions: check Tech Experience first. If X is listed,
-  use that value exactly. If X appears in Skills but not in Tech Experience, use the total
-  experience years as a reasonable answer. NEVER answer 0 for a technology the candidate
-  clearly knows.
+TARGET JOB:
+{job_context_str}
+
+CANDIDATE PROFILE (primary source — all filled fields are ground truth):
+{user_yaml_str}
+
+RESUME-EXTRACTED DETAILS (supplementary — use when candidate profile doesn't have the answer):
+{detailed_yaml_str}
+
+INSTRUCTIONS:
+- Use TARGET JOB context to tailor Text Box answers — highlight experience relevant to this role.
+- candidate profile (user.yaml) is the primary source. Key sections to use:
+    profile.current_location          → "current location" questions
+    screening_answers.defaults        → CTC, notice period, relocation, work auth answers
+    experience.skills_with_experience → "years of experience with X" (use EXACT values, NEVER 0)
+    experience.certifications         → certification questions
+    education                         → qualification/degree questions
+    narrative                         → motivation, reason for change, strengths questions
+    profile.urls                      → LinkedIn/GitHub profile link questions
+- For Radio Button / single_select questions: answer with ONLY the exact option value (e.g. yes/no). Never full sentences.
+- For Text Box questions: give a brief, direct answer (1-2 sentences). Tailor to the job.
+- NEVER answer 0 for a technology listed in experience.skills_with_experience.
 - For yes/no eligibility questions with no relevant context: default to "no".
-
-SCREENING ANSWERS:
-{screening_context}
-
-{profile_context}
 
 QUESTIONS:
 {question_list}
 
-Return JSON only (question_id -> answer string):
+Return JSON only — question_id to answer string:
 {{"38621838": "5", "38621846": "yes", ...}}"""
 
     try:
@@ -792,7 +761,7 @@ async def apply_to_job(
         logger.info(f"Received {len(questions)} questions")
 
         # Get LLM answers
-        answers = await get_llm_answers(questions, profile, config, detailed_profile)
+        answers = await get_llm_answers(questions, profile, config, detailed_profile, job=job)
         console.print(f"[green]LLM answers: {answers}[/]")
         logger.info(f"LLM answers log: {answers}")
 

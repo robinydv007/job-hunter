@@ -1,24 +1,31 @@
-from job_hunter.apply.naukri_apply import _build_profile_context
-from job_hunter.resume.schema import ResumeProfile
+from job_hunter.apply.naukri_apply import _build_job_context
 
 
-def test_build_profile_context_includes_detailed_profile() -> None:
-    profile = ResumeProfile(
-        name="Test User",
-        total_experience_years=6,
-        skills=["Python", "Node.js"],
-        tech_stack=["Node.js"],
-        past_roles=["Backend Engineer"],
-    )
-    detailed_profile = {
-        "tech_experience": {"Node.js": 5, "AWS": 2},
-        "achievements": ["Shipped a microservices migration"],
-        "key_responsibilities": ["API design", "Team leadership"],
+def test_build_job_context_includes_all_fields() -> None:
+    job = {
+        "title": "Senior QA Engineer",
+        "company": "Acme Corp",
+        "experience_required": "4-7 Yrs",
+        "location": "Bengaluru",
+        "work_mode": "hybrid",
+        "salary_lpa": "20-30 LPA",
+        "required_skills": ["Java", "Selenium", "TestNG"],
+        "description": "We need a QA engineer to build automation frameworks.",
     }
+    context = _build_job_context(job)
 
-    context = _build_profile_context(profile, detailed_profile)
+    assert "Senior QA Engineer" in context
+    assert "Acme Corp" in context
+    assert "Java, Selenium, TestNG" in context
+    assert "automation frameworks" in context
 
-    assert "Node.js: 5 years" in context
-    assert "AWS: 2 years" in context
-    assert "supplemental context only" in context
-    assert "Backend Engineer" in context
+
+def test_build_job_context_handles_none() -> None:
+    assert _build_job_context(None) == "Not available"
+
+
+def test_build_job_context_handles_partial_job() -> None:
+    job = {"title": "QA Engineer"}
+    context = _build_job_context(job)
+    assert "QA Engineer" in context
+    assert "Company:" not in context
