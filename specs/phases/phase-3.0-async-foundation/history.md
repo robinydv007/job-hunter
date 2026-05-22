@@ -37,3 +37,11 @@ Topics: async-architecture, login-platforms-node, nest-asyncio-removal, pipeline
 Affects-phases: phase-3.1-multi-platform
 Affects-docs: none
 Detail: Converted remaining 5 sync nodes to async def. Added login_platforms_node after parse_resume. Added login_platform() dispatcher in browser.py. Refactored BrowserManager.login_naukri() to accept optional page param. Removed login from CLI. score_jobs_node now awaits score_jobs_with_llm() directly. Replaced nest_asyncio with asyncio.run() in the sync wrapper. Removed nest-asyncio from pyproject.toml. Added logged_in_platforms to JobHunterState. Pipeline flow: load_config → parse_resume → login_platforms → search_jobs → ... Resolves ENH-017. 34 tests pass. E2E validation pending.
+
+---
+
+[NOTE] 2026-05-22 — Phase 3.0 complete — E2E validated, phase closed
+Topics: phase-completion, e2e-validation, filter-shortlist-bug
+Affects-phases: phase-3.1-multi-platform
+Affects-docs: specs/status.md, specs/architecture/overview.md
+Detail: E2E run confirmed correct pipeline order (parse_resume → login_platforms → search_jobs) and 37 jobs found/scored. Discovered and fixed latent bug in filter_shortlist_node (None > 0 TypeError on max_jobs). All acceptance criteria met. Retrospective written. ENH-017 closed. status.md updated to v0.3.0 complete. Architecture overview updated with correct node names and full flow diagram.

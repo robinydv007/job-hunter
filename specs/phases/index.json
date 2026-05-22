@@ -25,7 +25,7 @@
     },
     "phase-3.0-async-foundation": {
       "name": "Async Architecture Foundation",
-      "status": "in-progress",
+      "status": "complete",
       "keywords": ["async", "langgraph", "event-loop", "nest-asyncio", "login-node", "login-platforms-node", "pipeline-reorder", "pure-async", "asyncio-run", "workflow-reorder", "browser-page", "logged-in-platforms"]
     },
     "phase-3.2-config-strategy-revamp": {

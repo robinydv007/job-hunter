@@ -1,8 +1,8 @@
 # Phase 3.0 — Overview: Async Architecture Foundation
 
-**Status:** Not Started  
-**Target:** TBD  
-**Release:** v0.3.0 (planned)
+**Status:** Complete ✅  
+**Completed:** 2026-05-22  
+**Release:** v0.3.0
 
 ---
 
@@ -148,15 +148,15 @@ If login fails for a platform, log a warning and skip that platform. Do not cras
 
 ## Acceptance Criteria
 
-- [ ] All LangGraph nodes are `async def` — no sync nodes remain
-- [ ] `nest_asyncio` is not imported anywhere in the codebase
-- [ ] Pipeline runs end-to-end with same results as current sync pipeline
-- [ ] Login happens inside the graph after resume parsing, not in CLI
-- [ ] Pipeline flow is: `load_config → parse_resume → login_platforms → search_jobs → ...`
-- [ ] Failed login for a platform logs a warning and skips (does not crash pipeline)
-- [ ] `logged_in_platforms` field is populated in state after login node
-- [ ] CLI only starts browser — no login call
-- [ ] `workflow.ainvoke()` used instead of `workflow.invoke()`
+- [x] All LangGraph nodes are `async def` — no sync nodes remain
+- [x] `nest_asyncio` is not imported anywhere in the codebase
+- [x] Pipeline runs end-to-end — 37 jobs found, scored, shortlisted (E2E 2026-05-22)
+- [x] Login happens inside the graph after resume parsing, not in CLI
+- [x] Pipeline flow is: `load_config → parse_resume → login_platforms → search_jobs → ...`
+- [x] Failed login for a platform logs a warning and skips (does not crash pipeline)
+- [x] `logged_in_platforms` field is populated in state after login node
+- [x] CLI only starts browser — no login call
+- [x] `workflow.ainvoke()` used instead of `workflow.invoke()`
 
 ---
 

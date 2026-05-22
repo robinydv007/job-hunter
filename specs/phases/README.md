@@ -8,7 +8,7 @@ Quick reference for all phases. See [roadmap](../planning/roadmap.md) for timeli
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | `phase-2a-detailed-profile/` |
 | 2b | Auto-Apply & Batch Screening | ✅ Complete | `phase-2b-auto-apply/` |
 | 3.2 | Config Strategy Revamp | ✅ Complete | `phase-3.2-config-strategy-revamp/` |
-| 3.0 | Async Architecture Foundation | 🔄 In Progress | `phase-3.0-async-foundation/` |
+| 3.0 | Async Architecture Foundation | ✅ Complete | `phase-3.0-async-foundation/` |
 | 3.1 | Multi-Platform & Intelligence | 🔲 Planned | _(not started)_ |
 
 Each phase directory contains:
