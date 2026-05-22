@@ -515,7 +515,8 @@ async def _build_page_url(
     if experience_years is not None:
         filters += f"&experience={experience_years}"
     if ctc_filter is not None:
-        filters += f"&ctcFilter={ctc_filter}"
+        for bucket in ctc_filter.split(","):
+            filters += f"&ctcFilter={bucket}"
 
     if location:
         if page_num == 1:
