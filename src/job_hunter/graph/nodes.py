@@ -246,7 +246,7 @@ async def filter_shortlist_node(state: JobHunterState) -> dict:
     ]
     shortlisted.sort(key=lambda j: j.get("match_score", 0), reverse=True)
 
-    if hasattr(config.search, "max_jobs") and config.search.max_jobs > 0:
+    if hasattr(config.search, "max_jobs") and (config.search.max_jobs or 0) > 0:
         shortlisted = shortlisted[: config.search.max_jobs]
 
     console.print(
