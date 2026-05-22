@@ -100,12 +100,6 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
         page = await browser.start()
 
         try:
-            logged_in = await browser.login_naukri()
-            if not logged_in:
-                console.print("[red]Failed to login to Naukri. Check credentials.[/]")
-                await browser.close()
-                raise SystemExit(1)
-
             initial_state = {
                 "config": app_config,
                 "user_config": user_config,
@@ -119,6 +113,7 @@ def run(resume: str | None, config: str | None, headless: bool, force_parse: boo
                 "shortlisted_jobs": [],
                 "csv_path": "",
                 "browser_page": page,
+                "logged_in_platforms": [],
             }
 
             workflow = build_workflow()
