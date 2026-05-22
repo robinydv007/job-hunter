@@ -15,6 +15,7 @@ from job_hunter.graph.helpers import record_run, update_run_stats
 from job_hunter.graph.utils import (
     deduplicate_jobs,
     apply_exclusion_filters,
+    apply_inclusion_filter,
     apply_title_keyword_filter,
 )
 from job_hunter.resume.parser import (
@@ -175,6 +176,10 @@ async def search_jobs_node(state: JobHunterState) -> dict:
     )
     if config.search.excluded_companies or config.search.excluded_keywords:
         console.print(f"[green]After exclusion filters: {len(unique_jobs)} jobs[/]")
+
+    unique_jobs = apply_inclusion_filter(unique_jobs, config.search.included_keywords)
+    if config.search.included_keywords:
+        console.print(f"[green]After inclusion filter: {len(unique_jobs)} jobs[/]")
 
     unique_jobs = apply_title_keyword_filter(
         unique_jobs, config.search.title_exclude_keywords

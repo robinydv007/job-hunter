@@ -113,6 +113,13 @@ def _build_search_queries(
         else:
             queries.append({"keyword": role, "location": ""})
 
+    for keyword in config.search.included_keywords[: search_config.max_roles]:
+        if locations:
+            for loc in locations:
+                queries.append({"keyword": keyword, "location": loc})
+        else:
+            queries.append({"keyword": keyword, "location": ""})
+
     seen = set()
     unique = []
     for q in queries:

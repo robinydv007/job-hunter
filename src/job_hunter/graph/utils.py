@@ -69,6 +69,23 @@ def apply_exclusion_filters(
     return filtered
 
 
+def apply_inclusion_filter(jobs: list[dict], included_keywords: list[str]) -> list[dict]:
+    """Keep only jobs whose title or description contains at least one included keyword."""
+    if not included_keywords:
+        return jobs
+
+    included_lower = [k.lower() for k in included_keywords]
+
+    return [
+        job
+        for job in jobs
+        if any(
+            kw in f"{job.get('title', '')} {job.get('description', '')}".lower()
+            for kw in included_lower
+        )
+    ]
+
+
 def apply_title_keyword_filter(
     jobs: list[dict], title_exclude_keywords: list[str]
 ) -> list[dict]:
