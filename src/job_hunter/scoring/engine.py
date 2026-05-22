@@ -311,6 +311,14 @@ def score_job(
 
     composite = max(0, min(composite, 100))
 
+    # Low-skill penalty: when fewer than half the required skills are matched,
+    # scale down the composite so strong role/experience scores can't mask a poor
+    # skill fit. At 0% skill match the composite is halved; at 50% no penalty.
+    job_has_required_skills = bool(job.get("required_skills"))
+    if job_has_required_skills and s_skills < 50:
+        penalty_factor = 0.5 + 0.5 * (s_skills / 50)
+        composite = int(composite * penalty_factor)
+
     scores = {
         "skills": s_skills,
         "role": s_role,
