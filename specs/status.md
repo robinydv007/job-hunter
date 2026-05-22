@@ -1,12 +1,12 @@
 # Project Status
-**Last Updated**: 2026-05-19  
-**Current Phase**: Phase 3.0 — Async Architecture Foundation (`planned`)  
-**Latest Release**: v0.2.1  
+**Last Updated**: 2026-05-22  
+**Current Phase**: Phase 3.1 — Multi-Platform & Intelligence (`planned`)  
+**Latest Release**: v0.3.0  
 **Health**: On Track ✅
 
 ## Summary
 
-Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0, 1, 2a, and 2b are complete. Phase 3.0 is next.
+Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Indian platforms. Given a user resume and config file, it independently discovers jobs on Naukri, scores them against your profile using a 6-factor weighted rubric, and exports a ranked shortlist to CSV. Phases 0, 1, 2a, 2b, 3.2, and 3.0 are complete. Phase 3.1 is next.
 
 ## Completed Phases
 | Phase | Name | Status | Release |
@@ -16,14 +16,14 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 | 2a | Detailed Profile & Config Restructure | ✅ Complete | v0.2.0 |
 | 2b | Auto-Apply & Batch Screening | ✅ Complete | v0.2.1 |
 | 3.2 | Config Strategy Revamp | ✅ Complete | — |
+| 3.0 | Async Architecture Foundation | ✅ Complete | v0.3.0 |
 
 ## Active Phase
-*(Phase 3.0 NOT STARTED - Planned)*
+*(Phase 3.1 NOT STARTED — Planned)*
 
 ## Upcoming Phases
 | Phase | Name | Status | Key Deliverables |
 |-------|------|--------|------------------|
-| 3.0 | Async Architecture Foundation | 🔲 Planned | Resolve ENH-017: async pipeline, login node, resume-before-login flow |
 | 3.1 | Multi-Platform & Intelligence | 🔲 Planned | Multi-platform search (LinkedIn, Hirist, etc.), company intelligence |
 
 ## Blockers
@@ -39,12 +39,11 @@ Job Hunter AI Agent is a local Python CLI tool that automates job hunting on Ind
 ## Open P1 Items
 | ID | Type | Description |
 |----|------|-------------|
-| ENH-017 | Enhancement | Reorder pipeline: parse resume before login — **planned for Phase 3.0** (2 failed attempts, async/sync conflict) |
+| _(none)_ | | |
 
 ## Next Actions
-1. Merge `feat/phase-3.2-config-strategy-revamp` to `main`
-2. Start Phase 3.0 (async architecture foundation — resolves ENH-017)
-3. After Phase 3.0: Phase 3.1 (multi-platform search, enabled by async architecture)
+1. Run `/brainstorm-phase` to plan Phase 3.1 (multi-platform search — LinkedIn, Hirist, etc.)
+2. Merge `feat/phase-3.0-async-foundation` to `main` (tag v0.3.0)
 
 ## Key Decisions Made
 - **UV** chosen as Python package manager (speed + native lockfile)

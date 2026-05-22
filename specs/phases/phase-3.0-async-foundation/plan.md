@@ -239,7 +239,9 @@ async def run_pipeline():
     try:
         # No login here — login happens inside the workflow
         initial_state = {
-            "config": app_config,
+            "config": app_config,       # AppConfig (3-file model from Phase 3.2)
+            "user_config": user_config,
+            "platform_config": platform_config,
             "resume_path": resume,
             "force_parse": force_parse,
             "profile": None,
@@ -249,16 +251,18 @@ async def run_pipeline():
             "shortlisted_jobs": [],
             "csv_path": "",
             "browser_page": page,
+            "logged_in_platforms": [],
         }
 
         workflow = build_workflow()
-        result = await workflow.ainvoke(initial_state)  # ← ASYNC INVOKE
+        result = await workflow.ainvoke(initial_state)  # ← already in use
 ```
 
 **Changes:**
 - Remove `browser.login_naukri()` call and its error handling
 - Keep browser start/close lifecycle
-- Change `workflow.invoke(initial_state)` to `await workflow.ainvoke(initial_state)`
+- `workflow.ainvoke(initial_state)` is already in use — no change needed
+- Add `logged_in_platforms: []` to initial_state
 
 ---
 
@@ -266,12 +270,13 @@ async def run_pipeline():
 
 ### 7.1 Remove from codebase
 
-Remove all `import nest_asyncio` and `nest_asyncio.apply()` calls:
+`naukri.py` and `nodes.py` no longer use `nest_asyncio` (done in Phase 3.2). One usage remains:
 
-| File | Lines to Remove |
-|------|-----------------|
-| `src/job_hunter/search/naukri.py` | `import nest_asyncio`, `nest_asyncio.apply()`, `loop = asyncio.get_event_loop()`, all `loop.run_until_complete()` |
-| `src/job_hunter/graph/nodes.py` | `import asyncio`, `import nest_asyncio`, `nest_asyncio.apply()`, `loop = asyncio.get_event_loop()`, `loop.run_until_complete()` in `parse_resume_node` |
+| File | Change |
+|------|--------|
+| `src/job_hunter/scoring/llm_scorer.py` | `score_jobs_with_llm_sync()` — replace `nest_asyncio.apply()` + `asyncio.run()` pattern with just `asyncio.run()`. Remove `import nest_asyncio`. |
+
+`asyncio.run()` is the correct stdlib replacement — it creates a fresh event loop for a one-shot sync call into an async function, which is exactly what this wrapper does.
 
 ### 7.2 Remove from dependencies
 

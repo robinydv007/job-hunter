@@ -56,7 +56,7 @@
 | ENH-014 | Refactor CSV export: single source of truth for columns | P2 | resolved | 1 | [→](details/ENH-014.md) |
 | ENH-015 | LLM-Based Job Scoring | P1 | resolved | 1 | [→](details/ENH-015.md) |
 | ENH-016 | Fix Naukri pagination using UI navigation | P1 | resolved | 2 | [→](details/ENH-016.md) |
-| ENH-017 | Reorder pipeline: parse resume before login | P1 | open | 2 | [→](details/ENH-017.md) |
+| ENH-017 | Reorder pipeline: parse resume before login | P1 | resolved | 3.0 | login_platforms_node added; ENH-017 closed |
 | ENH-020 | Include detailed profile in LLM answer context | P1 | resolved | 2b | Changelog 2026-04-19 — detailed profile in LLM context |
 | ENH-021 | Merge resume cache into single `profile_cache.json` (remove split profile.json + profile_detailed.yaml) | P1 | resolved | 3.0 | [→](details/ENH-021.md) |
 | ENH-022 | User-owned `config/profile.yaml` for overrides and enrichment (survives re-parse) | P1 | resolved | 3.0 | [→](details/ENH-022.md) |

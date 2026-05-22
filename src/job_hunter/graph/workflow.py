@@ -9,6 +9,7 @@ from job_hunter.graph.nodes import (
     export_csv_node,
     filter_shortlist_node,
     load_config_node,
+    login_platforms_node,
     parse_resume_node,
     score_jobs_node,
     search_jobs_node,
@@ -24,6 +25,7 @@ def build_workflow():
     # Add nodes
     workflow.add_node("load_config", load_config_node)
     workflow.add_node("parse_resume", parse_resume_node)
+    workflow.add_node("login_platforms", login_platforms_node)
     workflow.add_node("search_jobs", search_jobs_node)
     workflow.add_node("score_jobs", score_jobs_node)
     workflow.add_node("filter_shortlist", filter_shortlist_node)
@@ -33,7 +35,8 @@ def build_workflow():
 
     # Define edges (linear pipeline)
     workflow.add_edge("load_config", "parse_resume")
-    workflow.add_edge("parse_resume", "search_jobs")
+    workflow.add_edge("parse_resume", "login_platforms")
+    workflow.add_edge("login_platforms", "search_jobs")
     workflow.add_edge("search_jobs", "score_jobs")
     workflow.add_edge("score_jobs", "filter_shortlist")
     workflow.add_edge("filter_shortlist", "apply_jobs")

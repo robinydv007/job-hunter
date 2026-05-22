@@ -26,7 +26,7 @@ from job_hunter.resume.parser import (
 console = Console()
 
 
-def load_config_node(state: JobHunterState) -> dict:
+async def load_config_node(state: JobHunterState) -> dict:
     """Log configuration loaded state (validation already done in CLI)."""
     console.print(Panel("[bold blue]Loading configuration...[/]", border_style="blue"))
     config = state["config"]
@@ -79,6 +79,39 @@ async def parse_resume_node(state: JobHunterState) -> dict:
         console.print(f"[dim]Applying profile.yaml overrides[/]")
         profile, detailed = merge_profile_with_overrides(profile, detailed, overrides, enrichment)
     return {"profile": profile, "detailed_profile": detailed}
+
+
+async def login_platforms_node(state: JobHunterState) -> dict:
+    """Login to configured platforms. Runs after resume parsing."""
+    from job_hunter.browser import login_platform
+
+    config = state["config"]
+    page = state.get("browser_page")
+    platforms = config.search.platforms
+
+    if not platforms:
+        console.print("[yellow]No platforms configured — skipping login[/]")
+        return {"logged_in_platforms": []}
+
+    if not page:
+        raise RuntimeError("Browser page is None, cannot login")
+
+    logged_in = []
+    for platform in platforms:
+        try:
+            success = await login_platform(page, platform)
+            if success:
+                logged_in.append(platform)
+                console.print(f"[green]Logged in to {platform}[/]")
+            else:
+                console.print(f"[yellow]Login failed for {platform}[/]")
+        except Exception as e:
+            console.print(f"[red]Error logging in to {platform}: {e}[/]")
+
+    if not logged_in:
+        raise RuntimeError("Could not login to any configured platform")
+
+    return {"logged_in_platforms": logged_in}
 
 
 async def search_jobs_node(state: JobHunterState) -> dict:
@@ -152,7 +185,7 @@ async def search_jobs_node(state: JobHunterState) -> dict:
     return {"raw_jobs": unique_jobs}
 
 
-def score_jobs_node(state: JobHunterState) -> dict:
+async def score_jobs_node(state: JobHunterState) -> dict:
     """Score each job against the user profile."""
     console.print(Panel("[bold blue]Scoring jobs...[/]", border_style="blue"))
 
@@ -169,9 +202,9 @@ def score_jobs_node(state: JobHunterState) -> dict:
 
     if use_llm_scoring:
         console.print("[dim]Using LLM-based scoring[/]")
-        from job_hunter.scoring.llm_scorer import score_jobs_with_llm_sync
+        from job_hunter.scoring.llm_scorer import score_jobs_with_llm
 
-        scored = score_jobs_with_llm_sync(raw_jobs, profile, config)
+        scored = await score_jobs_with_llm(raw_jobs, profile, config)
         threshold = llm_scoring_config.shortlist_threshold
 
         for result in scored:
@@ -203,7 +236,7 @@ def score_jobs_node(state: JobHunterState) -> dict:
     return {"scored_jobs": scored, "threshold_used": threshold}
 
 
-def filter_shortlist_node(state: JobHunterState) -> dict:
+async def filter_shortlist_node(state: JobHunterState) -> dict:
     """Filter jobs above the shortlist threshold and select top max_jobs."""
     config = state["config"]
     threshold = state.get("threshold_used") or config.scoring.shortlist_threshold
@@ -213,7 +246,7 @@ def filter_shortlist_node(state: JobHunterState) -> dict:
     ]
     shortlisted.sort(key=lambda j: j.get("match_score", 0), reverse=True)
 
-    if hasattr(config.search, "max_jobs") and config.search.max_jobs > 0:
+    if hasattr(config.search, "max_jobs") and (config.search.max_jobs or 0) > 0:
         shortlisted = shortlisted[: config.search.max_jobs]
 
     console.print(
@@ -351,7 +384,7 @@ async def apply_jobs_node(state: JobHunterState) -> dict:
     }
 
 
-def export_csv_node(state: JobHunterState) -> dict:
+async def export_csv_node(state: JobHunterState) -> dict:
     """Export shortlisted jobs to CSV."""
     console.print(Panel("[bold blue]Exporting CSV...[/]", border_style="blue"))
 
@@ -367,7 +400,7 @@ def export_csv_node(state: JobHunterState) -> dict:
     return {"csv_path": csv_path}
 
 
-def update_history_node(state: JobHunterState) -> dict:
+async def update_history_node(state: JobHunterState) -> dict:
     """Update run history with final stats after pipeline completes."""
     shortlisted = state.get("shortlisted_jobs", [])
     shortlisted_count = len(shortlisted)

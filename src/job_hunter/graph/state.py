@@ -52,6 +52,7 @@ class JobHunterState(TypedDict, total=False):
     shortlisted_jobs: list[ScoredJob]
     csv_path: str
     browser_page: Any  # Playwright Page object
+    logged_in_platforms: list[str]  # Platforms successfully logged into by login_platforms_node
     threshold_used: int  # Shortlist threshold resolved at score time
     # Apply outcome counters — populated by apply_jobs_node, consumed by update_history_node
     apply_applied_count: int
