@@ -113,6 +113,13 @@ def _build_search_queries(
         else:
             queries.append({"keyword": role, "location": ""})
 
+    for keyword in config.search.included_keywords[: search_config.max_roles]:
+        if locations:
+            for loc in locations:
+                queries.append({"keyword": keyword, "location": loc})
+        else:
+            queries.append({"keyword": keyword, "location": ""})
+
     seen = set()
     unique = []
     for q in queries:
@@ -122,6 +129,59 @@ def _build_search_queries(
             unique.append(q)
 
     return unique
+
+
+def _resolve_filter_value(min_val: int | None, max_val: int | None) -> int | None:
+    """Return a single filter value — used for experience (&experience=X).
+
+    Both set → median (midpoint). One set → that value. Neither → None.
+    """
+    if min_val is not None and max_val is not None:
+        return (min_val + max_val) // 2
+    if min_val is not None:
+        return min_val
+    if max_val is not None:
+        return max_val
+    return None
+
+
+# Naukri's fixed CTC filter buckets (LPA). Must match exactly.
+_CTC_BUCKETS: list[tuple[int, int]] = [
+    (0, 3), (3, 6), (6, 10), (10, 15), (15, 25),
+    (25, 50), (50, 75), (75, 100), (100, 500), (500, 9999),
+]
+
+
+def _resolve_ctc_filter(min_lpa: int | None, max_lpa: int | None) -> str | None:
+    """Map salary range onto up to 2 best-matching Naukri CTC bucket strings.
+
+    Selects buckets by overlap area with the user's range, falls back to the
+    nearest bucket by midpoint. Returns comma-separated strings e.g. '15to25,25to50'.
+    """
+    if min_lpa is None and max_lpa is None:
+        return None
+
+    lo = min_lpa if min_lpa is not None else 0
+    hi = max_lpa if max_lpa is not None else lo  # treat single value as a point
+
+    scored: list[tuple[int, int, int]] = []
+    for b_lo, b_hi in _CTC_BUCKETS:
+        if lo == hi:
+            if b_lo <= lo < b_hi:
+                scored.append((1, b_lo, b_hi))
+        else:
+            overlap = max(0, min(b_hi, hi) - max(b_lo, lo))
+            if overlap > 0:
+                scored.append((overlap, b_lo, b_hi))
+
+    if not scored:
+        mid = (lo + hi) / 2
+        b = min(_CTC_BUCKETS, key=lambda b: abs((b[0] + b[1]) / 2 - mid))
+        return f"{b[0]}to{b[1]}"
+
+    scored.sort(reverse=True)
+    top = sorted(scored[:2], key=lambda x: x[1])
+    return ",".join(f"{b_lo}to{b_hi}" for _, b_lo, b_hi in top)
 
 
 def _clean_company(name: str) -> str:
@@ -442,19 +502,32 @@ async def _click_next_button(page: Page, max_retries: int = 3) -> bool:
 
 
 async def _build_page_url(
-    page_num: int, keyword_encoded: str, loc_encoded: str, location: str, days_old: int
+    page_num: int,
+    keyword_encoded: str,
+    loc_encoded: str,
+    location: str,
+    days_old: int,
+    experience_years: int | None = None,
+    ctc_filter: str | None = None,
 ) -> str:
     """Build URL for a specific page number."""
+    filters = f"&jobAge={days_old}"
+    if experience_years is not None:
+        filters += f"&experience={experience_years}"
+    if ctc_filter is not None:
+        for bucket in ctc_filter.split(","):
+            filters += f"&ctcFilter={bucket}"
+
     if location:
         if page_num == 1:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}{filters}"
         else:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}-{page_num}?k={keyword_encoded}{filters}"
     else:
         if page_num == 1:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs?k={keyword_encoded}{filters}"
         else:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}{filters}"
 
 
 async def scrape_jobs_from_page(
@@ -465,6 +538,8 @@ async def scrape_jobs_from_page(
     max_jobs: int = 100,
     max_pages: int = 1,
     user_skills: list[str] | None = None,
+    experience_years: int | None = None,
+    ctc_filter: str | None = None,
 ) -> list[dict[str, Any]]:
     """Scrape jobs from Naukri search pages with pagination."""
     print(f"  Searching: {keyword}" + (f" in {location}" if location else ""))
@@ -484,7 +559,8 @@ async def scrape_jobs_from_page(
             if page_num == 1:
                 # Page 1: Use direct URL
                 url = await _build_page_url(
-                    page_num, keyword_encoded, loc_encoded, location, days_old
+                    page_num, keyword_encoded, loc_encoded, location, days_old,
+                    experience_years=experience_years, ctc_filter=ctc_filter,
                 )
                 print(f"    Page {page_num}: {url}")
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -611,6 +687,19 @@ async def search_naukri(
     user_skills = profile.skills + profile.tech_stack
     max_pages = naukri_config.max_pages if naukri_config else 3
 
+    exp_filter = _resolve_filter_value(
+        search_config.experience_range.min if search_config.experience_range else None,
+        search_config.experience_range.max if search_config.experience_range else None,
+    )
+    ctc_filter = _resolve_ctc_filter(
+        int(search_config.salary_range.min_lpa) if search_config.salary_range and search_config.salary_range.min_lpa else None,
+        int(search_config.salary_range.max_lpa) if search_config.salary_range and search_config.salary_range.max_lpa else None,
+    )
+    if exp_filter is not None:
+        print(f"  [INFO] Experience filter: {exp_filter} years")
+    if ctc_filter is not None:
+        print(f"  [INFO] CTC filter: {ctc_filter} LPA")
+
     jobs_per_page_estimate = 20
     max_pages_needed = min(
         max_pages,
@@ -628,6 +717,8 @@ async def search_naukri(
                 max_jobs=max_jobs_per_query,
                 max_pages=max_pages_needed,
                 user_skills=user_skills,
+                experience_years=exp_filter,
+                ctc_filter=ctc_filter,
             )
 
             for job in jobs:

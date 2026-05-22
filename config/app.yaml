@@ -5,8 +5,12 @@ search:
   role_families: []
   seniority_level: []
   preferred_locations: []
-  experience_range: null
-  salary_range: null
+  experience_range:    # min/max years; single value uses that directly, both set uses median
+    min: null
+    max: null
+  salary_range:        # min/max LPA; single value uses that directly, both set uses median
+    min_lpa: null
+    max_lpa: null
   min_company_rating: null
   company_size_preference: []
   company_type_preference: []
@@ -41,7 +45,7 @@ scoring:
     consider_location: false
     consider_work_mode: false
 auto_apply:
-  enabled: false
+  enabled: true
   max_per_day: null
   max_per_run: null
   delay_between_seconds: null
