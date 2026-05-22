@@ -131,6 +131,20 @@ def _build_search_queries(
     return unique
 
 
+def _resolve_filter_value(min_val: int | None, max_val: int | None) -> int | None:
+    """Return a single filter value from an optional range.
+
+    Both set → median (midpoint). One set → that value. Neither → None.
+    """
+    if min_val is not None and max_val is not None:
+        return (min_val + max_val) // 2
+    if min_val is not None:
+        return min_val
+    if max_val is not None:
+        return max_val
+    return None
+
+
 def _clean_company(name: str) -> str:
     """Clean company name by removing ratings and 'Posted by' prefixes."""
     if not name:
@@ -449,19 +463,31 @@ async def _click_next_button(page: Page, max_retries: int = 3) -> bool:
 
 
 async def _build_page_url(
-    page_num: int, keyword_encoded: str, loc_encoded: str, location: str, days_old: int
+    page_num: int,
+    keyword_encoded: str,
+    loc_encoded: str,
+    location: str,
+    days_old: int,
+    experience_years: int | None = None,
+    salary_lpa: int | None = None,
 ) -> str:
     """Build URL for a specific page number."""
+    filters = f"&jobAge={days_old}"
+    if experience_years is not None:
+        filters += f"&experience={experience_years}"
+    if salary_lpa is not None:
+        filters += f"&salary={salary_lpa}"
+
     if location:
         if page_num == 1:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}?k={keyword_encoded}{filters}"
         else:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-in-{loc_encoded}-{page_num}?k={keyword_encoded}{filters}"
     else:
         if page_num == 1:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs?k={keyword_encoded}{filters}"
         else:
-            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}&jobAge={days_old}"
+            return f"{NAUKRI.base_url}/{keyword_encoded}-jobs-{page_num}?k={keyword_encoded}{filters}"
 
 
 async def scrape_jobs_from_page(
@@ -472,6 +498,8 @@ async def scrape_jobs_from_page(
     max_jobs: int = 100,
     max_pages: int = 1,
     user_skills: list[str] | None = None,
+    experience_years: int | None = None,
+    salary_lpa: int | None = None,
 ) -> list[dict[str, Any]]:
     """Scrape jobs from Naukri search pages with pagination."""
     print(f"  Searching: {keyword}" + (f" in {location}" if location else ""))
@@ -491,7 +519,8 @@ async def scrape_jobs_from_page(
             if page_num == 1:
                 # Page 1: Use direct URL
                 url = await _build_page_url(
-                    page_num, keyword_encoded, loc_encoded, location, days_old
+                    page_num, keyword_encoded, loc_encoded, location, days_old,
+                    experience_years=experience_years, salary_lpa=salary_lpa,
                 )
                 print(f"    Page {page_num}: {url}")
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -618,6 +647,19 @@ async def search_naukri(
     user_skills = profile.skills + profile.tech_stack
     max_pages = naukri_config.max_pages if naukri_config else 3
 
+    exp_filter = _resolve_filter_value(
+        search_config.experience_range.min if search_config.experience_range else None,
+        search_config.experience_range.max if search_config.experience_range else None,
+    )
+    salary_filter = _resolve_filter_value(
+        int(search_config.salary_range.min_lpa) if search_config.salary_range and search_config.salary_range.min_lpa else None,
+        int(search_config.salary_range.max_lpa) if search_config.salary_range and search_config.salary_range.max_lpa else None,
+    )
+    if exp_filter is not None:
+        print(f"  [INFO] Experience filter: {exp_filter} years")
+    if salary_filter is not None:
+        print(f"  [INFO] Salary filter: {salary_filter} LPA")
+
     jobs_per_page_estimate = 20
     max_pages_needed = min(
         max_pages,
@@ -635,6 +677,8 @@ async def search_naukri(
                 max_jobs=max_jobs_per_query,
                 max_pages=max_pages_needed,
                 user_skills=user_skills,
+                experience_years=exp_filter,
+                salary_lpa=salary_filter,
             )
 
             for job in jobs:
