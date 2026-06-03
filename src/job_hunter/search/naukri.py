@@ -616,14 +616,13 @@ async def scrape_jobs_from_page(
                     new_job_ids.add(job_id)
                     current_page_jobs.append(job)
 
-            # Duplicate detection: stop if all jobs on current page are duplicates
             if new_job_ids.issubset(seen_job_ids):
                 print(
-                    f"    Duplicate content detected on page {page_num}, stopping pagination"
+                    f"    Page {page_num} contains only duplicate job IDs; continuing pagination"
                 )
-                break
 
             # Add new jobs to results
+            added_jobs = 0
             for job in current_page_jobs:
                 job_id = (
                     job.get("job_id")
@@ -632,9 +631,10 @@ async def scrape_jobs_from_page(
                 if job_id not in seen_job_ids:
                     seen_job_ids.add(job_id)
                     all_jobs.append(job)
+                    added_jobs += 1
 
             print(
-                f"    Added {len(current_page_jobs)} unique jobs from page {page_num}"
+                f"    Added {added_jobs} unique jobs from page {page_num}"
             )
             pages_scraped += 1
             page_num += 1
