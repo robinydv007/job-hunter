@@ -476,9 +476,12 @@ async def _click_next_button(page: Page, max_retries: int = 3) -> bool:
                 print(f"    No Next button found")
                 return False
 
-            # Check if disabled
+            # Check if disabled via class, aria-disabled, or missing href
             classes = await next_btn.get_attribute("class") or ""
-            if "disabled" in classes.lower() or "styles_disabled" in classes:
+            aria_disabled = await next_btn.get_attribute("aria-disabled") or ""
+            href = await next_btn.get_attribute("href")
+            if "disabled" in classes.lower() or "styles_disabled" in classes \
+                    or aria_disabled == "true" or not href:
                 print(f"    Next button is disabled")
                 return False
 
@@ -639,6 +642,11 @@ async def scrape_jobs_from_page(
             pages_scraped += 1
             page_num += 1
 
+            # Partial page means no more results exist
+            if len(job_cards) < 20:
+                print(f"    Partial page ({len(job_cards)} jobs) — last page, stopping")
+                break
+
             # Check if we should continue
             if len(all_jobs) >= max_jobs:
                 print(f"    Reached max_jobs limit ({max_jobs})")
@@ -648,6 +656,10 @@ async def scrape_jobs_from_page(
             next_button = await page.query_selector('[class*="pagination"] a[class*="btn-secondary"]:has-text("Next")')
             if not next_button:
                 print(f"    No more pages available")
+                break
+            next_href = await next_button.get_attribute("href")
+            if not next_href:
+                print(f"    Next button is disabled — last page reached")
                 break
 
             # Small delay before next page
