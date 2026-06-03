@@ -60,7 +60,7 @@ def resolve_freshness(config_freshness: int, platform: str = "naukri") -> int:
         last_ts = datetime.fromisoformat(last_run["timestamp"])
         days_since = (datetime.now() - last_ts).days
         auto_value = _map_days_to_freshness(days_since)
-        return max(config_freshness, auto_value)
+        return min(config_freshness, auto_value)
 
     if not platform_history:
         return 7
