@@ -60,7 +60,7 @@ def resolve_freshness(config_freshness: int, platform: str = "naukri") -> int:
         last_ts = datetime.fromisoformat(last_run["timestamp"])
         days_since = (datetime.now() - last_ts).days
         auto_value = _map_days_to_freshness(days_since)
-        return max(config_freshness, auto_value)
+        return min(config_freshness, auto_value)
 
     if not platform_history:
         return 7
@@ -470,8 +470,8 @@ async def _click_next_button(page: Page, max_retries: int = 3) -> bool:
     """Click the Next button in pagination. Returns True if successful."""
     for attempt in range(max_retries):
         try:
-            # Find Next button by text
-            next_btn = await page.query_selector('a:has-text("Next")')
+            # Find Next button scoped to pagination container to avoid matching job titles
+            next_btn = await page.query_selector('[class*="pagination"] a[class*="btn-secondary"]:has-text("Next")')
             if not next_btn:
                 print(f"    No Next button found")
                 return False
@@ -645,7 +645,7 @@ async def scrape_jobs_from_page(
                 break
 
             # Check if there are more pages
-            next_button = await page.query_selector('a:has-text("Next")')
+            next_button = await page.query_selector('[class*="pagination"] a[class*="btn-secondary"]:has-text("Next")')
             if not next_button:
                 print(f"    No more pages available")
                 break
